@@ -30,56 +30,78 @@
     {
       "mes": "2025-11",
       "servicios": 2,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 85.6
     },
     {
       "mes": "2025-12",
       "servicios": 5,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 88.4
     },
     {
       "mes": "2026-01",
       "servicios": 3,
+      "a_tiempo_pct": 66.7,
+      "nivel": "bajo",
       "desempeno": 80.1
     },
     {
       "mes": "2026-02",
       "servicios": 4,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 87.3
     },
     {
       "mes": "2026-03",
       "servicios": 4,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 87.6
     },
     {
       "mes": "2026-04",
       "servicios": 3,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 86.8
     },
     {
       "mes": "2026-05",
       "servicios": 5,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 88.3
     },
     {
       "mes": "2026-06",
       "servicios": 1,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 84.2
     },
     {
       "mes": "2026-07",
       "servicios": 7,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 89.5
     },
     {
       "mes": "2026-08",
       "servicios": 4,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 87.5
     },
     {
       "mes": "2026-09",
       "servicios": 3,
+      "a_tiempo_pct": 100.0,
+      "nivel": "alto",
       "desempeno": 86.5
     }
   ],

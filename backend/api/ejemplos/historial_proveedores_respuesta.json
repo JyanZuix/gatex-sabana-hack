@@ -1,0 +1,1260 @@
+{
+  "generado": "2026-10-24",
+  "meses": [
+    "2025-11",
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07",
+    "2026-08",
+    "2026-09",
+    "2026-10"
+  ],
+  "proveedores": [
+    {
+      "proveedor_id": "PROV-02",
+      "nombre": "Pacífico Express Logística",
+      "estado": "activo",
+      "cargas_especiales": [
+        "refrigerado"
+      ],
+      "servicios": 34,
+      "ultimo_servicio": "2026-09-28",
+      "puntualidad_pct": 100.0,
+      "desempeno": {
+        "valor": 94.4,
+        "desglose": {
+          "puntualidad": 0.95,
+          "magnitud_retraso": 0.074
+        },
+        "texto": "94/100: entrega a tiempo el 95 % de sus servicios y su retraso medio es del 7 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 62.5,
+        "nivel": "Media",
+        "desglose": {
+          "consistencia": 0.655,
+          "cumplimiento_cliente": 0.95,
+          "evidencia": 0.831
+        },
+        "texto": "Media (63/100): se basa en 34 servicios; sus tiempos son algo variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.3
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.4
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.8
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.2
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.4
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.5
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.7
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 6,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.4
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.4
+        }
+      ],
+      "fortalezas": [],
+      "debilidades": []
+    },
+    {
+      "proveedor_id": "PROV-04",
+      "nombre": "FríoCol Transportes",
+      "estado": "activo",
+      "cargas_especiales": [
+        "refrigerado"
+      ],
+      "servicios": 41,
+      "ultimo_servicio": "2026-09-16",
+      "puntualidad_pct": 97.6,
+      "desempeno": {
+        "valor": 93.7,
+        "desglose": {
+          "puntualidad": 0.94,
+          "magnitud_retraso": 0.071
+        },
+        "texto": "94/100: entrega a tiempo el 94 % de sus servicios y su retraso medio es del 7 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 63.7,
+        "nivel": "Media",
+        "desglose": {
+          "consistencia": 0.659,
+          "cumplimiento_cliente": 0.94,
+          "evidencia": 0.847
+        },
+        "texto": "Media (64/100): se basa en 41 servicios; sus tiempos son algo variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.6
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.4
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 3,
+          "a_tiempo_pct": 66.7,
+          "nivel": "bajo",
+          "desempeno": 80.1
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.3
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.6
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.8
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.3
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.2
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 7,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 89.5
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.5
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.5
+        }
+      ],
+      "fortalezas": [],
+      "debilidades": [
+        "Puntualidad de 83 % en la ruta Buenaventura → Medellín (su promedio: 98 %; 6 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-06",
+      "nombre": "Mulas de Oriente",
+      "estado": "activo",
+      "cargas_especiales": [],
+      "servicios": 5,
+      "ultimo_servicio": "2026-09-22",
+      "puntualidad_pct": 100.0,
+      "desempeno": {
+        "valor": 88.3,
+        "desglose": {
+          "puntualidad": 0.878,
+          "magnitud_retraso": 0.102
+        },
+        "texto": "88/100: entrega a tiempo el 88 % de sus servicios y su retraso medio es del 10 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 36.8,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.5,
+          "cumplimiento_cliente": 0.878,
+          "evidencia": 0.588
+        },
+        "texto": "Baja (37/100): se basa en 5 servicios; sus tiempos son algo variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2026-08",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.7
+        }
+      ],
+      "fortalezas": [],
+      "debilidades": []
+    },
+    {
+      "proveedor_id": "PROV-08",
+      "nombre": "Químicos y Carga Especial",
+      "estado": "activo",
+      "cargas_especiales": [
+        "peligrosa"
+      ],
+      "servicios": 47,
+      "ultimo_servicio": "2026-09-25",
+      "puntualidad_pct": 87.2,
+      "desempeno": {
+        "valor": 86.8,
+        "desglose": {
+          "puntualidad": 0.865,
+          "magnitud_retraso": 0.126
+        },
+        "texto": "87/100: entrega a tiempo el 87 % de sus servicios y su retraso medio es del 13 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 52.6,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.482,
+          "cumplimiento_cliente": 0.865,
+          "evidencia": 0.863
+        },
+        "texto": "Baja (53/100): se basa en 47 servicios; sus tiempos son algo variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 7,
+          "a_tiempo_pct": 71.4,
+          "nivel": "medio",
+          "desempeno": 78.5
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.7
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.6
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.5
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 6,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.9
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 77.9
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 82.9
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 4,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 87.6
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 6,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.7
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 81.3
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Buenaventura → Medellín (su promedio: 87 %; 6 servicios)",
+        "Puntualidad de 100 % en la ruta Barranquilla → Medellín (su promedio: 87 %; 7 servicios)",
+        "Puntualidad de 100 % en la ruta Santa Marta → Bogotá (su promedio: 87 %; 6 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en la ruta Buenaventura → Bogotá (su promedio: 87 %; 9 servicios)",
+        "Puntualidad de 71 % en la ruta Cartagena → Bogotá (su promedio: 87 %; 7 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-09",
+      "nombre": "Ruta Express Antioquia",
+      "estado": "activo",
+      "cargas_especiales": [],
+      "servicios": 26,
+      "ultimo_servicio": "2026-09-19",
+      "puntualidad_pct": 88.5,
+      "desempeno": {
+        "valor": 86.1,
+        "desglose": {
+          "puntualidad": 0.861,
+          "magnitud_retraso": 0.139
+        },
+        "texto": "86/100: entrega a tiempo el 86 % de sus servicios y su retraso medio es del 14 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 38.0,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.295,
+          "cumplimiento_cliente": 0.861,
+          "evidencia": 0.787
+        },
+        "texto": "Baja (38/100): se basa en 26 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.6
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.6
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.3
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 77.4
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 77.4
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 3,
+          "a_tiempo_pct": 66.7,
+          "nivel": "bajo",
+          "desempeno": 79.0
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.6
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.7
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.6
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Buenaventura → Cali (su promedio: 88 %; 6 servicios)"
+      ],
+      "debilidades": []
+    },
+    {
+      "proveedor_id": "PROV-10",
+      "nombre": "Transportes El Llano",
+      "estado": "activo",
+      "cargas_especiales": [],
+      "servicios": 30,
+      "ultimo_servicio": "2026-09-21",
+      "puntualidad_pct": 86.7,
+      "desempeno": {
+        "valor": 84.1,
+        "desglose": {
+          "puntualidad": 0.844,
+          "magnitud_retraso": 0.167
+        },
+        "texto": "84/100: entrega a tiempo el 84 % de sus servicios y su retraso medio es del 17 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 39.6,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.317,
+          "cumplimiento_cliente": 0.844,
+          "evidencia": 0.803
+        },
+        "texto": "Baja (40/100): se basa en 30 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 80.9
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 6,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.6
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 6,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.7
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.2
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 1,
+          "a_tiempo_pct": 0.0,
+          "nivel": "bajo",
+          "desempeno": 75.9
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.4
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 3,
+          "a_tiempo_pct": 66.7,
+          "nivel": "bajo",
+          "desempeno": 79.1
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 77.4
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.5
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Bogotá → Buenaventura (su promedio: 87 %; 9 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 73 % en la ruta Buenaventura → Bogotá (su promedio: 87 %; 11 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-05",
+      "nombre": "Tractocargas del Caribe",
+      "estado": "activo",
+      "cargas_especiales": [],
+      "servicios": 46,
+      "ultimo_servicio": "2026-10-01",
+      "puntualidad_pct": 82.6,
+      "desempeno": {
+        "valor": 82.5,
+        "desglose": {
+          "puntualidad": 0.82,
+          "magnitud_retraso": 0.162
+        },
+        "texto": "82/100: entrega a tiempo el 82 % de sus servicios y su retraso medio es del 16 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 41.1,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.305,
+          "cumplimiento_cliente": 0.82,
+          "evidencia": 0.862
+        },
+        "texto": "Baja (41/100): se basa en 46 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.7
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.4
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 82.8
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.5
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 80.5
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.6
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 8,
+          "a_tiempo_pct": 62.5,
+          "nivel": "bajo",
+          "desempeno": 75.2
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 80.9
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 6,
+          "a_tiempo_pct": 66.7,
+          "nivel": "bajo",
+          "desempeno": 76.8
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.5
+        },
+        {
+          "mes": "2026-10",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.5
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Cartagena → Bogotá (su promedio: 83 %; 5 servicios)",
+        "Puntualidad de 100 % en la ruta Cartagena → Medellín (su promedio: 83 %; 5 servicios)",
+        "Puntualidad de 100 % en la ruta Barranquilla → Medellín (su promedio: 83 %; 6 servicios)",
+        "Puntualidad de 100 % en la ruta Santa Marta → Bogotá (su promedio: 83 %; 7 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en la ruta Buenaventura → Bogotá (su promedio: 83 %; 6 servicios)",
+        "Puntualidad de 50 % en la ruta Bogotá → Buenaventura (su promedio: 83 %; 6 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-07",
+      "nombre": "Transpesados de Colombia",
+      "estado": "activo",
+      "cargas_especiales": [
+        "sobredimensionado"
+      ],
+      "servicios": 50,
+      "ultimo_servicio": "2026-09-28",
+      "puntualidad_pct": 80.0,
+      "desempeno": {
+        "valor": 82.4,
+        "desglose": {
+          "puntualidad": 0.812,
+          "magnitud_retraso": 0.142
+        },
+        "texto": "82/100: entrega a tiempo el 81 % de sus servicios y su retraso medio es del 14 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 46.0,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.386,
+          "cumplimiento_cliente": 0.812,
+          "evidencia": 0.871
+        },
+        "texto": "Baja (46/100): se basa en 50 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.1
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 81.2
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 4,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 75.2
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 78.6
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.2
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 5,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 88.2
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 80.9
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.5
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.8
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 7,
+          "a_tiempo_pct": 85.7,
+          "nivel": "alto",
+          "desempeno": 84.4
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 90 % en la ruta Buenaventura → Bogotá (su promedio: 80 %; 10 servicios)",
+        "Puntualidad de 91 % en vehículo Tractomula (su promedio: 80 %; 11 servicios)",
+        "Puntualidad de 91 % en carga general (su promedio: 80 %; 11 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en la ruta Buenaventura → Cali (su promedio: 80 %; 9 servicios)",
+        "Puntualidad de 40 % en la ruta Santa Marta → Bogotá (su promedio: 80 %; 5 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-11",
+      "nombre": "Integral Cargo SAS",
+      "estado": "activo",
+      "cargas_especiales": [],
+      "servicios": 30,
+      "ultimo_servicio": "2026-09-30",
+      "puntualidad_pct": 76.7,
+      "desempeno": {
+        "valor": 79.6,
+        "desglose": {
+          "puntualidad": 0.786,
+          "magnitud_retraso": 0.175
+        },
+        "texto": "80/100: entrega a tiempo el 79 % de sus servicios y su retraso medio es del 18 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 41.2,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.366,
+          "cumplimiento_cliente": 0.786,
+          "evidencia": 0.814
+        },
+        "texto": "Baja (41/100): se basa en 30 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-12",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 81.6
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 77.5
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 1,
+          "a_tiempo_pct": 0.0,
+          "nivel": "bajo",
+          "desempeno": 76.1
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 5,
+          "a_tiempo_pct": 80.0,
+          "nivel": "medio",
+          "desempeno": 82.3
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 2,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 85.5
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 3,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 86.8
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.4
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 81.2
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 80.5
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 80.8
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Buenaventura → Cali (su promedio: 77 %; 5 servicios)",
+        "Puntualidad de 100 % en la ruta Cartagena → Bogotá (su promedio: 77 %; 5 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en vehículo Turbo (su promedio: 77 %; 6 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-03",
+      "nombre": "Carga Segura del Valle",
+      "estado": "activo",
+      "cargas_especiales": [
+        "refrigerado"
+      ],
+      "servicios": 79,
+      "ultimo_servicio": "2026-09-24",
+      "puntualidad_pct": 77.2,
+      "desempeno": {
+        "valor": 78.8,
+        "desglose": {
+          "puntualidad": 0.78,
+          "magnitud_retraso": 0.188
+        },
+        "texto": "79/100: entrega a tiempo el 78 % de sus servicios y su retraso medio es del 19 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 44.6,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.345,
+          "cumplimiento_cliente": 0.78,
+          "evidencia": 0.911
+        },
+        "texto": "Baja (45/100): se basa en 79 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.4
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 83.6
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 5,
+          "a_tiempo_pct": 80.0,
+          "nivel": "medio",
+          "desempeno": 82.4
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 5,
+          "a_tiempo_pct": 60.0,
+          "nivel": "bajo",
+          "desempeno": 76.0
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 8,
+          "a_tiempo_pct": 87.5,
+          "nivel": "alto",
+          "desempeno": 84.7
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 5,
+          "a_tiempo_pct": 60.0,
+          "nivel": "bajo",
+          "desempeno": 75.6
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 13,
+          "a_tiempo_pct": 76.9,
+          "nivel": "medio",
+          "desempeno": 80.4
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 5,
+          "a_tiempo_pct": 60.0,
+          "nivel": "bajo",
+          "desempeno": 76.2
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 9,
+          "a_tiempo_pct": 77.8,
+          "nivel": "medio",
+          "desempeno": 80.7
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 11,
+          "a_tiempo_pct": 81.8,
+          "nivel": "medio",
+          "desempeno": 82.7
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 6,
+          "a_tiempo_pct": 83.3,
+          "nivel": "medio",
+          "desempeno": 82.9
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Buenaventura → Cali (su promedio: 77 %; 5 servicios)",
+        "Puntualidad de 100 % en la ruta Bogotá → Buenaventura (su promedio: 77 %; 12 servicios)",
+        "Puntualidad de 100 % en vehículo Sencillo (su promedio: 77 %; 9 servicios)",
+        "Puntualidad de 97 % en vehículo Tractomula (su promedio: 77 %; 31 servicios)",
+        "Puntualidad de 98 % en carga general (su promedio: 77 %; 40 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en la ruta Cartagena → Medellín (su promedio: 77 %; 9 servicios)",
+        "Puntualidad de 58 % en la ruta Barranquilla → Medellín (su promedio: 77 %; 12 servicios)",
+        "Puntualidad de 56 % en vehículo Refrigerado (su promedio: 77 %; 39 servicios)",
+        "Puntualidad de 56 % en carga refrigerada (su promedio: 77 %; 39 servicios)"
+      ]
+    },
+    {
+      "proveedor_id": "PROV-12",
+      "nombre": "Carga Nacional TLC",
+      "estado": "inactivo",
+      "cargas_especiales": [],
+      "servicios": 11,
+      "ultimo_servicio": "2026-04-30",
+      "puntualidad_pct": 63.6,
+      "desempeno": {
+        "valor": 75.7,
+        "desglose": {
+          "puntualidad": 0.746,
+          "magnitud_retraso": 0.211
+        },
+        "texto": "76/100: entrega a tiempo el 75 % de sus servicios y su retraso medio es del 21 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 29.9,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.323,
+          "cumplimiento_cliente": 0.746,
+          "evidencia": 0.644
+        },
+        "texto": "Baja (30/100): se basa en 11 servicios; sus tiempos son muy variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-12",
+          "servicios": 4,
+          "a_tiempo_pct": 75.0,
+          "nivel": "medio",
+          "desempeno": 81.0
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 1,
+          "a_tiempo_pct": 0.0,
+          "nivel": "bajo",
+          "desempeno": 75.8
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 1,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 84.4
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 2,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 78.5
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 3,
+          "a_tiempo_pct": 66.7,
+          "nivel": "bajo",
+          "desempeno": 79.0
+        }
+      ],
+      "fortalezas": [],
+      "debilidades": []
+    },
+    {
+      "proveedor_id": "PROV-01",
+      "nombre": "Transportes Andinos del Sur",
+      "estado": "activo",
+      "cargas_especiales": [],
+      "servicios": 81,
+      "ultimo_servicio": "2026-09-29",
+      "puntualidad_pct": 69.1,
+      "desempeno": {
+        "valor": 73.2,
+        "desglose": {
+          "puntualidad": 0.704,
+          "magnitud_retraso": 0.183
+        },
+        "texto": "73/100: entrega a tiempo el 70 % de sus servicios y su retraso medio es del 18 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 47.0,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.422,
+          "cumplimiento_cliente": 0.704,
+          "evidencia": 0.911
+        },
+        "texto": "Baja (47/100): se basa en 81 servicios; sus tiempos son algo variables."
+      },
+      "tendencia": [
+        {
+          "mes": "2025-11",
+          "servicios": 8,
+          "a_tiempo_pct": 100.0,
+          "nivel": "alto",
+          "desempeno": 90.0
+        },
+        {
+          "mes": "2025-12",
+          "servicios": 9,
+          "a_tiempo_pct": 66.7,
+          "nivel": "bajo",
+          "desempeno": 77.6
+        },
+        {
+          "mes": "2026-01",
+          "servicios": 4,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 75.4
+        },
+        {
+          "mes": "2026-02",
+          "servicios": 5,
+          "a_tiempo_pct": 80.0,
+          "nivel": "medio",
+          "desempeno": 82.6
+        },
+        {
+          "mes": "2026-03",
+          "servicios": 7,
+          "a_tiempo_pct": 42.9,
+          "nivel": "bajo",
+          "desempeno": 68.9
+        },
+        {
+          "mes": "2026-04",
+          "servicios": 7,
+          "a_tiempo_pct": 57.1,
+          "nivel": "bajo",
+          "desempeno": 74.3
+        },
+        {
+          "mes": "2026-05",
+          "servicios": 7,
+          "a_tiempo_pct": 71.4,
+          "nivel": "medio",
+          "desempeno": 79.2
+        },
+        {
+          "mes": "2026-06",
+          "servicios": 13,
+          "a_tiempo_pct": 84.6,
+          "nivel": "medio",
+          "desempeno": 84.1
+        },
+        {
+          "mes": "2026-07",
+          "servicios": 9,
+          "a_tiempo_pct": 77.8,
+          "nivel": "medio",
+          "desempeno": 81.7
+        },
+        {
+          "mes": "2026-08",
+          "servicios": 6,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 72.1
+        },
+        {
+          "mes": "2026-09",
+          "servicios": 6,
+          "a_tiempo_pct": 50.0,
+          "nivel": "bajo",
+          "desempeno": 73.3
+        }
+      ],
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Santa Marta → Bogotá (su promedio: 69 %; 7 servicios)",
+        "Puntualidad de 100 % en la ruta Bogotá → Buenaventura (su promedio: 69 %; 5 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 57 % en la ruta Buenaventura → Cali (su promedio: 69 %; 7 servicios)",
+        "Puntualidad de 56 % en la ruta Buenaventura → Bogotá (su promedio: 69 %; 18 servicios)",
+        "Puntualidad de 40 % en la ruta Cartagena → Medellín (su promedio: 69 %; 5 servicios)",
+        "Puntualidad de 33 % en la ruta Medellín → Cartagena (su promedio: 69 %; 6 servicios)"
+      ]
+    }
+  ]
+}

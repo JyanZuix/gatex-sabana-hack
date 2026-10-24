@@ -35,12 +35,13 @@ export class TabletOperaciones {
         const c=this.ctx;this.zones=[];c.fillStyle='#f5f7fb';c.fillRect(0,0,1440,1080);
         this.texto('GATEX',42,58,32,'#175cde',800);this.texto('OPERACIONES / APOYO A LA DECISIÓN',210,55,20,'#586a82',600);
         this.button('exit','Salir de VR',1190,20,205,55,()=>this.onSalir?.());
-        this.button('page0','Datos del envío',42,92,270,56,()=>this.setPage(0));
-        this.button('page1','Ruta y carga',327,92,270,56,()=>this.setPage(1));
-        this.button('page2','Resultados',612,92,270,56,()=>this.setPage(2),!!this.resultado);
+        this.button('page0','Datos del envío',42,92,210,56,()=>this.setPage(0));
+        this.button('page1','Ruta y carga',264,92,200,56,()=>this.setPage(1));
+        this.button('page2','Resultados',476,92,200,56,()=>this.setPage(2),!!this.resultado);
+        this.button('page3','Historial',688,92,200,56,()=>this.setPage(3));
         this.button('connect','Reconectar',990,92,205,56,()=>this.conectar(),!this.catalogLoading&&!this.consultas.ocupado);
         this.texto(this.catalogLoading?'Cargando opciones del servidor…':this.catalogReady?(this.catalogos.repositorio.includes('simulad')?'Conectado a datos sintéticos de prueba':'Catálogos obtenidos del backend'):this.catalogos?'Catálogos incompletos: revisa el error y pulsa Reconectar':'Sin conexión a los catálogos',42,187,22,'#586a82');
-        if(this.page===2)this.drawResultados();else this.drawFields();
+        if(this.page===2)this.drawResultados();else if(this.page===3)this.drawHistorial();else this.drawFields();
         this.drawDescartados();
         const canEvaluate=this.catalogReady&&!this.catalogLoading&&!this.consultas.ocupado;
         this.button('evaluate',this.consultas.ocupado?'Evaluando…':'Evaluar solicitud',42,606,420,62,()=>this.evaluar(),canEvaluate,true);
@@ -72,7 +73,49 @@ export class TabletOperaciones {
         });
         if(this.page===0)this.button('clients','Ver clientes',250,213,217,30,()=>this.openMenu('cliente'),!!this.catalogos&&!this.catalogLoading);
     }
-    setPage(page) {this.page=page;this.active=null;this.menu.close();this.focus=0;this.keyboardFocus=false;this.draw();}
+    setPage(page) {this.page=page;this.active=null;this.menu.close();this.focus=0;this.keyboardFocus=false;if(page===3&&!this.historial&&!this.historialCargando)this.cargarHistorial();this.draw();}
+    async cargarHistorial() {
+        this.historialCargando=true;this.historialError=null;this.draw();
+        try {this.historial=await this.api.historial();this.historialPage=0;}
+        catch(error){this.historialError=error.message;}
+        finally {this.historialCargando=false;this.draw();}
+    }
+    abrirInformeHistorial() {
+        const url=this.api.urlInformeHistorial();
+        const ventana=globalThis.open?.(url,'_blank');
+        this.mensaje=ventana?'Informe del historial abierto en una pestaña nueva (fuera de VR).':'Abre el informe en el navegador: '+url;
+        this.erroresGlobal=false;this.draw();
+    }
+    drawHistorial() {
+        this.texto('Historial de proveedores · % de entregas a tiempo por mes',42,238,24,'#16243b',700);
+        if(this.historialCargando){this.texto('Cargando historial…',42,290,22);return;}
+        if(this.historialError){this.wrap(this.historialError,70).slice(0,3).forEach((l,i)=>this.texto(l,42,290+i*28,20,'#9a3412'));this.button('historial-retry','Reintentar',42,540,210,48,()=>this.cargarHistorial());return;}
+        const h=this.historial;if(!h)return;
+        const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        const etiqueta=m=>MESES[Number(m.slice(5,7))-1]+'-'+m.slice(2,4);
+        const meses=h.meses.slice(-6),porPagina=6,paginas=Math.max(1,Math.ceil(h.proveedores.length/porPagina));
+        this.historialPage=Math.min(this.historialPage||0,paginas-1);
+        const x0=330,ancho=95,colores={alto:'#dcf2e3',medio:'#fff1d6',bajo:'#fde2dc'};
+        this.texto('Proveedor · desempeño',42,276,17,'#586a82',600);
+        meses.forEach((m,k)=>this.texto(etiqueta(m),x0+k*ancho+18,276,17,'#586a82',600));
+        h.proveedores.slice(this.historialPage*porPagina,this.historialPage*porPagina+porPagina).forEach((p,i)=>{
+            const y=286+i*40,porMes=new Map(p.tendencia.map(t=>[t.mes,t]));
+            const nombre=p.nombre.length>24?p.nombre.slice(0,23)+'…':p.nombre;
+            this.texto(nombre,42,y+18,18,'#16243b',700);
+            this.texto(`D ${Math.round(p.desempeno.valor)} · ${p.servicios} servicios`,42,y+35,14,'#586a82');
+            meses.forEach((m,k)=>{
+                const t=porMes.get(m),x=x0+k*ancho;
+                if(!t){this.texto('—',x+38,y+24,18,'#9aa5b5');return;}
+                this.rect(x,y,ancho-6,36,colores[t.nivel]);
+                this.texto(`${Math.round(t.a_tiempo_pct)} %`,x+10,y+18,18,'#16243b',700);
+                this.texto(`${t.servicios} serv.`,x+10,y+33,13,'#586a82');
+            });
+        });
+        this.button('historial-prev','‹',42,540,70,48,()=>{this.historialPage--;this.draw();},this.historialPage>0);
+        this.texto(`${this.historialPage+1} / ${paginas}`,130,572,20);
+        this.button('historial-next','›',200,540,70,48,()=>{this.historialPage++;this.draw();},this.historialPage<paginas-1);
+        this.button('historial-informe','Informe completo (12 meses)',520,540,370,48,()=>this.abrirInformeHistorial(),true,true);
+    }
     openField(id) {
         const field=this.field(id);if(field.kind==='select'){this.openMenu(id);return;}
         this.menu.close();this.active=id;this.keyboardFocus=false;this.draw();
@@ -160,7 +203,8 @@ export class TabletOperaciones {
             const evaluation=await pending;if(!evaluation)return;
             this.onResultados(evaluation,this.vinculos,this.politicaCasi);
             this.resultado=evaluation;this.dirty=false;this.page=2;this.detallePage=0;this.discardPage=0;this.casiPage=0;this.proveedorActual=evaluation.candidatos[0]?.proveedor_id||null;
-            this.mensaje=evaluation.sin_candidatos?'No hay proveedores adecuados. Revisa descartados y qué podría flexibilizarse.':`${evaluation.candidatos.length} candidatos, ordenados por puntaje. Se sugieren los ${evaluation.parametros_escenario.pesos_puntaje.top_n} primeros; la decisión final es del operador.`;
+            const viable=evaluation.casi_elegibles.find(x=>x.recomendada)||evaluation.casi_elegibles[0];
+            this.mensaje=evaluation.sin_candidatos?`Ningún proveedor cumple todo. Opción viable con condición: ${viable.nombre} (${viable.flexibilizar}).`:`${evaluation.candidatos.length} candidatos, ordenados por puntaje. Se sugieren los ${evaluation.parametros_escenario.pesos_puntaje.top_n} primeros; la decisión final es del operador.`;
         } catch(error){this.mensaje=error.message;this.erroresGlobal=true;for(const item of error.errores||[]){const field=CAMPOS_API[item.campo];if(field)this.errores[field]=item.mensaje;}if(Object.keys(this.errores).length)this.page=this.fields.findIndex(f=>this.errores[f.id])<6?0:1;}
         finally {this.draw();}
     }
@@ -175,7 +219,17 @@ export class TabletOperaciones {
         const r=this.resultado;if(!r)return;
         const items=[...r.candidatos].sort((a,b)=>a.puesto-b.puesto),index=Math.max(0,items.findIndex(p=>p.proveedor_id===this.proveedorActual)),p=items[index];
         this.texto('Solicitud '+r.solicitud_id+(this.dirty?' · resultado anterior':''),42,238,26,'#16243b',700);
-        if(!p){this.texto('No hay proveedores adecuados.',42,291,29,'#9a3412',700);this.texto('Revisa los motivos y las alternativas del panel derecho.',42,338,22);return;}
+        if(!p){
+            const v=(r.casi_elegibles||[]).find(x=>x.recomendada)||r.casi_elegibles?.[0];
+            if(!v){this.texto('No hay proveedores adecuados.',42,291,29,'#9a3412',700);this.texto('Revisa los motivos del panel derecho.',42,338,22);return;}
+            this.texto('Opción viable con condición: '+v.nombre,42,282,25,'#704512',700);
+            const filas=['Ningún proveedor cumple todo. Este es el que menos condiciones incumple'+(v.vehiculos?' y el más barato de ellos.':'.'),
+                ...v.condiciones.flatMap(c=>['No cumple: '+c.razon.mensaje,'Habría que: '+c.flexibilizar]),
+                ...(v.vehiculos?[`Vehículos: ${v.vehiculos.cantidad} × ${v.vehiculos.tipo}`]:[]),
+                'Flexibilizar es decisión del funcionario; si lo elige, queda registrado como flexibilizado.'].flatMap(s=>this.wrap(s,75));
+            filas.slice(0,8).forEach((s,i)=>this.texto(s,42,325+i*29,21,i===0?'#334760':'#16243b'));
+            return;
+        }
         this.texto(`#${p.puesto} ${p.nombre}`+(p.top?' · Sugerido':''),42,282,26,p.top?'#175cde':'#4b5a70',700);
         const money=n=>n==null?'No disponible':new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);
         const d=p.puntaje.desglose,pts=n=>Number(n).toLocaleString('es-CO',{maximumFractionDigits:1});
@@ -196,21 +250,51 @@ export class TabletOperaciones {
         this.texto(`${index+1} / ${items.length}`,720,572,22);
         this.button('provider-next','›',820,540,70,48,()=>this.seleccionarProveedor(items[(index+1)%items.length].proveedor_id),items.length>1);
     }
+    bloques(lista,lineasPorPagina) {
+        // Cada proveedor es un bloque (nombre + sus líneas); una página nunca parte un bloque.
+        const paginas=[];let actual=[],usadas=0;
+        for(const b of lista){
+            const alto=Math.min(1+b.lineas.length,lineasPorPagina);
+            if(actual.length&&usadas+alto>lineasPorPagina){paginas.push(actual);actual=[];usadas=0;}
+            actual.push(1+b.lineas.length>lineasPorPagina?{...b,lineas:[...b.lineas.slice(0,lineasPorPagina-2),'… (más en el informe)']}:b);
+            usadas+=alto;
+        }
+        if(actual.length)paginas.push(actual);
+        return paginas;
+    }
+    drawBloques(pagina,x,y,alto,colorTitulo,colorTexto) {
+        let fila=0;
+        pagina.forEach((b,k)=>{
+            if(k>0)this.rect(x,y+(fila-0.75)*alto,380,2,'#d9e0ea');
+            this.texto(b.titulo,x,y+fila*alto,20,colorTitulo,700);fila++;
+            for(const l of b.lineas){this.texto(l,x+14,y+fila*alto,18,colorTexto);fila++;}
+        });
+    }
     drawDescartados() {
-        this.rect(970,210,425,366,'white');this.texto('Descartados',990,250,27,'#16243b',700);
+        this.rect(970,210,425,366,'white');
         const r=this.resultado;
-        const lines=r?r.cancelados.flatMap(p=>[p.nombre,...p.razones.flatMap(reason=>this.wrap(reason.mensaje,33))]):['Sin evaluación todavía.'];
-        if(r&&!lines.length)lines.push('No hay descartados.');
-        const pages=Math.max(1,Math.ceil(lines.length/8));this.discardPage=Math.min(this.discardPage,pages-1);
-        lines.slice(this.discardPage*8,this.discardPage*8+8).forEach((s,i)=>this.texto(s,990,287+i*29,19));
-        this.button('discard-prev','‹',990,526,80,40,()=>{this.discardPage--;this.draw();},this.discardPage>0);this.texto(`${this.discardPage+1}/${pages}`,1140,555,19);
-        this.button('discard-next','›',1295,526,80,40,()=>{this.discardPage++;this.draw();},this.discardPage<pages-1);
+        this.texto(r?`Descartados (${r.cancelados.length})`:'Descartados',990,250,27,'#16243b',700);
+        const lista=r?r.cancelados.map(p=>({titulo:'✕ '+p.nombre,lineas:p.razones.flatMap(x=>this.wrap(x.mensaje,34).map((l,i)=>(i?'   ':'• ')+l))})):[];
+        if(!r)this.texto('Sin evaluación todavía.',990,290,19);
+        else if(!lista.length)this.texto('No hay descartados.',990,290,19);
+        const paginas=this.bloques(lista,7);
+        this.discardPage=Math.min(this.discardPage,Math.max(0,paginas.length-1));
+        if(paginas.length)this.drawBloques(paginas[this.discardPage],990,288,29,'#9a3412','#334760');
+        const total=Math.max(1,paginas.length);
+        this.button('discard-prev','‹',990,526,80,40,()=>{this.discardPage--;this.draw();},this.discardPage>0);
+        this.texto(`${this.discardPage+1}/${total}`,1140,555,19);
+        this.button('discard-next','›',1295,526,80,40,()=>{this.discardPage++;this.draw();},this.discardPage<total-1);
         if(r?.casi_elegibles.length&&!this.active){
-            this.rect(970,600,425,395,'#fff1d6');this.texto('Casi elegibles',990,641,25,'#704512',700);
-            const rows=r.casi_elegibles.flatMap(p=>[p.nombre,...this.wrap(p.razon.mensaje,33),...this.wrap(p.flexibilizar,33)]);
-            const count=Math.max(1,Math.ceil(rows.length/9));this.casiPage=Math.min(this.casiPage,count-1);
-            rows.slice(this.casiPage*9,this.casiPage*9+9).forEach((s,i)=>this.texto(s,990,678+i*28,19,'#704512'));
-            this.button('casi-prev','‹',990,941,80,40,()=>{this.casiPage--;this.draw();},this.casiPage>0);this.texto(`${this.casiPage+1}/${count}`,1140,970,19);
+            this.rect(970,600,425,395,'#fff1d6');
+            this.texto('Casi elegibles',990,641,25,'#704512',700);
+            const casi=r.casi_elegibles.map(p=>({titulo:`#${p.puesto} ${p.nombre}`+(p.recomendada?' · viable':''),
+                lineas:p.condiciones.flatMap(c=>[...this.wrap('✕ '+c.razon.mensaje,34),...this.wrap('→ '+c.flexibilizar,34)])}));
+            const pags=this.bloques(casi,9);
+            this.casiPage=Math.min(this.casiPage,Math.max(0,pags.length-1));
+            this.drawBloques(pags[this.casiPage],990,678,28,'#704512','#704512');
+            const count=Math.max(1,pags.length);
+            this.button('casi-prev','‹',990,941,80,40,()=>{this.casiPage--;this.draw();},this.casiPage>0);
+            this.texto(`${this.casiPage+1}/${count}`,1140,970,19);
             this.button('casi-next','›',1295,941,80,40,()=>{this.casiPage++;this.draw();},this.casiPage<count-1);
         }
     }

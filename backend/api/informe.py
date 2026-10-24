@@ -105,7 +105,8 @@ def _bloque_elegido(d: e.Decision, ev: e.Evaluacion) -> str:
             cuerpo += "<ul class='riesgos'>" + "".join(f"<li>{_t(r)}</li>" for r in [*c.riesgos, *c.avisos]) + "</ul>"
     elif casi is not None:
         cuerpo = (f"<p class='aviso'><strong>Proveedor casi elegible: el funcionario decidió flexibilizar.</strong><br>"
-                  f"No cumplía: {_t(casi.razon.mensaje)}.<br>Habría que: {_t(casi.flexibilizar)}.</p>")
+                  f"No cumplía: {_t('; '.join(c.razon.mensaje for c in casi.condiciones))}.<br>"
+                  f"Habría que: {_t('; '.join(c.flexibilizar for c in casi.condiciones))}.</p>")
         if casi.vehiculos is not None:
             v = casi.vehiculos
             cuerpo += f"<p>Vehículos: {v.cantidad} × {_t(v.tipo)} · contenedores por vehículo: {_reparto(v)}</p>"
@@ -186,9 +187,16 @@ def _descartados(ev: e.Evaluacion) -> str:
 def _casi(ev: e.Evaluacion) -> str:
     if not ev.casi_elegibles:
         return ""
-    filas = [f"<tr><td>{_t(x.nombre)}</td><td>{_t(x.razon.mensaje)}</td><td>{_t(x.flexibilizar)}</td></tr>"
-             for x in ev.casi_elegibles]
-    return "<h2>Casi elegibles</h2>" + _tabla(["Proveedor", "No cumple", "Qué habría que flexibilizar"], filas)
+    filas = []
+    for x in ev.casi_elegibles:
+        sello = " <span class='sello'>Opción viable con condición</span>" if x.recomendada else ""
+        no_cumple = "<br>".join(_t(c.razon.mensaje) for c in x.condiciones)
+        flexibilizar = "<br>".join(_t(c.flexibilizar) for c in x.condiciones)
+        filas.append(f"<tr><td class='n'>{x.puesto}</td><td>{_t(x.nombre)}{sello}</td><td>{no_cumple}</td>"
+                     f"<td>{flexibilizar}</td></tr>")
+    return ("<h2>Casi elegibles</h2><p class='tenue'>Ningún proveedor cumplía todo: se muestran los que fallan menos "
+            "condiciones, del vehículo más barato al más caro.</p>"
+            + _tabla(["#", "Proveedor", "No cumple", "Qué habría que flexibilizar"], filas))
 
 
 # --- Documento ----------------------------------------------------------------

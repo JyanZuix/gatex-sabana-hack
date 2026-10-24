@@ -169,11 +169,20 @@ class CanceladoSalida(_Esquema):
     razones: list[RazonSalida]
 
 
-class CasiElegibleSalida(_Esquema):
-    proveedor_id: str
-    nombre: str
+class CondicionSalida(_Esquema):
     razon: RazonSalida
     flexibilizar: str
+
+
+class CasiElegibleSalida(_Esquema):
+    """Solo cuando no hay candidatos: los que fallan el menor número de condiciones (siempre hay al menos uno)."""
+    proveedor_id: str
+    nombre: str
+    puesto: int                            # 1 = la opción viable con condición que se muestra primero
+    recomendada: bool                      # true solo para el puesto 1
+    razon: RazonSalida                     # primera condición (compatibilidad); todas en `condiciones`
+    flexibilizar: str
+    condiciones: list[CondicionSalida]
     vehiculos: Optional[Vehiculos] = None  # lo que tendría que pedirle si se flexibiliza; null si no tiene tarifa
 
 
@@ -299,6 +308,8 @@ class Catalogos(_Esquema):
 class PuntoTendencia(_Esquema):
     mes: str                             # AAAA-MM
     servicios: int
+    a_tiempo_pct: float                  # % de esos servicios entregados a tiempo (sin ponderar)
+    nivel: Literal["alto", "medio", "bajo"]  # color para la tabla mes a mes (umbrales en parametros.yaml)
     desempeno: float
 
 
@@ -315,6 +326,13 @@ class FichaProveedor(_Esquema):
     tendencia: list[PuntoTendencia]
     fortalezas: list[str]
     debilidades: list[str]
+
+
+class HistorialProveedores(_Esquema):
+    """Track record de todos los proveedores, mes a mes (GET /historial/proveedores)."""
+    generado: date
+    meses: list[str]                     # AAAA-MM con al menos un servicio de algún proveedor, en orden
+    proveedores: list[FichaProveedor]    # de mayor a menor desempeño; sin historial al final
 
 # --- Catálogos de solo lectura para frontend / Quest ---------------------------
 class OpcionCatalogo(_Esquema):

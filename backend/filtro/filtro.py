@@ -62,9 +62,19 @@ def evaluar_contextos(contextos: Iterable[ContextoProveedor], reglas: Optional[l
 
     casi = ()
     if not candidatos:
-        casi = tuple(CasiElegible(c.proveedor, c.razones[0], que_flexibilizar(c.razones[0]),
-                                  _opcion_si_flexibiliza(contexto_de[c.proveedor.proveedor_id]))
-                     for c in cancelados if len(c.razones) == 1)
+        # Siempre hay al menos una opción que mostrar: los que fallan el MENOR número de condiciones
+        # (una, si existe), ordenados por el vehículo más barato que tendrían. El primero es la
+        # "opción viable con condición"; nunca se oculta qué incumple.
+        minimo = min(len(c.razones) for c in cancelados)
+        lista = []
+        for c in cancelados:
+            if len(c.razones) != minimo:
+                continue
+            condiciones = tuple((r, que_flexibilizar(r)) for r in c.razones)
+            lista.append(CasiElegible(c.proveedor, c.razones[0], condiciones[0][1],
+                                      _opcion_si_flexibiliza(contexto_de[c.proveedor.proveedor_id]), condiciones))
+        casi = tuple(sorted(lista, key=lambda x: (x.opcion is None, x.opcion.costo if x.opcion else 0,
+                                                  x.proveedor.proveedor_id)))
     return ResultadoFiltro(ruta=contextos[0].ruta, candidatos=tuple(candidatos),
                            cancelados=tuple(cancelados), casi_elegibles=casi)
 

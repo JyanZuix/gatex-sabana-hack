@@ -77,6 +77,15 @@ def texto_confianza(c: Confianza, n_servicios: int, n_cliente: Optional[int], cf
             f"con este cliente cumple cerca del {_pct(c.cumplimiento_cliente)}.")
 
 
+def nivel_puntualidad(pct: float, cfg: Config) -> Literal["alto", "medio", "bajo"]:
+    """Color del historial mes a mes: alto desde `textos.puntualidad_alta`, medio desde `riesgo.min_a_tiempo`."""
+    if pct >= 100 * cfg.textos.puntualidad_alta:
+        return "alto"
+    if pct >= 100 * cfg.riesgo.min_a_tiempo:
+        return "medio"
+    return "bajo"
+
+
 # --- Fortalezas y debilidades ----------------------------------------------
 
 @dataclass(frozen=True)

@@ -236,6 +236,8 @@
     {
       "proveedor_id": "PROV-01",
       "nombre": "Transportes Andinos del Sur",
+      "puesto": 1,
+      "recomendada": true,
       "razon": {
         "codigo": "CARGA_NO_SOPORTADA",
         "mensaje": "No transporta carga peligrosa",
@@ -243,69 +245,17 @@
         "disponible": null
       },
       "flexibilizar": "El proveedor no maneja este tipo de carga",
-      "vehiculos": {
-        "tipo_vehiculo_id": "tractomula",
-        "tipo": "Tractomula",
-        "cantidad": 3,
-        "contenedores_por_vehiculo": [
-          1,
-          1,
-          1
-        ]
-      }
-    },
-    {
-      "proveedor_id": "PROV-03",
-      "nombre": "Carga Segura del Valle",
-      "razon": {
-        "codigo": "CARGA_NO_SOPORTADA",
-        "mensaje": "No transporta carga peligrosa",
-        "requerido": "peligrosa",
-        "disponible": "refrigerado"
-      },
-      "flexibilizar": "El proveedor no maneja este tipo de carga",
-      "vehiculos": {
-        "tipo_vehiculo_id": "tractomula",
-        "tipo": "Tractomula",
-        "cantidad": 3,
-        "contenedores_por_vehiculo": [
-          1,
-          1,
-          1
-        ]
-      }
-    },
-    {
-      "proveedor_id": "PROV-07",
-      "nombre": "Transpesados de Colombia",
-      "razon": {
-        "codigo": "CARGA_NO_SOPORTADA",
-        "mensaje": "No transporta carga peligrosa",
-        "requerido": "peligrosa",
-        "disponible": "sobredimensionado"
-      },
-      "flexibilizar": "El proveedor no maneja este tipo de carga",
-      "vehiculos": {
-        "tipo_vehiculo_id": "tractomula",
-        "tipo": "Tractomula",
-        "cantidad": 3,
-        "contenedores_por_vehiculo": [
-          1,
-          1,
-          1
-        ]
-      }
-    },
-    {
-      "proveedor_id": "PROV-09",
-      "nombre": "Ruta Express Antioquia",
-      "razon": {
-        "codigo": "CARGA_NO_SOPORTADA",
-        "mensaje": "No transporta carga peligrosa",
-        "requerido": "peligrosa",
-        "disponible": null
-      },
-      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "condiciones": [
+        {
+          "razon": {
+            "codigo": "CARGA_NO_SOPORTADA",
+            "mensaje": "No transporta carga peligrosa",
+            "requerido": "peligrosa",
+            "disponible": null
+          },
+          "flexibilizar": "El proveedor no maneja este tipo de carga"
+        }
+      ],
       "vehiculos": {
         "tipo_vehiculo_id": "tractomula",
         "tipo": "Tractomula",
@@ -320,6 +270,8 @@
     {
       "proveedor_id": "PROV-11",
       "nombre": "Integral Cargo SAS",
+      "puesto": 2,
+      "recomendada": false,
       "razon": {
         "codigo": "CARGA_NO_SOPORTADA",
         "mensaje": "No transporta carga peligrosa",
@@ -327,6 +279,119 @@
         "disponible": null
       },
       "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "condiciones": [
+        {
+          "razon": {
+            "codigo": "CARGA_NO_SOPORTADA",
+            "mensaje": "No transporta carga peligrosa",
+            "requerido": "peligrosa",
+            "disponible": null
+          },
+          "flexibilizar": "El proveedor no maneja este tipo de carga"
+        }
+      ],
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-03",
+      "nombre": "Carga Segura del Valle",
+      "puesto": 3,
+      "recomendada": false,
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": "refrigerado"
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "condiciones": [
+        {
+          "razon": {
+            "codigo": "CARGA_NO_SOPORTADA",
+            "mensaje": "No transporta carga peligrosa",
+            "requerido": "peligrosa",
+            "disponible": "refrigerado"
+          },
+          "flexibilizar": "El proveedor no maneja este tipo de carga"
+        }
+      ],
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-09",
+      "nombre": "Ruta Express Antioquia",
+      "puesto": 4,
+      "recomendada": false,
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": null
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "condiciones": [
+        {
+          "razon": {
+            "codigo": "CARGA_NO_SOPORTADA",
+            "mensaje": "No transporta carga peligrosa",
+            "requerido": "peligrosa",
+            "disponible": null
+          },
+          "flexibilizar": "El proveedor no maneja este tipo de carga"
+        }
+      ],
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-07",
+      "nombre": "Transpesados de Colombia",
+      "puesto": 5,
+      "recomendada": false,
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": "sobredimensionado"
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "condiciones": [
+        {
+          "razon": {
+            "codigo": "CARGA_NO_SOPORTADA",
+            "mensaje": "No transporta carga peligrosa",
+            "requerido": "peligrosa",
+            "disponible": "sobredimensionado"
+          },
+          "flexibilizar": "El proveedor no maneja este tipo de carga"
+        }
+      ],
       "vehiculos": {
         "tipo_vehiculo_id": "tractomula",
         "tipo": "Tractomula",

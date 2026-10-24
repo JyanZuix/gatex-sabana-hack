@@ -67,6 +67,7 @@ ficha:                            # ficha de proveedor (GET /proveedores/{id})
   min_servicios_segmento: 5       # servicios mínimos en una ruta o vehículo para opinar de él
   umbral_diferencia: 0.10         # diferencia frente a su promedio para llamarlo fortaleza o debilidad
   max_en_tarjeta: 2               # fortalezas y debilidades (cada una) que se copian a la tarjeta del candidato
+  meses_informe: 12               # meses que muestran el informe y la tablet del historial (la API devuelve todos)
 
 riesgo:                           # riesgos visibles en la tarjeta del candidato, cada uno con su dato
   min_a_tiempo: 0.70              # por debajo de esta probabilidad de llegar a tiempo se avisa
@@ -74,3 +75,4 @@ riesgo:                           # riesgos visibles en la tarjeta del candidato
 textos:                           # palabras para describir la consistencia de tiempos (S_desv, sección 3.1)
   consistencia_estable: 0.70      # S_desv ≥ 0.70 → "tiempos estables"
   consistencia_variable: 0.40     # 0.40 ≤ S_desv < 0.70 → "tiempos algo variables"; menos → "muy variables"
+  puntualidad_alta: 0.85          # historial mes a mes: verde desde 85 % a tiempo; ámbar desde riesgo.min_a_tiempo

@@ -61,12 +61,16 @@ class Cancelado:
 
 @dataclass(frozen=True)
 class CasiElegible:
-    """Cancelado por una sola regla, con lo que habría que flexibilizar. Decide el funcionario."""
+    """Cancelado por el menor número de reglas, con lo que habría que flexibilizar. Decide el funcionario.
+
+    `razon` y `flexibilizar` son la primera condición; `condiciones` las trae todas (incluida la primera).
+    """
     proveedor: Proveedor
     razon: Razon
     flexibilizar: str
     # Vehículo más económico que tendría si se flexibiliza (None si no tiene tarifa para ninguno válido).
     opcion: Optional[OpcionVehiculo] = None
+    condiciones: tuple[tuple[Razon, str], ...] = ()
 
 
 @dataclass(frozen=True)

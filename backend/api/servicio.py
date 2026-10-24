@@ -156,15 +156,25 @@ class ServicioEvaluacion:
             candidatos=candidatos,
             cancelados=[e.CanceladoSalida(proveedor_id=x.proveedor.proveedor_id, nombre=x.proveedor.nombre,
                                           razones=[_razon(r) for r in x.razones]) for x in resultado.cancelados],
-            casi_elegibles=[e.CasiElegibleSalida(proveedor_id=x.proveedor.proveedor_id, nombre=x.proveedor.nombre,
-                                                 razon=_razon(x.razon), flexibilizar=x.flexibilizar,
-                                                 vehiculos=None if x.opcion is None else _vehiculos(x.opcion))
-                            for x in resultado.casi_elegibles],
+            casi_elegibles=[e.CasiElegibleSalida(
+                proveedor_id=x.proveedor.proveedor_id, nombre=x.proveedor.nombre, puesto=i, recomendada=i == 1,
+                razon=_razon(x.razon), flexibilizar=x.flexibilizar,
+                condiciones=[e.CondicionSalida(razon=_razon(r), flexibilizar=f) for r, f in x.condiciones],
+                vehiculos=None if x.opcion is None else _vehiculos(x.opcion))
+                for i, x in enumerate(resultado.casi_elegibles, start=1)],
             sin_candidatos=resultado.sin_candidatos,
             parametros_escenario=e.ParametrosEscenario(
                 plazo_h=s.plazo_h, pesos_puntaje=_pesos(cfg),
                 semilla=cfg.simulacion.semilla, n_simulaciones=cfg.simulacion.n),
         )
+
+    # ------------------------------------------------------------------
+    def historial_proveedores(self, hoy: date) -> e.HistorialProveedores:
+        """La ficha de cada proveedor (con su tendencia mensual), de mayor a menor desempeño."""
+        fichas = [f for p in self.repo.proveedores() if (f := self.ficha(p.proveedor_id, hoy)) is not None]
+        fichas.sort(key=lambda f: (f.servicios == 0, -f.desempeno.valor, f.proveedor_id))
+        meses = sorted({punto.mes for f in fichas for punto in f.tendencia})
+        return e.HistorialProveedores(generado=hoy, meses=meses, proveedores=fichas)
 
     # ------------------------------------------------------------------
     def ficha(self, proveedor_id: str, hoy: date) -> Optional[e.FichaProveedor]:
@@ -187,6 +197,8 @@ class ServicioEvaluacion:
             fin = max(x.fecha_entrega for x in del_mes)
             hm = construir_historial(del_mes, fin, H)
             tendencia.append(e.PuntoTendencia(mes=mes, servicios=hm.n,
+                                              a_tiempo_pct=(pct := round(100 * float(hm.a.mean()), 1) if hm.n else 0.0),
+                                              nivel=t.nivel_puntualidad(pct, cfg),
                                               desempeno=round(calcular_desempeno(hm.sumas(), nacional, cfg).valor, 1)))
 
         fuertes, flojas = t.fortalezas_y_debilidades(propios, hoy, cfg, *self._nombres_segmentos())

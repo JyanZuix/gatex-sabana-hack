@@ -117,6 +117,7 @@ class Ficha(_Seccion):
     min_servicios_segmento: int = Field(ge=1)
     umbral_diferencia: float = Field(gt=0, le=1)
     max_en_tarjeta: int = Field(ge=0)
+    meses_informe: int = Field(ge=1)
 
 
 class Riesgo(_Seccion):
@@ -126,6 +127,7 @@ class Riesgo(_Seccion):
 class Textos(_Seccion):
     consistencia_estable: float = Field(ge=0, le=1)
     consistencia_variable: float = Field(ge=0, le=1)
+    puntualidad_alta: float = Field(ge=0, le=1)
 
 
 class Config(_Seccion):

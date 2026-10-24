@@ -23,7 +23,7 @@ export class AnimadorTarjetas {
                 if(!binding||!this.items.has(binding.tarjeta))throw new Error('No hay asociación verificada para '+proveedor.proveedor_id+'. No se modificaron las tarjetas.');
                 const anterior=porProveedor.get(proveedor.proveedor_id);
                 if(anterior&&(anterior.estado===estado||anterior.estado==='candidato'||estado==='candidato'))throw new Error('La API clasificó un proveedor en grupos incompatibles.');
-                porProveedor.set(proveedor.proveedor_id,{...binding,estado,puesto:proveedor.puesto??null,top:estado==='candidato'&&proveedor.top===true});
+                porProveedor.set(proveedor.proveedor_id,{...binding,estado,puesto:proveedor.puesto??null,top:(estado==='candidato'&&proveedor.top===true)||(estado==='casi'&&proveedor.recomendada===true)});
             }
         }
         const clasificadas=new Set([...porProveedor.values()].map(p=>p.tarjeta));
@@ -35,7 +35,8 @@ export class AnimadorTarjetas {
             const item=this.items.get(entry.tarjeta);item.estado=entry.estado;item.proveedor_id=id;item.puesto=entry.puesto;item.top=entry.top;
             const target=item.original.clone();
             // Top N sugerido arriba; los demás candidatos, a media altura y seleccionables; descartados abajo.
-            if(entry.estado==='cancelado'||(entry.estado==='casi'&&casiPolicy==='panel'))target.y-=this.descenso;
+            // La opción viable con condición (casi elegible recomendada) también queda arriba.
+            if(entry.estado==='cancelado'||(entry.estado==='casi'&&casiPolicy==='panel'&&!entry.top))target.y-=this.descenso;
             else if(entry.estado==='candidato'&&!entry.top)target.y-=this.descenso/2;
             this.mover(item,target);
         }

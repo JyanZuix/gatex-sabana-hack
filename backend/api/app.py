@@ -26,6 +26,7 @@ from . import esquemas as e
 from .catalogos import construir_catalogos
 from .cors import envolver_cors
 from .informe import construir_informe, nombre_archivo
+from .informe_historial import construir_informe_historial
 from .registro import Registro
 from .servicio import ServicioEvaluacion
 
@@ -319,6 +320,19 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         if f is None:
             raise HTTPException(status_code=404, detail=f"No existe el proveedor {proveedor_id}")
         return f
+
+    @app.get("/historial/proveedores", response_model=e.HistorialProveedores, tags=["Proveedores"],
+             summary="Track record de todos los proveedores, mes a mes (ficha de cada uno, de mayor a menor desempeño)")
+    def historial_proveedores() -> e.HistorialProveedores:
+        return servicio.historial_proveedores(hoy())
+
+    @app.get("/historial/proveedores/informe", response_class=HTMLResponse, tags=["Proveedores"],
+             summary="Informe HTML (imprimible o guardable como PDF) del track record de todos los proveedores")
+    def informe_historial(descargar: bool = True) -> HTMLResponse:
+        h = servicio.historial_proveedores(hoy())
+        modo = "attachment" if descargar else "inline"
+        return HTMLResponse(construir_informe_historial(h, cfg),
+                            headers={"Content-Disposition": f'{modo}; filename="historial_proveedores_{h.generado}.html"'})
 
     return app
 
