@@ -1,0 +1,5 @@
+Sustituye únicamente js/main.js por este archivo y recarga completamente la página.
+
+La tablet baja exactamente un metro en Y global, después de calcular su orientación. Conserva tamaño, inclinación, coordenadas X/Z e interfaz. Su centro pasa aproximadamente de 5.095 m a 4.095 m. No cambia la vista del usuario, Gatex3 ni el fondo sin niebla. El ajuste se aplica tanto en PC como al entrar y salir de VR; se recalcula desde el punto de entrada para evitar descensos acumulativos.
+
+Solo se añadió una línea de posición. Se comprobó que el resto del código es idéntico al original y que la sintaxis es válida. Falta revisión visual en las gafas. No se modificó la carpeta original de OneDrive.
