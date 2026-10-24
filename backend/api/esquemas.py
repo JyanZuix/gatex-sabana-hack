@@ -240,3 +240,30 @@ class FichaProveedor(_Esquema):
     tendencia: list[PuntoTendencia]
     fortalezas: list[str]
     debilidades: list[str]
+
+# --- Catálogos de solo lectura para frontend / Quest ---------------------------
+class OpcionCatalogo(_Esquema):
+    id: Optional[str]
+    nombre: str
+
+class RutaCobertura(_Esquema):
+    ruta_id: str
+    origen_id: str
+    destino_id: str
+
+class ProveedorCatalogo(_Esquema):
+    proveedor_id: str
+    nombre: str
+    estado: str
+
+class CatalogosSalida(_Esquema):
+    repositorio: str
+    origenes: list[OpcionCatalogo]
+    destinos: list[OpcionCatalogo]
+    rutas: list[RutaCobertura]
+    clientes: list[OpcionCatalogo]
+    tipos_carga: list[OpcionCatalogo]
+    tipos_vehiculo: list[OpcionCatalogo]
+    proveedores: list[ProveedorCatalogo]
+    fecha_servicio: Optional[date]
+    nota: str

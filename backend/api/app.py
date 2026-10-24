@@ -24,6 +24,7 @@ from backend.dominio import CARGAS_ESPECIALES, Solicitud
 from backend.filtro import RutaNoEncontrada
 
 from . import esquemas as e
+from .catalogos import construir_catalogos
 from .registro import Registro
 from .servicio import ServicioEvaluacion
 
@@ -119,6 +120,10 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
             tipos_carga=[e.TipoCargaCatalogo(tipo_carga=None, nombre="General")]
                         + [e.TipoCargaCatalogo(tipo_carga=c, nombre=NOMBRES_CARGA[c]) for c in CARGAS_ESPECIALES],
         )
+
+    @app.get("/catalogos/formulario", response_model=e.CatalogosSalida, tags=["Catálogos"], summary="Catálogos y destinos según cobertura, sin evaluar una solicitud")
+    def catalogos_formulario(origen_id: Optional[str] = None, fecha_servicio: Optional[date] = None):
+        return construir_catalogos(repo, origen_id, fecha_servicio)
 
     def _evaluar(s: Solicitud, escenario_id: Optional[str] = None) -> e.Evaluacion:
         try:
@@ -240,3 +245,5 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
 
 
 app = crear_app()
+
+
