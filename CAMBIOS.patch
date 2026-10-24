@@ -1,0 +1,37 @@
+--- a/backend/api/app.py
++++ b/backend/api/app.py
+@@ -5,13 +5,12 @@
+ """
+ from __future__ import annotations
+ 
+-import os
+ from datetime import date, datetime, timezone
+ from typing import Callable, Optional
+ 
+ from fastapi import FastAPI, HTTPException, Request
+ from fastapi.exceptions import RequestValidationError
+-from fastapi.middleware.cors import CORSMiddleware
++from .cors import envolver_cors
+ from fastapi.responses import JSONResponse
+ from pydantic import ValidationError
+ from starlette.exceptions import HTTPException as StarletteHTTPException
+@@ -77,8 +76,6 @@
+                     "candidatos y registra la decisión del funcionario. La API no elige: el funcionario decide.",
+         version="1.0.0",
+     )
+-    origenes = [o.strip() for o in os.environ.get("CORS_ORIGENES", "*").split(",") if o.strip()]
+-    app.add_middleware(CORSMiddleware, allow_origins=origenes, allow_methods=["*"], allow_headers=["*"])
+ 
+     @app.exception_handler(RequestValidationError)
+     async def _validacion(_: Request, exc: RequestValidationError):
+@@ -244,6 +241,7 @@
+     return app
+ 
+ 
+-app = crear_app()
+-
+-
++# CORS por fuera de FastAPI: también cubre los errores 500 del servidor.
++app = envolver_cors(crear_app())
++
++

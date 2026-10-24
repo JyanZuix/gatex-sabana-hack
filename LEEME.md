@@ -1,57 +1,77 @@
-# Gatex-sim VR — primera versión
+# Corrección CORS — para el equipo que ejecuta el backend
 
-## Qué incluye
-- Inicio con un botón Entrar a VR; acceso directo a sección 2.
-- Entorno 3D gris claro y tablet provisional creada con geometría, no con un modelo de Blender.
-- Seis campos editables: origen, destino, tipo de carga, vehículo, peso y fecha límite.
-- Teclado virtual: letras, números, espacio, borrar, siguiente campo y listo.
-- Mandos: apunta a un campo o tecla y pulsa el gatillo. Ambos mandos tienen rayo de selección.
-- Salir de VR desde la tablet o el sistema del visor.
-- Lista de solicitudes vacía y análisis pendiente, sin recomendaciones ni datos ficticios.
+El backend está ejecutándose en el computador de un compañero. Esta entrega NO se instala en Netlify. No se accedió ni se modificó ese computador, su servidor o su base de datos.
 
-## Alcance de los datos
-Por indicación de no hacer nada todavía al ingresar datos, no hay peticiones al backend, persistencia ni envío de solicitudes. Los datos son un borrador en memoria que se borra al salir de VR o recargar. No hay validación de negocio todavía: todos los campos admiten texto. No se utiliza seguimiento de manos; esta versión está preparada para mandos Touch.
+## Qué corrige
 
-## Archivos
-index.html: inicio, estilos y mapa de dependencias.
-js/inicio.js: carga con mensaje de error si falla la dependencia remota.
-js/main.js: escena, tablet, teclado e interacción WebXR.
+El código revisado ya usaba CORSMiddleware, con `CORS_ORIGENES=*` como valor predeterminado. Por ello no se puede afirmar que falte habilitar CORS en todas las respuestas.
 
-No requiere npm ni compilación. Necesita internet para cargar Three.js 0.160.0 desde unpkg.com.
+Se corrigió la ubicación del middleware: ahora envuelve toda la aplicación publicada, incluidas las respuestas 500 generadas por errores internos. Un error 500 sin cabeceras CORS puede mostrarse al usuario como un bloqueo CORS en vez del error real del backend. El cambio sigue la recomendación oficial de Starlette: https://starlette.dev/middleware/#corsmiddleware-global-enforcement
 
-## Copiar a tu proyecto
-Haz una copia de seguridad de index.html y js/main.js antes de sustituirlos. Copia index.html y los dos archivos de js/ a tu proyecto. No borres assets/ ni otros archivos existentes. No se ha modificado automáticamente la carpeta de OneDrive.
+También se validan los orígenes configurados y se normalizan las barras finales y puertos predeterminados. `https://sitio.netlify.app/` se convierte en el origen correcto `https://sitio.netlify.app`. Una ruta como `/index.html` debe retirarse de la variable; una configuración inválida se informa al iniciar, en vez de ignorarse silenciosamente.
 
-## Windows
-Abre una terminal en esta carpeta y, si tienes Python instalado, ejecuta:
+No se añadieron credenciales, cookies, proxys públicos ni `mode: no-cors`. Se conserva la política existente de métodos y cabeceras, y el valor predeterminado `*`; no se modifica una configuración activa sin que el operador la revise.
 
-    py -m http.server 8000 --bind 127.0.0.1
+## Aplicación en el computador del compañero
 
-Abre http://localhost:8000/?preview=1 para probar con ratón y teclado en PC. Pulsa Abrir prueba en PC. Haz clic en un campo y escribe con tu teclado o el teclado virtual. Tab y flechas cambian el foco, Enter activa, Escape cierra el teclado virtual. Esta vista no simula ni comprueba un visor.
+Descomprimir esta carpeta y revisar `CAMBIOS.patch`.
 
-## Ubuntu / WSL
-Desde esta carpeta:
+Desde PowerShell, ejecutar con la ruta REAL del repositorio del compañero:
 
-    python3 -m http.server 8000 --bind 0.0.0.0
+```powershell
+.\Aplicar.ps1 -Proyecto 'C:\ruta\real\gatex-sabana-hack'
+```
 
-Abre http://localhost:8000/?preview=1 desde Windows. Si hay problemas de red entre WSL y Windows usa el servidor directamente en Windows o publica la versión HTTPS.
+El script verifica que `app.py` coincida exactamente con la versión revisada, hace copia de seguridad y copia únicamente:
 
-## Quest 3 mediante HTTPS
-1. Sube index.html y js/ a la raíz de un repositorio de GitHub.
-2. Settings > Pages > Deploy from a branch > rama que contiene el código > / (root) > Save.
-3. Espera la publicación y abre la URL HTTPS directamente en Meta Quest Browser. No añadas ?preview=1 en las gafas.
-4. Pulsa Entrar a VR y acepta el permiso si se solicita. La página solicita immersive-vr y local-floor.
-5. Comprueba la altura y legibilidad de la tablet y utiliza el gatillo de los mandos para introducir datos.
-6. Pulsa Salir de VR en la tablet y comprueba que vuelve al inicio y el borrador queda vacío.
+- `backend/api/app.py`
+- `backend/api/cors.py` (nuevo)
 
-No abras index.html con doble clic. Una IP del PC por HTTP no proporciona HTTPS en el visor. La excepción de localhost corresponde al dispositivo que abre la página. No hace falta APK para esta prueba web. No se ha publicado la página automáticamente.
+Si el archivo cambió o ya existe cors.py, el script se detiene sin reemplazar archivos. En ese caso, integrar manualmente los cambios de `CAMBIOS.patch` sobre la versión nueva y añadir cors.py. No sustituir el código nuevo de los compañeros por una versión antigua.
 
-## Modelo de Blender pendiente
-Comparte un .glb no vacío de la tablet, con pantalla separada de la carcasa, y sus dimensiones. La pantalla actual es un plano de proporción 4:3 y mide 1.15 x 0.8625 metros virtuales. La escala puede adaptarse al modelo. No se ha cargado un modelo de tablet ni el archivo almacen.glb del proyecto original, que está vacío. No se han implementado secciones 3 o 4.
+En la terminal que ejecutará el backend, si desean una lista explícita de orígenes:
 
-## Verificación
-La sintaxis de ambos módulos JavaScript pasó node --check. La apertura de la vista previa del navegador falló por tiempo de conexión, por lo que no se ha completado la verificación visual. Falta probar WebGL, la descarga de Three.js, el flujo de permisos, mandos y la legibilidad en unas Quest 3 reales. No se garantiza compatibilidad sin esa prueba.
+```powershell
+$env:CORS_ORIGENES='https://shimmering-mousse-135327.netlify.app'
+```
 
-Referencias:
-https://developers.meta.com/vr/documentation/web/port-vr-xr/
-https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
+Debe ser el dominio donde está PUBLICADO el frontend, no `app.netlify.com`, no la dirección del túnel del backend y no una dirección con `/index.html`. Si publicaron en otro dominio, usar ese. Varios dominios se separan por comas. No mezclar `*` y dominios.
+
+Detener y reiniciar el proceso del backend con su entorno Python, credenciales y comando habituales. El comando del proyecto sirve la aplicación `backend.api.app:app`; conservar esa entrada para que se use la envoltura externa de CORS. No usar `crear_app --factory` para esta entrega. No hace falta reiniciar el túnel si permanece conectado al mismo puerto.
+
+Si el backend corre bajo WSL/Linux, configurar CORS_ORIGENES en la terminal o servicio de Linux y aplicar los dos archivos allí: una variable definida en PowerShell no configura automáticamente un proceso Linux ya existente.
+
+## Comprobar después del reinicio
+
+En la carpeta de esta entrega:
+
+```powershell
+.\Comprobar-CORS.ps1
+```
+
+Usa la dirección del túnel que el usuario confirmó y el último dominio conocido de Netlify. Si cambiaron:
+
+```powershell
+.\Comprobar-CORS.ps1 -Api 'https://tunel-real.trycloudflare.com' -Origen 'https://sitio-real.netlify.app'
+```
+
+Hace solo GET /salud y OPTIONS /solicitudes/evaluar. No envía POST ni guarda datos. Deben verse respuestas correctas con `CORSValido: True`; el preflight debe permitir POST y content-type. Esto comprueba las cabeceras, pero aún hay que probar el fetch real desde el navegador.
+
+Si el túnel devuelve un error de Cloudflare, de conexión o DNS, CORS de FastAPI no puede añadir cabeceras a una respuesta que no produjo el backend. Verificar en el equipo del compañero primero `http://localhost:8000/salud` y después la URL pública del túnel. Una respuesta 500/503 legible requiere corregir su causa en el backend; habilitar CORS no repara la base de datos ni el túnel.
+
+## Qué se comprobó aquí
+
+- Pasaron cinco pruebas de configuración: orígenes Netlify, barras/puertos, lista de orígenes, rechazo de valores inválidos, conservación del asterisco y presencia de la envoltura global.
+- Pasó la validación de sintaxis Python y se comparó la lógica de `crear_app`: las rutas y reglas de negocio siguen idénticas salvo retirar la instalación interna de CORS.
+- Se incluyen cuatro pruebas de HTTP/preflight/errores/origen rechazado con FastAPI TestClient, pero NO pudieron ejecutarse en esta sesión: faltan FastAPI y httpx y no se pudieron instalar. No se presentan como aprobadas.
+- No se probó el servidor real: /salud del túnel devolvió «Host desconocido» desde esta sesión. El usuario confirma que es la URL correcta; se conserva. No se ha demostrado que ese problema sea el que ven los demás equipos.
+
+Para ejecutar todas las pruebas en el entorno Python del backend (donde ya están sus dependencias):
+
+```powershell
+python .\tests\test_cors.py
+```
+
+El test usa una aplicación de prueba, no la base de datos real. Debe ejecutar nueve pruebas sin omisiones. Después comprobar desde la página publicada y las Quest. Si sigue fallando, guardar el error de consola, la URL de la petición y el resultado de Comprobar-CORS.ps1.
+
+Esta es una corrección preparada para aplicar y verificar en el backend del compañero. No se afirma que el servidor remoto ya esté corregido.
