@@ -47,6 +47,7 @@ def evaluar_contextos(contextos: Iterable[ContextoProveedor], reglas: Optional[l
     if not contextos:
         raise ValueError("No hay proveedores para evaluar")
     candidatos, cancelados = [], []
+    contexto_de = {ctx.proveedor.proveedor_id: ctx for ctx in contextos}
     for ctx in contextos:
         razones = [r for regla in reglas for r in regla(ctx)]
         if razones:
@@ -61,10 +62,16 @@ def evaluar_contextos(contextos: Iterable[ContextoProveedor], reglas: Optional[l
 
     casi = ()
     if not candidatos:
-        casi = tuple(CasiElegible(c.proveedor, c.razones[0], que_flexibilizar(c.razones[0]))
+        casi = tuple(CasiElegible(c.proveedor, c.razones[0], que_flexibilizar(c.razones[0]),
+                                  _opcion_si_flexibiliza(contexto_de[c.proveedor.proveedor_id]))
                      for c in cancelados if len(c.razones) == 1)
     return ResultadoFiltro(ruta=contextos[0].ruta, candidatos=tuple(candidatos),
                            cancelados=tuple(cancelados), casi_elegibles=casi)
+
+
+def _opcion_si_flexibiliza(ctx: ContextoProveedor):
+    """La opción más viable que tiene: con unidades suficientes, luego con alguna unidad, luego solo con tarifa."""
+    return opcion_mas_economica(ctx.suficientes or ctx.operables or ctx.opciones)
 
 
 def filtrar(solicitud: Solicitud, repo: Repositorio, cfg: Config, reglas: Optional[list[Regla]] = None) -> ResultadoFiltro:

@@ -57,7 +57,7 @@ def vehiculo_no_disponible(ctx: ContextoProveedor) -> list[Razon]:
     requeridos = ", ".join(t.nombre for t in ctx.tipos_validos) or "un vehículo compatible con la carga"
     tiene = ", ".join(sorted(k for k, v in ctx.unidades.items() if v > 0)) or None
     detalle = f" (requerida para {ctx.solicitud.tipo_carga})" if ctx.solicitud.tipo_carga else ""
-    return [Razon("VEHICULO_NO_DISPONIBLE", f"No tiene {requeridos}{detalle}",
+    return [Razon("VEHICULO_NO_DISPONIBLE", f"No tiene {requeridos} disponible{detalle}",
                   requerido=requeridos, disponible=tiene)]
 
 

@@ -1,6 +1,6 @@
 # PLAN.md · Plan de implementación
 
-> Estado: **APROBADO el 2026-10-23.** Fases 0-3 terminadas; en pausa hasta leer la base de datos del subequipo.
+> Estado: **APROBADO el 2026-10-23.** Fases 0-3 terminadas y ajustadas al modelo del 2026-10-24 (sin incidentes ni vía, carga en contenedores). Fase 4 casi completa y conectada a Supabase.
 > Fuentes de verdad: `README.md` (contexto, contrato de la API, reglas) y `docs/calculos_simulacion.md` (fórmulas).
 > Convención: `- [ ] tarea — criterio de "listo"`. Cada tarea es de 1 a 3 horas. Una tarea solo se marca `[x]` si sus pruebas pasan y queda una línea en la Bitácora.
 
@@ -15,6 +15,10 @@ Registro completo en `docs/decisiones.md`. Resumen:
 | Fecha | Decisión | Motivo |
 |---|---|---|
 | 2026-10-23 | Python 3.10 + FastAPI + pandas/numpy | Simple y adecuado para Monte Carlo |
+| 2026-10-24 | **Python 3.12.7** (reemplaza 3.10) | Igual que el despliegue en Render |
+| 2026-10-24 | Sin incidentes ni condiciones de vía; `Q = (2/3)·S_desv + (1/3)·S_cump` | Decisión del equipo |
+| 2026-10-24 | Solicitud con `n_contenedores` y `peso_kg` por contenedor; vehículos = `ceil(n / min(cap_teu, floor(cap_kg/peso_kg)))` | Decisión del equipo |
+| 2026-10-24 | Adaptador PostgreSQL contra Supabase (esquema `transporte`, tablas `tipo_vehiculo` y `cliente`) | Base del subequipo disponible |
 | 2026-10-23 | Web de respaldo en HTML y JS plano con Chart.js | Sin build; coherente con el prototipo VR |
 | 2026-10-23 | PostgreSQL (subequipo BD) | Definido por el equipo |
 | 2026-10-23 | Gafas Meta Quest 3, Three.js + WebXR | Visor disponible |
@@ -27,9 +31,9 @@ Registro completo en `docs/decisiones.md`. Resumen:
 | 2026-10-23 | `solicitud_id` consecutivo del backend (`REQ-0042`); `cliente_id` propio | Registro correcto de pedidos |
 | 2026-10-23 | `penal_hora_cop` = 0 por defecto; viajes en tandas = descartar | Valores por defecto de la especificación |
 
-TODO abiertos en el código: Δ del mercado sin datos en la ruta (respaldo provisional Normal(0, σ0)), viajes en tandas, combinaciones mixtas de vehículos, adaptador PostgreSQL.
+TODO abiertos en el código: Δ del mercado sin datos en la ruta (respaldo provisional Normal(0, σ0)), viajes en tandas, combinaciones mixtas de vehículos, persistencia del registro en la base.
 
-Supuestos abiertos (no bloquean): esquema real de la BD, cobertura, tipos de vehículo y de carga, campos definitivos de la solicitud. Hasta entonces se trabaja con el esquema de `docs/calculos_simulacion.md` sección 5.2 y 7.
+Supuestos abiertos: capacidades del catálogo de vehículos a confirmar con negocio; columnas en la base para el proveedor elegido, la justificación y el snapshot. Resuelto: solo contenedores (turbo y sencillo obsoletos).
 
 ## Resumen de avance
 | Fase | Casillas | Avance |
@@ -38,7 +42,7 @@ Supuestos abiertos (no bloquean): esquema real de la BD, cobertura, tipos de veh
 | 1 Filtro | 12/12 | 100 % |
 | 2 Cálculos | 11/11 | 100 % |
 | 3 Simulación | 9/9 | 100 % |
-| 4 API | 0/9 | 0 % |
+| 4 API | 10/11 | 91 % |
 | 5 Web de respaldo | 0/9 | 0 % |
 | 6 Tableros | 0/6 | 0 % |
 | 7 Gafas | 0/6 | 0 % |
@@ -47,7 +51,7 @@ Supuestos abiertos (no bloquean): esquema real de la BD, cobertura, tipos de veh
 ---
 
 ## Fase 0 · Base del proyecto
-- [x] Entorno Python — `python3.10 -m venv`, `requirements.txt` (fastapi, uvicorn, pandas, numpy, pydantic, pyyaml, pytest, psycopg[binary]) y `pytest` corre con 0 tests sin error
+- [x] Entorno Python — Python 3.12.7 con `uv venv` (antes `python3.10 -m venv`), `requirements.txt` (fastapi, uvicorn, pandas, numpy, pydantic, pyyaml, pytest, psycopg[binary]) y `pytest` corre con 0 tests sin error
 - [x] Estructura de paquetes en `backend/` — `import backend.filtro, backend.calculos, backend.simulacion, backend.api` funciona; los `.gitkeep` se reemplazan por `__init__.py` (`backend/api/` se crea en la Fase 4)
 - [x] `backend/config/parametros.yaml` — contiene **todos** los parámetros de la sección 8 del doc de cálculos (H=365, m=10, k=10, α=2, pesos de D y Q, piso de F=0.4, σ_max=0.5, severidades, N=2000, semilla, priors P0/R0/σ0/I0, umbrales de nivel de confianza 75/55, tandas=descartar, penal_hora=0)
 - [x] Cargador de configuración — `cargar_config()` devuelve un objeto tipado; test: falta un parámetro → error claro que nombra el parámetro; no hay números mágicos en `calculos/` ni `simulacion/` (revisión con grep)
@@ -55,7 +59,7 @@ Supuestos abiertos (no bloquean): esquema real de la BD, cobertura, tipos de veh
 - [x] Interfaz `Repositorio` — métodos para proveedores activos, tarifas vigentes por ruta, flota, cobertura, capacidad, historial, incidentes y condiciones de vía; documentada con docstrings
 - [x] Adaptador simulado en memoria — implementa `Repositorio` leyendo JSON desde una carpeta configurable; test: devuelve los datos cargados
 - [x] Datos sintéticos etiquetados — 10 proveedores, 4 rutas, 4 tipos de vehículo y 413 servicios con `"sintetico": true` en cada archivo, en `backend/datos_sinteticos/` (no en `demo/`, ver Decisiones) y generados por `generar.py` con semilla fija; test: ningún dato sintético se carga sin la etiqueta
-- [x] Adaptador PostgreSQL (esqueleto) — clase `RepositorioPostgres` con la misma interfaz y consultas marcadas `TODO(esquema)`; el backend arranca con `REPOSITORIO=simulado|postgres` desde el entorno
+- [x] Adaptador PostgreSQL — `RepositorioPostgres` lee las 9 tablas de `transporte` en Supabase (incluidas `tipo_vehiculo` y `cliente`); el backend arranca con `REPOSITORIO=simulado|postgres` desde el entorno; `tests/test_fase5_postgres.py` y verificación contra la base real
 
 ## Fase 1 · Filtro (`backend/filtro/`)
 Entrada: solicitud + datos del proveedor. Salida: `Candidato` o `Cancelado` con lista de `Razon(codigo, mensaje, requerido, disponible)`. Se evalúan **todas** las reglas.
@@ -65,7 +69,7 @@ Entrada: solicitud + datos del proveedor. Salida: `Candidato` o `Cancelado` con 
 - [x] Regla `SIN_TARIFA` — test: sin tarifa vigente a la fecha de la solicitud para ningún tipo de vehículo válido → razón; con tarifa vencida → razón
 - [x] Regla `VEHICULO_NO_DISPONIBLE` — test: carga sobredimensionada y proveedor sin cama baja → razón con el tipo requerido
 - [x] Regla `CARGA_NO_SOPORTADA` — test: carga peligrosa y proveedor que no la maneja → razón
-- [x] Cálculo de vehículos necesarios para el filtro — usa `max(ceil(TEU/cap_teu), ceil(ton/cap_ton))` (compartido con Fase 2); test: 3 TEU con plataforma de 2 TEU → 2
+- [x] Cálculo de vehículos necesarios para el filtro — usa `ceil(n_contenedores / min(cap_teu, floor(cap_kg/peso_kg)))` (compartido con Fase 2); test: 3 contenedores de 20 000 kg en tractomula de 34 000 kg → 3
 - [x] Regla `VEHICULOS_INSUFICIENTES` — test: necesita 2, tiene 1 → razón con `requerido=2`, `disponible=1`; con tandas=descartar el resultado es el mismo
 - [x] Regla `SIN_CAPACIDAD` — test: capacidad de servicio en la fecha menor a lo requerido → razón con la fecha
 - [x] Regla `PLAZO_INCUMPLIBLE` — test: tiempo prometido 52 h vs plazo 40 h devuelve la razón con `requerido=40` y `disponible=52`
@@ -82,33 +86,35 @@ Entradas: historial ponderado por recencia. Todas las fórmulas del doc de cálc
 - [x] Puntualidad `P` y retraso `Ret` suavizados — test: coinciden con A (0.887 / 0.085) y B (0.893 / 0.071) del ejemplo, ±0.001
 - [x] Desempeño `D` — test: A = 89.4 y B = 90.2 (±0.1)
 - [x] Consistencia `S_desv` — test: A → σ_aj 0.164 y S_desv 0.672; B → 0.171 y 0.658 (±0.001)
-- [x] Incidentes `S_inc` y cumplimiento con cliente `S_cump` — test: A → 0.950 y 0.882; B → 0.964 y 0.923 (±0.001); sin historial con el cliente `S_cump = P`
-- [x] Calidad `Q`, factor de evidencia `F` y confianza `C` con nivel — test: A = 73.7 (Media) y B = 60.6 (Media), ±0.1
+- [x] Cumplimiento con cliente `S_cump` — test: A → 0.882; B → 0.923 (±0.001); sin historial con el cliente `S_cump = P`. (Incidentes `S_inc` eliminados el 2026-10-24)
+- [x] Calidad `Q = (2/3)·S_desv + (1/3)·S_cump`, factor de evidencia `F` y confianza `C` con nivel — test: A = 66.3 (Media) y B = 54.3 (Baja), ±0.1
 - [x] Proveedor sin historial — test: `D ≈ 100·(0.75·P0 + 0.25·(1−R0))` y `C = 100·Q0·0.4`; el resultado marca "sin historial" en lugar de inventar datos (se muestra como riesgo "Poca evidencia histórica")
-- [x] Costo y vehículos — elige el tipo de vehículo más barato que cumple; test: 3 TEU → 2 viajes con la plataforma más barata; sin tarifa → no es opción
+- [x] Costo y vehículos — elige el tipo de vehículo más barato que cumple y reparte llenando un vehículo antes del siguiente; test: 3 contenedores con 2 por vehículo → `[2, 1]`; contenedor más pesado que el vehículo o vehículo sin `cap_teu` → no es opción; sin tarifa → no es opción
 - [x] Profit — `presupuesto − costo − costo_esperado_retraso`, margen sobre el presupuesto; test: presupuesto 12 000 000, costo 9 800 000, retraso 0 → profit 2 200 000 y margen 18.3 %; costo mayor al presupuesto → profit negativo, no se oculta
 
 ## Fase 3 · Simulación (`backend/simulacion/`)
 - [x] Muestreo de desviación `Δ` — bootstrap ponderado con mezcla `W/(W+m)` proveedor/mercado, y uso de todo el historial si `W_ruta < 5`; test: con `W` grande la media simulada se acerca a la del proveedor, con `W=0` a la del mercado
-- [x] Demora por condiciones de vía — evento con probabilidad `p_evento` y demora uniforme `[d_min, d_max]`; test: `p=0` → demora siempre 0; `p=1` → siempre dentro del rango
-- [x] Tiempo de tránsito y llegada a tiempo — `T = T_prom·(1+Δ) + demora`; test con datos fijos calculados a mano
-- [x] Incidentes simulados — Bernoulli con `min(1, I/s̄)` y severidad tomada del historial; test: sin incidentes en historial → probabilidad cercana a `I0/0.5`
+- [x] ~~Demora por condiciones de vía~~ — eliminada del modelo el 2026-10-24
+- [x] Tiempo de tránsito y llegada a tiempo — `T = T_prom·(1+Δ)`; test con datos fijos calculados a mano
+- [x] ~~Incidentes simulados~~ — eliminados del modelo el 2026-10-24
 - [x] Costo esperado de retraso — `penal_hora · max(0, T−plazo)` promediado; test: penal=0 → 0; plazo muy corto → crece con la penal
-- [x] Resultados por opción — P50, P90, `prob_a_tiempo`, probabilidad de incidente, profit esperado y profit P10; test: con semilla fija los números coinciden con un caso guardado (*golden*)
+- [x] Resultados por opción — P50, P90, `prob_a_tiempo`, profit esperado y profit P10; test: con semilla fija los números coinciden con un caso guardado (*golden*, regenerado el 2026-10-24)
 - [x] Reproducibilidad — test: misma solicitud + misma semilla → resultados idénticos; semilla distinta → distintos
-- [x] Escenarios "¿y si…?" — recalcula con otros `p_evento`, `d_min/d_max`, plazo o `penal_hora` sin tocar el historial; test: el historial en memoria no cambia y un bloqueo seguro aumenta P90
+- [x] Escenarios "¿y si…?" — recalcula con otro plazo o `penal_hora` sin tocar el historial; test: el historial en memoria no cambia y una penalidad mayor baja el profit
 - [x] Explicación en lenguaje natural — los 2-3 factores que más suben y que más bajan la opción, trazables a datos; test: cada frase referencia un valor del desglose
 
 ## Fase 4 · API (`backend/api/`)
-- [ ] Aplicación FastAPI y `GET /salud` — responde 200 con el tipo de repositorio activo
-- [ ] Esquemas pydantic del contrato — `POST /solicitudes/evaluar` devuelve exactamente las claves de la sección 5 del README; test: valida contra un ejemplo guardado del README
-- [ ] Consecutivos — `solicitud_id` `REQ-0001...` generado por el backend y `cliente_id` validado contra el catálogo; test: dos solicitudes seguidas reciben IDs consecutivos distintos y un `cliente_id` inexistente da 422 con mensaje claro
-- [ ] `POST /solicitudes/evaluar` — integra filtro + cálculos + simulación; test de integración con datos sintéticos: devuelve candidatos y cancelados con todas las razones
-- [ ] Caso sin candidatos en la API — `sin_candidatos=true` y casi elegibles; test con solicitud imposible
-- [ ] `POST /solicitudes/{id}/escenario` — test: devuelve resultados distintos con otros supuestos y deja la solicitud original intacta
-- [ ] `POST /decisiones` — guarda elección, justificación (obligatoria) y snapshot de lo mostrado; test: sin justificación → 422; con ella se puede recuperar el snapshot idéntico
-- [ ] `GET /proveedores/{id}` — historial, tendencia de D, fortalezas y debilidades; test: proveedor inexistente → 404
-- [ ] CORS, documentación OpenAPI y errores en español — la web y las gafas leen `/docs`; test: error de validación con mensaje en español
+- [x] Aplicación FastAPI y `GET /salud` — responde 200 con el tipo de repositorio activo
+- [x] Esquemas pydantic del contrato — `POST /solicitudes/evaluar` devuelve las claves de la sección 5 del README; test: los ejemplos guardados en `backend/api/ejemplos/` validan contra los esquemas
+- [x] Consecutivos — `solicitud_id` `REQ-0001...` generado por el backend y `cliente_id` validado contra el catálogo; test: dos solicitudes seguidas reciben IDs consecutivos distintos y un `cliente_id` inexistente da 422 con mensaje claro
+- [x] `POST /solicitudes/evaluar` — integra filtro + cálculos + simulación; test de integración con datos sintéticos y con filas de la base: devuelve candidatos y cancelados con todas las razones
+- [x] Caso sin candidatos en la API — `sin_candidatos=true` y casi elegibles; verificado contra Supabase (carga peligrosa Buenaventura → Cali)
+- [x] `POST /solicitudes/{id}/escenario` — test: devuelve resultados distintos con otros supuestos y deja la solicitud original intacta
+- [x] `POST /decisiones` — guarda elección, justificación (obligatoria) y snapshot de lo mostrado; test: sin justificación → 422; con ella se puede recuperar el snapshot idéntico
+- [x] `GET /proveedores/{id}` — historial, tendencia de D, fortalezas y debilidades; test: proveedor inexistente → 404
+- [x] CORS, documentación OpenAPI y errores en español — verificado con `uvicorn` y preflight CORS desde otro origen; `GET /catalogos` y 503 si la base no responde
+- [x] Persistencia de la solicitud al decidir — número reservado de la secuencia de `transporte.solicitud` al evaluar e INSERT al decidir; 409 si se repite y 503 si la base no responde; test con almacén en memoria y verificación contra Supabase dentro de una transacción con ROLLBACK
+- [ ] Persistencia del proveedor elegido, justificación y snapshot — bloqueado: `transporte.solicitud` no tiene columnas para ellos
 
 ## Fase 5 · Web de respaldo (`frontend_web/`)
 Depende de la Fase 4. Misma funcionalidad que las gafas.
@@ -195,3 +201,9 @@ Una solicitud real entra por la web o las gafas, se filtra (con todas las razone
 | 2026-10-23 | Fase 1: 8 reglas registrables, orquestador que evalúa todas, opción de vehículo más barata que cumple el plazo y casi elegibles | `tests/test_fase1_filtro.py`: 21 pruebas pasan, incluido 52 h vs 40 h y el caso PROV-07 del README con datos sintéticos |
 | 2026-10-23 | Fase 3: Monte Carlo con semilla por (solicitud, proveedor), escenarios inmutables, explicaciones trazables y riesgos | `tests/test_fase3_simulacion.py`: 25 pruebas pasan, incluido un caso *golden* y el flujo filtro → cálculos → simulación con datos sintéticos |
 | 2026-10-23 | Revisión de parámetros hardcodeados en `filtro/`, `calculos/` y `simulacion/` | grep de literales numéricos: solo 0, 1 y la base 0.5 de la fórmula de recencia. Total: 92 pruebas pasan con `backend/pruebas.sh` |
+| 2026-10-24 | Suite reparada (pruebas que importaban `CondicionVia`); Python 3.12.7 con `uv` | `backend/pruebas.sh`: 87 pruebas pasan |
+| 2026-10-24 | Sin incidentes en dominio, cálculos, simulación, API y datos sintéticos; `Q = (2/3)·S_desv + (1/3)·S_cump` | 87 pruebas pasan; ejemplo de la sección 4 recalculado (A 66.3, B 54.3) |
+| 2026-10-24 | Solicitud con `n_contenedores` y `peso_kg`; tipo de vehículo indicado obligatorio; primera suite de la API | 107 pruebas pasan |
+| 2026-10-24 | Fórmula nueva de vehículos y reparto de contenedores | 116 pruebas pasan, incluido 3 × 20 000 kg en tractomula → 3 vehículos `[1, 1, 1]` |
+| 2026-10-24 | Adaptador PostgreSQL con `tipo_vehiculo` y `cliente`; `GET /catalogos`; 503 si la base cae; ejemplos del contrato | 131 pruebas pasan; `uvicorn` contra Supabase: 15 solicitudes pendientes evaluadas, CORS, escenarios, decisiones y ficha verificados |
+| 2026-10-24 | Solo contenedores (turbo y sencillo obsoletos); persistencia de la solicitud al decidir en `transporte.solicitud`; 409/503 en decisiones; vehículo de los casi elegibles; protección de credenciales | 145 pruebas pasan; INSERT verificado contra Supabase con ROLLBACK (la base sigue con 495 filas); `uvicorn` contra Supabase con IDs `REQ-0498` de la secuencia |

@@ -4,8 +4,9 @@ Por iteración j:
   1. Δ_j: con prob. W/(W+m) del historial del proveedor (ponderado por w_i), si no del mercado.
   2. T_j = T_prom · (1 + Δ_j)
   3. a_j = T_j ≤ plazo
-  4. inc_j ~ Bernoulli(min(1, I / s̄)); si ocurre, la severidad sale de su historial.
-  5. costo_j = Costo_opción + penal_hora · max(0, T_j − plazo)
+  4. costo_j = Costo_opción + penal_hora · max(0, T_j − plazo)
+
+Incidentes y condiciones de vía no forman parte del modelo (docs/decisiones.md, 2026-10-24).
 """
 from __future__ import annotations
 
@@ -33,8 +34,6 @@ class EntradaSimulacion:
     deltas_mercado: np.ndarray
     pesos_mercado: np.ndarray
     sigma0: float                    # respaldo si el mercado no tiene datos
-    indice_incidentes: float         # I (sección 3.2), incluye servicios sin incidente
-    severidades_proveedor: np.ndarray
 
     @property
     def W(self) -> float:
@@ -48,8 +47,6 @@ class ResultadoSimulacion:
     tiempo_p50_h: float
     tiempo_p90_h: float
     prob_a_tiempo: float
-    prob_incidente: float
-    severidad_media_incidente: float
     costo_cop: int
     costo_esperado_retraso_cop: float
     costo_esperado_cop: float
@@ -67,7 +64,6 @@ def preparar_entrada(
     historial_proveedor: Historial,
     historial_mercado: Historial,
     ruta_id: str,
-    indice_incidentes: float,
     sigma0: float,
     tiempo_prometido_h: float,
     plazo_h: float,
@@ -86,8 +82,6 @@ def preparar_entrada(
         presupuesto_cop=presupuesto_cop, penal_hora_cop=penal_hora_cop,
         deltas_proveedor=propio.delta, pesos_proveedor=propio.w,
         deltas_mercado=mercado.delta, pesos_mercado=mercado.w, sigma0=sigma0,
-        indice_incidentes=indice_incidentes,
-        severidades_proveedor=historial_proveedor.severidades_incidentes,
     )
 
 
@@ -128,15 +122,7 @@ def simular(e: EntradaSimulacion, cfg: Config, semilla: Optional[int] = None) ->
     T = e.tiempo_prometido_h * (1 + delta)
     a_tiempo = T <= e.plazo_h
 
-    # 4. Incidentes
-    sev = e.severidades_proveedor
-    s_media = float(sev.mean()) if sev.size else s.severidad_media_sin_historial
-    p_inc = min(1.0, e.indice_incidentes / s_media)
-    inc = rng.random(n) < p_inc
-    sev_j = rng.choice(sev, size=n) if sev.size else np.full(n, s_media)
-    sev_media_inc = float(sev_j[inc].mean()) if inc.any() else 0.0
-
-    # 5. Costo y profit
+    # 4. Costo y profit
     retraso_h = np.maximum(0.0, T - e.plazo_h)
     penalidad = e.penal_hora_cop * retraso_h
     costo_j = e.costo_cop + penalidad
@@ -148,8 +134,6 @@ def simular(e: EntradaSimulacion, cfg: Config, semilla: Optional[int] = None) ->
         tiempo_p50_h=float(np.percentile(T, s.percentil_tipico)),
         tiempo_p90_h=float(np.percentile(T, s.percentil_mal_caso)),
         prob_a_tiempo=float(a_tiempo.mean()),
-        prob_incidente=float(inc.mean()),
-        severidad_media_incidente=sev_media_inc,
         costo_cop=e.costo_cop,
         costo_esperado_retraso_cop=float(penalidad.mean()),
         costo_esperado_cop=float(costo_j.mean()),

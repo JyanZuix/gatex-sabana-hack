@@ -1,0 +1,349 @@
+{
+  "solicitud_id": "REQ-0497",
+  "escenario_id": null,
+  "ruta": {
+    "ruta_id": "RUTA-01",
+    "origen": "Buenaventura",
+    "destino": "Cali",
+    "distancia_km": 120.0
+  },
+  "candidatos": [],
+  "cancelados": [
+    {
+      "proveedor_id": "PROV-01",
+      "nombre": "Transportes Andinos del Sur",
+      "razones": [
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-02",
+      "nombre": "Pacífico Express Logística",
+      "razones": [
+        {
+          "codigo": "VEHICULO_NO_DISPONIBLE",
+          "mensaje": "No tiene Tractomula disponible (requerida para peligrosa)",
+          "requerido": "Tractomula",
+          "disponible": "refrigerado"
+        },
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": "refrigerado"
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-03",
+      "nombre": "Carga Segura del Valle",
+      "razones": [
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": "refrigerado"
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-04",
+      "nombre": "FríoCol Transportes",
+      "razones": [
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "VEHICULO_NO_DISPONIBLE",
+          "mensaje": "No tiene Tractomula disponible (requerida para peligrosa)",
+          "requerido": "Tractomula",
+          "disponible": "refrigerado, sencillo"
+        },
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": "refrigerado"
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-05",
+      "nombre": "Tractocargas del Caribe",
+      "razones": [
+        {
+          "codigo": "SIN_CAPACIDAD",
+          "mensaje": "Capacidad agotada para el 03-nov",
+          "requerido": 1,
+          "disponible": 0
+        },
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-06",
+      "nombre": "Mulas de Oriente",
+      "razones": [
+        {
+          "codigo": "SIN_COBERTURA",
+          "mensaje": "No opera el trayecto Buenaventura → Cali",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-07",
+      "nombre": "Transpesados de Colombia",
+      "razones": [
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": "sobredimensionado"
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-08",
+      "nombre": "Químicos y Carga Especial",
+      "razones": [
+        {
+          "codigo": "SIN_COBERTURA",
+          "mensaje": "No opera el trayecto Buenaventura → Cali",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-01",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-09",
+      "nombre": "Ruta Express Antioquia",
+      "razones": [
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-10",
+      "nombre": "Transportes El Llano",
+      "razones": [
+        {
+          "codigo": "SIN_COBERTURA",
+          "mensaje": "No opera el trayecto Buenaventura → Cali",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-11",
+      "nombre": "Integral Cargo SAS",
+      "razones": [
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-12",
+      "nombre": "Carga Nacional TLC",
+      "razones": [
+        {
+          "codigo": "SIN_COBERTURA",
+          "mensaje": "No opera el trayecto Buenaventura → Cali",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-01",
+          "disponible": null
+        },
+        {
+          "codigo": "VEHICULO_NO_DISPONIBLE",
+          "mensaje": "No tiene Tractomula disponible (requerida para peligrosa)",
+          "requerido": "Tractomula",
+          "disponible": null
+        },
+        {
+          "codigo": "CARGA_NO_SOPORTADA",
+          "mensaje": "No transporta carga peligrosa",
+          "requerido": "peligrosa",
+          "disponible": null
+        },
+        {
+          "codigo": "PROVEEDOR_INACTIVO",
+          "mensaje": "Proveedor inactivo",
+          "requerido": "activo",
+          "disponible": "inactivo"
+        }
+      ]
+    }
+  ],
+  "casi_elegibles": [
+    {
+      "proveedor_id": "PROV-01",
+      "nombre": "Transportes Andinos del Sur",
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": null
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-03",
+      "nombre": "Carga Segura del Valle",
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": "refrigerado"
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-07",
+      "nombre": "Transpesados de Colombia",
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": "sobredimensionado"
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-09",
+      "nombre": "Ruta Express Antioquia",
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": null
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "proveedor_id": "PROV-11",
+      "nombre": "Integral Cargo SAS",
+      "razon": {
+        "codigo": "CARGA_NO_SOPORTADA",
+        "mensaje": "No transporta carga peligrosa",
+        "requerido": "peligrosa",
+        "disponible": null
+      },
+      "flexibilizar": "El proveedor no maneja este tipo de carga",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  ],
+  "sin_candidatos": true,
+  "parametros_escenario": {
+    "plazo_h": 33.0,
+    "penal_hora_cop": 50000.0,
+    "semilla": 42,
+    "n_simulaciones": 2000
+  }
+}

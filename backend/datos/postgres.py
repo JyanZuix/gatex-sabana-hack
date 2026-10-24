@@ -1,15 +1,23 @@
-"""Adaptador PostgreSQL para el esquema `transporte` (01_esquema.sql).
+"""Adaptador PostgreSQL para el esquema `transporte` (Supabase).
 
 Lee las tablas una vez, en la primera consulta, y las convierte a los mismos
-modelos de `backend.dominio` que el adaptador simulado. Lo que la base no
-guarda sale de `mapeo_postgres.yaml` (provisional) o se deduce así:
+modelos de `backend.dominio` que el adaptador simulado.
 
-- IDs: `PROV-01`, `RUTA-02`, `TAR-003`, `SRV-0004`. Ubicaciones y clientes usan su nombre.
-- Corredor de una ruta: los dos extremos, puerto primero (Buenaventura–Bogotá
-  vale para ambos sentidos).
+Tablas que lee: proveedor, flota, capacidad_actual, ruta, tarifa, solicitud, servicio,
+tipo_vehiculo (catálogo con `cap_teu` y `cap_kg`) y cliente.
+
+Lo que la base no guarda sale de `mapeo_postgres.yaml` (provisional) o se deduce así:
+- IDs: `PROV-01`, `RUTA-02`, `TAR-003`, `SRV-0004`, `CLI-001`. Las ubicaciones usan su nombre
+  y los tipos de vehículo su clave (`tractomula`).
+- Corredor de una ruta: los dos extremos, puerto primero (Buenaventura–Bogotá vale para ambos sentidos).
 - Cobertura: rutas en las que el proveedor tiene tarifa.
 - Tarifas y flota vigentes desde la vinculación del proveedor.
 - Servicio: plazo = `fecha_entrega_limite − fecha_recogida`; tiempo prometido = el de la tarifa.
+
+Compatibilidad: si la base aún no tiene la tabla `cliente` o la columna `solicitud.cliente_id`,
+los clientes se identifican por el texto de `solicitud.cliente`, como en la versión anterior.
+El desempeño nunca se lee de la base: se calcula del historial (`servicio`). La columna
+`servicio.calificacion` no se usa.
 """
 from __future__ import annotations
 
@@ -19,15 +27,14 @@ from pathlib import Path
 from typing import Callable, Mapping, Optional
 
 import yaml
-from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from backend.config import Config, cargar_config
-from backend.config.carga import Severidad
 from backend.dominio import (
+    CARGAS_ESPECIALES,
     Capacidad,
     CargaEspecial,
     Cliente,
-    Incidente,
     Proveedor,
     Ruta,
     ServicioHistorico,
@@ -38,9 +45,10 @@ from backend.dominio import (
 )
 
 from .memoria import RepositorioEnMemoria
-from .repositorio import Repositorio
+from .repositorio import ErrorDatosNoDisponibles, Repositorio
 
-TABLAS = ("proveedor", "flota", "capacidad_actual", "ruta", "tarifa", "solicitud", "servicio")
+TABLAS = ("proveedor", "flota", "capacidad_actual", "ruta", "tarifa", "solicitud", "servicio", "tipo_vehiculo")
+TABLAS_OPCIONALES = ("cliente",)   # compatibilidad: sin ella se usa el texto `solicitud.cliente`
 RUTA_MAPEO = Path(__file__).with_name("mapeo_postgres.yaml")
 
 Fila = Mapping[str, object]
@@ -48,32 +56,13 @@ LectorTablas = Callable[[], Mapping[str, list[Fila]]]
 
 
 class ErrorMapeo(ValueError):
-    """`mapeo_postgres.yaml` falta, es inválido o no cubre un valor de la base."""
-
-
-class _TipoMapeo(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-    nombre: str
-    cap_teu: int
-    cap_toneladas: float
-    cap_m3: Optional[float] = None
-    carga_especial: Optional[CargaEspecial] = None
+    """`mapeo_postgres.yaml` falta o es inválido, o la base no tiene lo que el backend necesita."""
 
 
 class Mapeo(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     esquema: str
     puertos: tuple[str, ...]
-    tipos_vehiculo: dict[str, _TipoMapeo]
-    severidad_incidente: dict[str, str]
-
-    @model_validator(mode="after")
-    def _niveles_validos(self) -> "Mapeo":
-        niveles = set(Severidad.model_fields)
-        malos = {k: v for k, v in self.severidad_incidente.items() if v not in niveles}
-        if malos:
-            raise ValueError(f"niveles de severidad desconocidos {malos}; use {sorted(niveles)}")
-        return self
 
 
 @lru_cache(maxsize=1)
@@ -95,8 +84,21 @@ def id_ruta(n: int) -> str:
     return f"RUTA-{n:02d}"
 
 
+def id_cliente(n: int) -> str:
+    return f"CLI-{n:03d}"
+
+
 def _horas(desde: datetime, hasta: datetime) -> float:
     return (hasta - desde).total_seconds() / 3600
+
+
+def _carga_especial(valor: Optional[str], tipo: str) -> Optional[CargaEspecial]:
+    if valor is None:
+        return None
+    if valor not in CARGAS_ESPECIALES:
+        raise ErrorMapeo(f"tipo_vehiculo '{tipo}': carga_especial '{valor}' desconocida; "
+                         f"use {list(CARGAS_ESPECIALES)} o NULL")
+    return valor  # type: ignore[return-value]
 
 
 class RepositorioPostgres(Repositorio):
@@ -116,11 +118,22 @@ class RepositorioPostgres(Repositorio):
         from psycopg import sql
         from psycopg.rows import dict_row
 
-        with psycopg.connect(self.dsn, row_factory=dict_row) as con:
+        try:
+            return self._consultar(psycopg, sql, dict_row)
+        except psycopg.Error as e:
+            # El mensaje de psycopg puede incluir el host; nunca la contraseña.
+            raise ErrorDatosNoDisponibles(
+                f"No se pudo leer la base de datos ({type(e).__name__}). Intente de nuevo en unos segundos.") from e
+
+    def _consultar(self, psycopg, sql, dict_row) -> dict[str, list[Fila]]:
+        with psycopg.connect(self.dsn, row_factory=dict_row, connect_timeout=15) as con:
+            existentes = {f["table_name"] for f in con.execute(
+                "SELECT table_name FROM information_schema.tables WHERE table_schema = %s",
+                (self.mapeo.esquema,)).fetchall()}
             return {
                 t: con.execute(sql.SQL("SELECT * FROM {}.{}").format(
                     sql.Identifier(self.mapeo.esquema), sql.Identifier(t))).fetchall()
-                for t in TABLAS
+                for t in TABLAS + TABLAS_OPCIONALES if t in existentes
             }
 
     def recargar(self) -> None:
@@ -141,12 +154,14 @@ class RepositorioPostgres(Repositorio):
             raise ErrorMapeo(f"Faltan las tablas {faltan} en el esquema {self.mapeo.esquema}")
         m = self.mapeo
 
-        en_base = {f["tipo_vehiculo"] for n in ("flota", "tarifa", "solicitud") for f in t[n]}
-        sin_mapeo = sorted(en_base - set(m.tipos_vehiculo))
-        if sin_mapeo:
-            raise ErrorMapeo(f"Tipos de vehículo sin capacidades en {RUTA_MAPEO.name}: {sin_mapeo}")
-        tipos = [TipoVehiculo(tipo_vehiculo_id=k, **v.model_dump()) for k, v in m.tipos_vehiculo.items()]
+        tipos = [TipoVehiculo(tipo_vehiculo_id=f["tipo_vehiculo"], nombre=f["nombre"], cap_teu=f["cap_teu"],
+                              cap_kg=f["cap_kg"], carga_especial=_carga_especial(f["carga_especial"], f["tipo_vehiculo"]))
+                 for f in t["tipo_vehiculo"]]
         carga_de_tipo = {x.tipo_vehiculo_id: x.carga_especial for x in tipos}
+        en_uso = {f["tipo_vehiculo"] for n in ("flota", "tarifa", "solicitud") for f in t[n]}
+        sin_catalogo = sorted(en_uso - set(carga_de_tipo))
+        if sin_catalogo:
+            raise ErrorMapeo(f"Tipos de vehículo sin fila en {m.esquema}.tipo_vehiculo: {sin_catalogo}")
 
         vinculacion = {f["proveedor_id"]: f["fecha_vinculacion"] for f in t["proveedor"]}
         con_flota: dict[int, set[str]] = {}
@@ -194,36 +209,44 @@ class RepositorioPostgres(Repositorio):
         capacidad = [Capacidad(proveedor_id=id_proveedor(f["proveedor_id"]), fecha=f["fecha"],
                                servicios_disponibles=f["servicios_disponibles"]) for f in t["capacidad_actual"]]
 
+        clientes, cliente_de = self._clientes(t)
+
         solicitudes = {f["solicitud_id"]: f for f in t["solicitud"]}
         prometido = {(f["proveedor_id"], f["ruta_id"], f["tipo_vehiculo"]): f["transito_estimado_h"]
                      for f in t["tarifa"]}
-        valor_nivel = self.cfg.severidad.model_dump()
-        servicios, incidentes = [], []
+        servicios = []
         for f in t["servicio"]:
             so = solicitudes[f["solicitud_id"]]
-            sid = f"SRV-{f['servicio_id']:04d}"
             servicios.append(ServicioHistorico(
-                servicio_id=sid, proveedor_id=id_proveedor(f["proveedor_id"]), cliente_id=so["cliente"],
-                ruta_id=id_ruta(so["ruta_id"]), tipo_vehiculo_id=so["tipo_vehiculo"],
+                servicio_id=f"SRV-{f['servicio_id']:04d}", proveedor_id=id_proveedor(f["proveedor_id"]),
+                cliente_id=cliente_de(so), ruta_id=id_ruta(so["ruta_id"]), tipo_vehiculo_id=so["tipo_vehiculo"],
                 fecha_entrega=f["fecha_entrega_real"].date(),
                 tiempo_prometido_h=prometido.get((f["proveedor_id"], so["ruta_id"], so["tipo_vehiculo"])),
                 tiempo_real_h=f["transito_real_h"],
                 plazo_acordado_h=_horas(so["fecha_recogida"], so["fecha_entrega_limite"]),
                 a_tiempo=f["a_tiempo"],
             ))
-            if f["incidente"] != "ninguno":
-                if f["incidente"] not in m.severidad_incidente:
-                    raise ErrorMapeo(f"Incidente '{f['incidente']}' sin severidad en {RUTA_MAPEO.name}")
-                incidentes.append(Incidente(servicio_id=sid, tipo=f["incidente"],
-                                            severidad=valor_nivel[m.severidad_incidente[f["incidente"]]]))
-
-        clientes = [Cliente(cliente_id=n, nombre=n) for n in sorted({f["cliente"] for f in t["solicitud"]})]
 
         return RepositorioEnMemoria(
             proveedores=proveedores, clientes=clientes, ubicaciones=ubicaciones, rutas=rutas,
             tipos_vehiculo=tipos, tarifas=tarifas, flota=flota, capacidad=capacidad, servicios=servicios,
-            incidentes=incidentes,
         )
+
+    @staticmethod
+    def _clientes(t: Mapping[str, list[Fila]]) -> tuple[list[Cliente], Callable[[Fila], str]]:
+        """Catálogo de clientes y cómo obtener el `cliente_id` de una solicitud."""
+        con_columna = all("cliente_id" in f for f in t["solicitud"])
+        if "cliente" in t and con_columna:
+            clientes = [Cliente(cliente_id=id_cliente(f["cliente_id"]), nombre=f["nombre"])
+                        for f in sorted(t["cliente"], key=lambda f: f["cliente_id"])]
+            existentes = {f["cliente_id"] for f in t["cliente"]}
+            sin_cliente = sorted({f["cliente_id"] for f in t["solicitud"]} - existentes)
+            if sin_cliente:
+                raise ErrorMapeo(f"Solicitudes con cliente_id sin fila en la tabla cliente: {sin_cliente}")
+            return clientes, lambda so: id_cliente(so["cliente_id"])
+        # Compatibilidad con la base anterior: el cliente es el texto de `solicitud.cliente`.
+        clientes = [Cliente(cliente_id=n, nombre=n) for n in sorted({f["cliente"] for f in t["solicitud"]})]
+        return clientes, lambda so: so["cliente"]
 
     # ------------------------------------------------------------------
     # Interfaz Repositorio
@@ -260,6 +283,3 @@ class RepositorioPostgres(Repositorio):
 
     def servicios_historicos(self, hasta=None):
         return self._datos().servicios_historicos(hasta)
-
-    def incidentes(self):
-        return self._datos().incidentes()

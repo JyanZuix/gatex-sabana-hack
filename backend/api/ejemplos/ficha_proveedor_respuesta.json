@@ -1,0 +1,88 @@
+{
+  "proveedor_id": "PROV-04",
+  "nombre": "FríoCol Transportes",
+  "estado": "activo",
+  "cargas_especiales": [
+    "refrigerado"
+  ],
+  "servicios": 41,
+  "ultimo_servicio": "2026-09-16",
+  "puntualidad_pct": 97.6,
+  "desempeno": {
+    "valor": 93.7,
+    "desglose": {
+      "puntualidad": 0.94,
+      "magnitud_retraso": 0.071
+    }
+  },
+  "confianza": {
+    "valor": 63.7,
+    "nivel": "Media",
+    "desglose": {
+      "consistencia": 0.659,
+      "cumplimiento_cliente": 0.94,
+      "evidencia": 0.847
+    }
+  },
+  "tendencia": [
+    {
+      "mes": "2025-11",
+      "servicios": 2,
+      "desempeno": 85.6
+    },
+    {
+      "mes": "2025-12",
+      "servicios": 5,
+      "desempeno": 88.4
+    },
+    {
+      "mes": "2026-01",
+      "servicios": 3,
+      "desempeno": 80.1
+    },
+    {
+      "mes": "2026-02",
+      "servicios": 4,
+      "desempeno": 87.3
+    },
+    {
+      "mes": "2026-03",
+      "servicios": 4,
+      "desempeno": 87.6
+    },
+    {
+      "mes": "2026-04",
+      "servicios": 3,
+      "desempeno": 86.8
+    },
+    {
+      "mes": "2026-05",
+      "servicios": 5,
+      "desempeno": 88.3
+    },
+    {
+      "mes": "2026-06",
+      "servicios": 1,
+      "desempeno": 84.2
+    },
+    {
+      "mes": "2026-07",
+      "servicios": 7,
+      "desempeno": 89.5
+    },
+    {
+      "mes": "2026-08",
+      "servicios": 4,
+      "desempeno": 87.5
+    },
+    {
+      "mes": "2026-09",
+      "servicios": 3,
+      "desempeno": 86.5
+    }
+  ],
+  "fortalezas": [],
+  "debilidades": [
+    "Puntualidad de 83% en la ruta Buenaventura → Medellín (su promedio: 98%; 6 servicios)"
+  ]
+}

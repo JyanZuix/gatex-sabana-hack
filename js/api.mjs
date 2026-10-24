@@ -23,7 +23,7 @@ export class API {
     salud(signal) {return this.llamar('GET','/salud',undefined,signal);}
     catalogos(origen='',fecha='',signal) {
         const query=new URLSearchParams();if(origen)query.set('origen_id',origen);if(fecha)query.set('fecha_servicio',fecha);
-        return this.llamar('GET','/catalogos'+(query.size?'?'+query:''),undefined,signal);
+        return this.llamar('GET','/catalogos/formulario'+(query.size?'?'+query:''),undefined,signal);
     }
     async evaluar(datos,signal) {
         const data=await this.llamar('POST','/solicitudes/evaluar',datos,signal);

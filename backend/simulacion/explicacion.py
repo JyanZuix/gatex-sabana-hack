@@ -19,7 +19,6 @@ class ResumenOpcion:
     desempeno: float
     confianza: float
     servicios_con_cliente: float   # W_c
-    prob_incidente: float
 
 
 @dataclass(frozen=True)
@@ -28,7 +27,6 @@ class ReferenciaMercado:
     prob_a_tiempo: float
     desempeno: float
     confianza: float
-    prob_incidente: float
 
 
 @dataclass(frozen=True)
@@ -86,9 +84,6 @@ def _factores(o: ResumenOpcion, otras: list[ResumenOpcion], ref: ReferenciaMerca
     factores.append(Factor("servicios_con_cliente", o.servicios_con_cliente, r,
                            (o.servicios_con_cliente - r) / (o.servicios_con_cliente + r + k),
                            f"Historial con este cliente de {o.servicios_con_cliente:.1f} servicios efectivos (referencia {r:.1f})"))
-    r = media("prob_incidente", ref.prob_incidente)
-    factores.append(Factor("prob_incidente", o.prob_incidente, r, r - o.prob_incidente,
-                           f"Probabilidad de incidente de {_pct(o.prob_incidente)} (referencia {_pct(r)})"))
     return factores
 
 

@@ -7,7 +7,7 @@ from typing import Callable, Iterable, Optional
 
 import numpy as np
 
-from backend.dominio import Incidente, ServicioHistorico
+from backend.dominio import ServicioHistorico
 
 from .recencia import peso_recencia
 
@@ -18,7 +18,6 @@ class Sumas:
     W: float
     W_a: float
     W_r: float
-    W_inc: float
     W_c: float
     W_ca: float
     sigma_obs: float  # desviación estándar ponderada de Δ
@@ -32,12 +31,11 @@ def _solo_lectura(a) -> np.ndarray:
 
 @dataclass(frozen=True)
 class Historial:
-    """Servicios ya transformados: Δ_i, r_i, a_i, s_i, c_i y w_i (arreglos de solo lectura)."""
+    """Servicios ya transformados: Δ_i, r_i, a_i, c_i y w_i (arreglos de solo lectura)."""
     w: np.ndarray
     delta: np.ndarray
     r: np.ndarray
     a: np.ndarray
-    s: np.ndarray
     c: np.ndarray
     ruta_id: np.ndarray
     omitidos: tuple[str, ...] = field(default=())  # servicios sin datos suficientes, con el motivo
@@ -48,7 +46,7 @@ class Historial:
 
     def filtrar_ruta(self, ruta_id: str) -> "Historial":
         m = self.ruta_id == ruta_id
-        return Historial(*(_solo_lectura(x[m]) for x in (self.w, self.delta, self.r, self.a, self.s, self.c, self.ruta_id)))
+        return Historial(*(_solo_lectura(x[m]) for x in (self.w, self.delta, self.r, self.a, self.c, self.ruta_id)))
 
     def sumas(self) -> Sumas:
         W = float(self.w.sum())
@@ -61,29 +59,14 @@ class Historial:
             W=W,
             W_a=float((self.w * self.a).sum()),
             W_r=float((self.w * self.r).sum()),
-            W_inc=float((self.w * self.s).sum()),
             W_c=float((self.w * self.c).sum()),
             W_ca=float((self.w * self.c * self.a).sum()),
             sigma_obs=float(np.sqrt(var)),
         )
 
-    @property
-    def severidades_incidentes(self) -> np.ndarray:
-        """Severidades de los servicios con incidente (s_i > 0)."""
-        return self.s[self.s > 0]
-
-
-def severidad_por_servicio(incidentes: Iterable[Incidente]) -> dict[str, float]:
-    """Si un servicio tiene varios incidentes, s_i es el máximo, no la suma (sección 1.1)."""
-    resultado: dict[str, float] = {}
-    for inc in incidentes:
-        resultado[inc.servicio_id] = max(resultado.get(inc.servicio_id, 0.0), inc.severidad)
-    return resultado
-
 
 def construir_historial(
     servicios: Iterable[ServicioHistorico],
-    severidades: dict[str, float],
     fecha_calculo: date,
     vida_media_dias: float,
     cliente_id: Optional[str] = None,
@@ -115,20 +98,19 @@ def construir_historial(
             delta,
             min(max(delta, 0.0), 1.0),
             1.0 if a else 0.0,
-            severidades.get(sv.servicio_id, 0.0),
             1.0 if cliente_id is not None and sv.cliente_id == cliente_id else 0.0,
             sv.ruta_id,
         ))
     if filas:
-        t, delta, r, a, s, c, ruta = (np.array(col) for col in zip(*filas))
+        t, delta, r, a, c, ruta = (np.array(col) for col in zip(*filas))
         w = peso_recencia(t, vida_media_dias)
         w = np.atleast_1d(w)
     else:
-        w = delta = r = a = s = c = np.zeros(0)
+        w = delta = r = a = c = np.zeros(0)
         ruta = np.array([], dtype=str)
     return Historial(
         w=_solo_lectura(w.astype(float)), delta=_solo_lectura(delta.astype(float)),
         r=_solo_lectura(r.astype(float)), a=_solo_lectura(a.astype(float)),
-        s=_solo_lectura(s.astype(float)), c=_solo_lectura(c.astype(float)),
+        c=_solo_lectura(c.astype(float)),
         ruta_id=_solo_lectura(ruta.astype(str)), omitidos=tuple(omitidos),
     )

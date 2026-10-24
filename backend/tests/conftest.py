@@ -19,7 +19,7 @@ def repo():
 
 @pytest.fixture
 def solicitud_base():
-    """Buenaventura → Bogotá, 4 TEU, plazo 40 h (datos sintéticos)."""
+    """Buenaventura → Bogotá, 4 contenedores de 10 000 kg, plazo 40 h (datos sintéticos)."""
     return Solicitud(cliente_id="CLI-0001", origen_id="BUN", destino_id="BOG",
-                     fecha_servicio=date(2026, 10, 28), plazo_h=40, n_teu=4,
+                     fecha_servicio=date(2026, 10, 28), plazo_h=40, n_contenedores=4, peso_kg=10_000,
                      presupuesto_cop=15_000_000)

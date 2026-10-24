@@ -1,28 +1,10 @@
-# Supuestos para leer el esquema `transporte` (01_esquema.sql) con el adaptador PostgreSQL.
+# Supuestos para leer el esquema `transporte` (Supabase) con el adaptador PostgreSQL.
 # Cubren datos que el backend necesita y la base aún no guarda.
-# TODO(esquema): PROVISIONAL. Confirmar con el equipo; cuando la base tenga estas tablas o
-# columnas, el adaptador debe leerlas de ahí y esta sección se borra.
+# TODO(esquema): PROVISIONAL. Confirmar con el equipo; cuando la base tenga estas columnas,
+# el adaptador debe leerlas de ahí y esta sección se borra.
+# Las capacidades de los vehículos ya NO viven aquí: se leen de la tabla `transporte.tipo_vehiculo`.
 
 esquema: transporte
 
 # Ubicaciones que son puertos. El resto se toma como ciudad.
 puertos: [Buenaventura, Cartagena, Barranquilla, Santa Marta]
-
-# Catálogo de vehículos. La base solo tiene el nombre (`tipo_vehiculo`).
-# Capacidades provisionales: cubren el peso máximo de los datos de prueba de cada tipo.
-tipos_vehiculo:
-  turbo:       {nombre: Turbo,       cap_teu: 0, cap_toneladas: 4.5, carga_especial: null}
-  sencillo:    {nombre: Sencillo,    cap_teu: 0, cap_toneladas: 9,   carga_especial: null}
-  tractomula:  {nombre: Tractomula,  cap_teu: 2, cap_toneladas: 34,  carga_especial: null}
-  refrigerado: {nombre: Refrigerado, cap_teu: 2, cap_toneladas: 28,  carga_especial: refrigerado}
-  cama_baja:   {nombre: Cama baja,   cap_teu: 2, cap_toneladas: 45,  carga_especial: sobredimensionado}
-
-# Nivel de severidad (sección `severidad` de config/parametros.yaml) de cada valor de
-# `servicio.incidente`. `dano` es ambiguo en la tabla 1.1 (daño menor = moderado, mayor = grave).
-severidad_incidente:
-  ninguno: sin_incidente
-  documental: leve
-  retraso: leve
-  varado: moderado
-  dano: moderado
-  robo: grave

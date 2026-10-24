@@ -9,8 +9,9 @@ from datetime import date
 from typing import Optional
 
 from backend.calculos.confianza import Confianza, calcular_confianza
+from backend.calculos.costos import OpcionVehiculo
 from backend.calculos.desempeno import Desempeno, calcular_desempeno
-from backend.calculos.historial import Historial, Sumas, construir_historial, severidad_por_servicio
+from backend.calculos.historial import Historial, Sumas, construir_historial
 from backend.calculos.priors import Prior, calcular_prior
 from backend.config import Config
 from backend.datos import Repositorio
@@ -21,7 +22,12 @@ from backend.simulacion import ReferenciaMercado, ResumenOpcion, explicar, prepa
 
 from . import esquemas as e
 
-SUMAS_VACIAS = Sumas(W=0, W_a=0, W_r=0, W_inc=0, W_c=0, W_ca=0, sigma_obs=0)
+SUMAS_VACIAS = Sumas(W=0, W_a=0, W_r=0, W_c=0, W_ca=0, sigma_obs=0)
+
+
+def _vehiculos(o: OpcionVehiculo) -> e.Vehiculos:
+    return e.Vehiculos(tipo_vehiculo_id=o.tipo_vehiculo_id, tipo=o.nombre, cantidad=o.viajes,
+                       contenedores_por_vehiculo=list(o.reparto))
 
 
 def _razon(r: Razon) -> e.RazonSalida:
@@ -35,17 +41,14 @@ def _desempeno(d: Desempeno) -> e.DesempenoSalida:
 
 def _confianza(c: Confianza) -> e.ConfianzaSalida:
     return e.ConfianzaSalida(valor=round(c.valor, 1), nivel=c.nivel, desglose=e.DesgloseConfianza(
-        consistencia=round(c.consistencia, 3), incidentes=round(c.incidentes, 3),
-        cumplimiento_cliente=round(c.cumplimiento_cliente, 3), evidencia=round(c.evidencia, 3)))
+        consistencia=round(c.consistencia, 3), cumplimiento_cliente=round(c.cumplimiento_cliente, 3), evidencia=round(c.evidencia, 3)))
 
 
 def referencia_mercado(prior: Prior, cfg: Config) -> ReferenciaMercado:
     """Un proveedor promedio del segmento, para explicar cuando hay una sola opción."""
     d = calcular_desempeno(SUMAS_VACIAS, prior, cfg)
     q = calcular_confianza(SUMAS_VACIAS, prior, d.puntualidad, cfg).calidad
-    return ReferenciaMercado(
-        prob_a_tiempo=prior.P0, desempeno=d.valor, confianza=100 * q,
-        prob_incidente=min(1.0, prior.I0 / cfg.simulacion.severidad_media_sin_historial))
+    return ReferenciaMercado(prob_a_tiempo=prior.P0, desempeno=d.valor, confianza=100 * q)
 
 
 class ServicioEvaluacion:
@@ -53,10 +56,9 @@ class ServicioEvaluacion:
         self.repo = repo
         self.cfg = cfg
 
-    def _mercado(self, hasta: date) -> tuple[list, dict[str, float], Historial]:
-        sev = severidad_por_servicio(self.repo.incidentes())
+    def _mercado(self, hasta: date) -> tuple[list, Historial]:
         todos = self.repo.servicios_historicos(hasta=hasta)
-        return todos, sev, construir_historial(todos, sev, hasta, self.cfg.recencia.vida_media_dias)
+        return todos, construir_historial(todos, hasta, self.cfg.recencia.vida_media_dias)
 
     def _prior(self, mercado: Historial, ruta_id: str, corredor: Optional[str]) -> Prior:
         rutas = {r.ruta_id for r in self.repo.rutas() if corredor is not None and r.corredor == corredor}
@@ -69,25 +71,25 @@ class ServicioEvaluacion:
         resultado = filtrar(s, self.repo, cfg)
         ruta = resultado.ruta
         nombres = {u.ubicacion_id: u.nombre for u in self.repo.ubicaciones()}
-        todos, sev, mercado = self._mercado(s.fecha_servicio)
+        todos, mercado = self._mercado(s.fecha_servicio)
         prior = self._prior(mercado, ruta.ruta_id, ruta.corredor)
         penal = cfg.escenario.penal_hora_cop if s.penal_hora_cop is None else s.penal_hora_cop
 
         calculos = []
         for c in resultado.candidatos:
             pid = c.proveedor.proveedor_id
-            h = construir_historial([x for x in todos if x.proveedor_id == pid], sev, s.fecha_servicio,
+            h = construir_historial([x for x in todos if x.proveedor_id == pid], s.fecha_servicio,
                                     cfg.recencia.vida_media_dias, cliente_id=s.cliente_id)
             sumas = h.sumas()
             d = calcular_desempeno(sumas, prior, cfg)
             conf = calcular_confianza(sumas, prior, d.puntualidad, cfg)
-            entrada = preparar_entrada(pid, h, mercado, ruta.ruta_id, conf.indice_incidentes, prior.sigma0,
+            entrada = preparar_entrada(pid, h, mercado, ruta.ruta_id, prior.sigma0,
                                        c.opcion.tiempo_prometido_h, s.plazo_h, c.opcion.costo,
                                        s.presupuesto_cop, penal, cfg)
             calculos.append((c, sumas, d, conf, simular(entrada, cfg)))
 
         resumenes = [ResumenOpcion(c.proveedor.proveedor_id, c.opcion.costo, sim.prob_a_tiempo, d.valor,
-                                   conf.valor, sumas.W_c, sim.prob_incidente)
+                                   conf.valor, sumas.W_c)
                      for c, sumas, d, conf, sim in calculos]
         explicaciones = explicar(resumenes, referencia_mercado(prior, cfg), cfg)
 
@@ -98,14 +100,13 @@ class ServicioEvaluacion:
                 lista_riesgos.append("El costo supera el presupuesto")
             candidatos.append(e.CandidatoSalida(
                 proveedor_id=c.proveedor.proveedor_id, nombre=c.proveedor.nombre,
-                vehiculos=e.Vehiculos(tipo=c.opcion.nombre, cantidad=c.opcion.viajes),
+                vehiculos=_vehiculos(c.opcion),
                 costo_cop=c.opcion.costo,
                 profit=e.Profit(esperado_cop=round(sim.profit_esperado_cop), p10_cop=round(sim.profit_p10_cop),
                                 margen_pct=None if sim.margen_pct is None else round(sim.margen_pct, 1)),
                 tiempo_h=e.TiempoH(p50=round(sim.tiempo_p50_h, 1), p90=round(sim.tiempo_p90_h, 1),
                                    prob_a_tiempo=round(sim.prob_a_tiempo, 3),
                                    abanico={f"{p:g}": round(v, 1) for p, v in sim.abanico_h.items()}),
-                prob_incidente=round(sim.prob_incidente, 3),
                 desempeno=_desempeno(d), confianza=_confianza(conf),
                 riesgos=lista_riesgos, explicacion=explicaciones[c.proveedor.proveedor_id].texto,
                 avisos=list(c.avisos) + list(sim.avisos),
@@ -119,7 +120,8 @@ class ServicioEvaluacion:
             cancelados=[e.CanceladoSalida(proveedor_id=x.proveedor.proveedor_id, nombre=x.proveedor.nombre,
                                           razones=[_razon(r) for r in x.razones]) for x in resultado.cancelados],
             casi_elegibles=[e.CasiElegibleSalida(proveedor_id=x.proveedor.proveedor_id, nombre=x.proveedor.nombre,
-                                                 razon=_razon(x.razon), flexibilizar=x.flexibilizar)
+                                                 razon=_razon(x.razon), flexibilizar=x.flexibilizar,
+                                                 vehiculos=None if x.opcion is None else _vehiculos(x.opcion))
                             for x in resultado.casi_elegibles],
             sin_candidatos=resultado.sin_candidatos,
             parametros_escenario=e.ParametrosEscenario(plazo_h=s.plazo_h, penal_hora_cop=penal,
@@ -134,10 +136,10 @@ class ServicioEvaluacion:
             return None
         cfg = self.cfg
         H = cfg.recencia.vida_media_dias
-        todos, sev, mercado = self._mercado(hoy)
+        todos, mercado = self._mercado(hoy)
         nacional = self._prior(mercado, "", None)
         propios = [x for x in todos if x.proveedor_id == proveedor_id]
-        h = construir_historial(propios, sev, hoy, H)
+        h = construir_historial(propios, hoy, H)
         d = calcular_desempeno(h.sumas(), nacional, cfg)
         conf = calcular_confianza(h.sumas(), nacional, d.puntualidad, cfg)
 
@@ -145,13 +147,13 @@ class ServicioEvaluacion:
         for mes in sorted({x.fecha_entrega.strftime("%Y-%m") for x in propios}):
             del_mes = [x for x in propios if x.fecha_entrega.strftime("%Y-%m") == mes]
             fin = max(x.fecha_entrega for x in del_mes)
-            hm = construir_historial(del_mes, sev, fin, H)
+            hm = construir_historial(del_mes, fin, H)
             tendencia.append(e.PuntoTendencia(mes=mes, servicios=hm.n,
                                               desempeno=round(calcular_desempeno(hm.sumas(), nacional, cfg).valor, 1)))
 
         fortalezas, debilidades = [], []
         if h.n:
-            punt, inc = float(h.a.mean()), float((h.s > 0).mean())
+            punt = float(h.a.mean())
             nombres = {u.ubicacion_id: u.nombre for u in self.repo.ubicaciones()}
             rutas = {r.ruta_id: f"{nombres.get(r.origen_id, r.origen_id)} → {nombres.get(r.destino_id, r.destino_id)}"
                      for r in self.repo.rutas()}
@@ -162,25 +164,21 @@ class ServicioEvaluacion:
                           for t in sorted({x.tipo_vehiculo_id for x in propios})]
             u = cfg.ficha.umbral_diferencia
             for nombre, servicios in segmentos:
-                hs = construir_historial(servicios, sev, hoy, H)
+                hs = construir_historial(servicios, hoy, H)
                 if hs.n < cfg.ficha.min_servicios_segmento:
                     continue
-                p_seg, i_seg = float(hs.a.mean()), float((hs.s > 0).mean())
+                p_seg = float(hs.a.mean())
                 detalle = f"{hs.n} servicios"
                 if p_seg >= punt + u:
                     fortalezas.append(f"Puntualidad de {p_seg:.0%} en {nombre} (su promedio: {punt:.0%}; {detalle})")
                 elif p_seg <= punt - u:
                     debilidades.append(f"Puntualidad de {p_seg:.0%} en {nombre} (su promedio: {punt:.0%}; {detalle})")
-                if i_seg >= inc + u:
-                    debilidades.append(f"Incidentes en el {i_seg:.0%} de los servicios en {nombre} "
-                                       f"(su promedio: {inc:.0%}; {detalle})")
 
         return e.FichaProveedor(
             proveedor_id=p.proveedor_id, nombre=p.nombre, estado=p.estado,
             cargas_especiales=list(p.cargas_especiales), servicios=h.n,
             ultimo_servicio=max((x.fecha_entrega for x in propios), default=None),
             puntualidad_pct=round(100 * float(h.a.mean()), 1) if h.n else None,
-            incidentes_pct=round(100 * float((h.s > 0).mean()), 1) if h.n else None,
             desempeno=_desempeno(d), confianza=_confianza(conf), tendencia=tendencia,
             fortalezas=fortalezas, debilidades=debilidades,
         )

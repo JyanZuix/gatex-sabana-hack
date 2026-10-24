@@ -7,7 +7,7 @@
    "tipo_vehiculo_id": "TV-PLAT40",
    "nombre": "Tractocamión plataforma 40'",
    "cap_teu": 2,
-   "cap_toneladas": 34,
+   "cap_kg": 34000,
    "cap_m3": 67,
    "carga_especial": null
   },
@@ -15,7 +15,7 @@
    "tipo_vehiculo_id": "TV-SENC20",
    "nombre": "Camión sencillo 20'",
    "cap_teu": 1,
-   "cap_toneladas": 17,
+   "cap_kg": 17000,
    "cap_m3": 33,
    "carga_especial": null
   },
@@ -23,15 +23,15 @@
    "tipo_vehiculo_id": "TV-REFRI40",
    "nombre": "Tractocamión refrigerado 40'",
    "cap_teu": 2,
-   "cap_toneladas": 30,
+   "cap_kg": 30000,
    "cap_m3": 60,
    "carga_especial": "refrigerado"
   },
   {
    "tipo_vehiculo_id": "TV-CAMABAJA",
    "nombre": "Cama baja",
-   "cap_teu": 0,
-   "cap_toneladas": 45,
+   "cap_teu": 2,
+   "cap_kg": 45000,
    "cap_m3": null,
    "carga_especial": "sobredimensionado"
   }

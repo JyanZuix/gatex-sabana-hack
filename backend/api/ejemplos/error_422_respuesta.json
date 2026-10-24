@@ -1,0 +1,9 @@
+{
+  "detalle": "Ningún vehículo del catálogo puede llevar un contenedor de 60.000 kg (máximo 45.000 kg)",
+  "errores": [
+    {
+      "campo": "peso_kg",
+      "mensaje": "Ningún vehículo del catálogo puede llevar un contenedor de 60.000 kg (máximo 45.000 kg)"
+    }
+  ]
+}

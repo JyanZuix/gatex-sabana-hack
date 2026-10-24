@@ -16,7 +16,6 @@ from backend.dominio import (
     Capacidad,
     Cliente,
     Cobertura,
-    Incidente,
     Proveedor,
     Ruta,
     ServicioHistorico,
@@ -53,7 +52,6 @@ class RepositorioSimulado(RepositorioEnMemoria):
             flota=self._leer("vehiculos_proveedor", VehiculoProveedor),
             capacidad=self._leer("capacidad_actual", Capacidad),
             servicios=self._leer("servicios_historicos", ServicioHistorico),
-            incidentes=self._leer("incidentes", Incidente),
             cobertura=cobertura,
         )
 
