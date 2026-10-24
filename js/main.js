@@ -65,6 +65,7 @@ const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.15, .8625), new THREE.Me
 screen.position.z = .022; tablet.add(screen); // Pantalla interactiva independiente de la carcasa.
 
 let animador=null;
+let xrSession=null,starting=false; // Estado compartido por el botón de entrada y la salida de VR.
 const raycaster=new THREE.Raycaster(),rotation=new THREE.Matrix4();
 const controllers=[],selecting=new Set();
 const ui=new TabletOperaciones({canvas,api:new API(),onDirty:()=>{texture.needsUpdate=true;},politicaCasi:POLITICA_CASI,
@@ -113,7 +114,7 @@ async function exitVR() {
 entrar.addEventListener('click',async()=>{
     if(starting)return;
     if(preview) {inicio.hidden=true;document.getElementById('aviso').hidden=false;draw();return;}
-    starting=true;entrar.disabled=true;
+    starting=true;entrar.disabled=true;estado.textContent='Solicitando acceso a VR…';
     let session;
     try {
         session=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']}); // Solicitud dentro del clic: conserva la activación del usuario.
@@ -122,10 +123,12 @@ entrar.addEventListener('click',async()=>{
             xrSession=null;entradaVR.reset();centrarAlEntrar=false;restablecerVistaPC();selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
             estado.textContent='Sesión terminada. Puedes volver a entrar.';entrar.focus();
         },{once:true});
+        estado.textContent='Preparando la sesión VR…';
         await renderer.xr.setSession(session);entradaVR.iniciar(renderer.xr.getReferenceSpace());centrarAlEntrar=true;inicio.hidden=true;draw(); // Entrada directa a la sección 2.
     } catch(error) {
         console.error(error);if(session)await session.end().catch(()=>{});xrSession=null;
-        estado.textContent='No se pudo entrar en VR. Comprueba los permisos del navegador y el área de juego e inténtalo de nuevo.';
+        inicio.hidden=false;
+        estado.textContent='No se pudo entrar en VR: '+(error.message||error.name||'error desconocido')+'. Revisa los permisos de Meta Quest Browser e inténtalo otra vez.';
         window.alert(estado.textContent);
     } finally {starting=false;entrar.disabled=false;}
 });
@@ -175,7 +178,11 @@ renderer.setAnimationLoop((tiempo,frame)=>{
     if(renderer.xr.isPresenting)ui.setHover(hoverIds);
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
-initialize();
+initialize().catch(error=>{
+    console.error('Error de inicio:',error);
+    inicio.hidden=false;entrar.disabled=true;estado.textContent='No se pudo iniciar la aplicación: '+(error.message||error);
+});
+
 
 
 
