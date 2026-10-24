@@ -9,6 +9,8 @@ import { TabletOperaciones } from './tablet-ui.mjs';
 import { AnimadorTarjetas } from './tarjetas.mjs';
 import { POLITICA_CASI, RESTABLECER_TARJETAS } from './config.js';
 import { cargarEscenario } from './escenario.js'; // El escenario es independiente de la tablet.
+import { DialogoDecision } from './decision.mjs';
+import { crearAparienciaTarjetas } from './apariencia-tarjetas.mjs';
 window.GatexDiagnostico?.registrar('Módulos de aplicación cargados; preparando Three.js…');
 
 const inicio = document.getElementById('inicio'); // Pantalla 1: una única acción de entrada.
@@ -70,16 +72,58 @@ let animador=null;
 let xrSession=null,starting=false; // Estado compartido por el botón de entrada y la salida de VR.
 const raycaster=new THREE.Raycaster(),rotation=new THREE.Matrix4();
 const controllers=[],selecting=new Set();
-const ui=new TabletOperaciones({canvas,api:new API(),onDirty:()=>{texture.needsUpdate=true;},politicaCasi:POLITICA_CASI,
-    onResultados:(evaluacion,vinculos,politica)=>{if(!animador)throw new Error('No se cargaron las tarjetas.');animador.aplicar(evaluacion,vinculos,politica);},
-    onNuevaConsulta:()=>{if(RESTABLECER_TARJETAS!=='original')throw new Error('Falta confirmar la distribución de regreso de las tarjetas.');animador?.restaurar();}
+const api=new API();
+// Panel flotante de decisión (confirmación, alerta o informe): se ancla frente al usuario al abrirse.
+const panel=new THREE.Group();panel.visible=false;scene.add(panel);
+const panelCanvas=document.createElement('canvas');panelCanvas.width=1440;panelCanvas.height=1080;
+const panelTexture=new THREE.CanvasTexture(panelCanvas);panelTexture.colorSpace=THREE.SRGBColorSpace;
+const panelMarco=new THREE.Mesh(new THREE.BoxGeometry(1.24,.94,.03),new THREE.MeshStandardMaterial({color:'#26344c',roughness:.5}));
+panelMarco.position.z=-.018;panel.add(panelMarco);
+const panelPantalla=new THREE.Mesh(new THREE.PlaneGeometry(1.2,.9),new THREE.MeshBasicMaterial({map:panelTexture}));panel.add(panelPantalla);
+function anclarPanel(){ // 1,1 m delante de la vista, casi a la altura de los ojos y de frente al usuario.
+    camera.updateMatrixWorld(true); // En VR, Three.js copia aquí la pose del visor después de cada fotograma.
+    const ojo=new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld),frente=camera.getWorldDirection(new THREE.Vector3());
+    frente.y=0;if(frente.lengthSq()<1e-6)frente.set(0,0,-1);frente.normalize();
+    panel.position.copy(ojo).addScaledVector(frente,1.1);panel.position.y=ojo.y-.08;panel.lookAt(ojo);
+}
+const dialogo=new DialogoDecision({canvas:panelCanvas,api,onDirty:()=>{panelTexture.needsUpdate=true;},
+    onCambio:abierto=>{if(abierto&&!panel.visible)anclarPanel();panel.visible=abierto;if(!abierto)animador?.seleccionar(null);},
+    onDecision:(decision,evaluacion)=>{if(ui.resultado?.solicitud_id!==evaluacion.solicitud_id)return;animador?.marcarElegida(decision.proveedor_id);ui.avisarDecision(decision);},
+    abrirURL:url=>window.open(url,'_blank','noopener'),
+    copiarTexto:texto=>navigator.clipboard.writeText(texto)});
+const ui=new TabletOperaciones({canvas,api,onDirty:()=>{texture.needsUpdate=true;},politicaCasi:POLITICA_CASI,
+    onResultados:(evaluacion,vinculos,politica)=>{if(!animador)throw new Error('No se cargaron las tarjetas.');animador.aplicar(evaluacion,vinculos,politica);dialogo.cerrar();},
+    onNuevaConsulta:()=>{if(RESTABLECER_TARJETAS!=='original')throw new Error('Falta confirmar la distribución de regreso de las tarjetas.');dialogo.cerrar();animador?.restaurar();}
 });
 ui.onSalir=()=>exitVR();
 function draw(){ui.draw();}
 function resetForm(){ui.nuevaConsulta();}
-function objetosInteractivos(){return [screen,...(animador?.seleccionables()||[])];}
-function idImpacto(hit){if(!hit)return null;if(hit.object===screen){const z=ui.hit(hit.uv);return z?.id==='dismiss'?null:z?.id;}if(ui.menu.isOpen)return null;const item=animador?.desdeObjeto(hit.object);return item?.estado==='candidato'?'card-'+item.node.name:null;}
-function activarImpacto(hit){if(ui.menu.isOpen&&hit?.object!==screen){ui.activate(undefined);return;}if(!hit||hit.object===screen){ui.activate(hit?.uv);return;}const item=animador?.desdeObjeto(hit.object);if(item?.estado==='candidato')ui.seleccionarProveedor(item.proveedor_id);}
+// Con el panel abierto solo él responde (modal). Si no, la tablet y todas las tarjetas clasificadas.
+function objetosInteractivos(){return dialogo.abierto?[panelPantalla]:[screen,...(animador?.seleccionables()||[])];}
+function destinoImpacto(hit){ // A qué apunta el rayo: zona del panel, zona de la tablet o tarjeta.
+    if(!hit)return null;
+    if(hit.object===panelPantalla){const z=dialogo.hit(hit.uv);return z?{tipo:'panel',id:z.id}:null;}
+    if(hit.object===screen){const z=ui.hit(hit.uv);return z&&z.id!=='dismiss'?{tipo:'tablet',id:z.id}:null;}
+    if(ui.menu.isOpen)return null;
+    const item=animador?.desdeObjeto(hit.object);return animador?.esSeleccionable(item)?{tipo:'tarjeta',id:item.node.name}:null;
+}
+function aplicarHover(destinos){
+    const ids=tipo=>destinos.filter(d=>d?.tipo===tipo).map(d=>d.id);
+    ui.setHover(ids('tablet'));dialogo.setHover(ids('panel'));animador?.resaltar(ids('tarjeta'));
+}
+function activarImpacto(hit){
+    if(dialogo.abierto){if(hit?.object===panelPantalla)dialogo.activate(hit.uv);return;}
+    if(ui.menu.isOpen&&hit?.object!==screen){ui.activate(undefined);return;}
+    if(!hit||hit.object===screen){ui.activate(hit?.uv);return;}
+    const item=animador?.desdeObjeto(hit.object);if(!animador?.esSeleccionable(item))return;
+    if(item.estado==='candidato')ui.seleccionarProveedor(item.proveedor_id);
+    if(dialogo.abrirParaTarjeta(item,ui.resultado))animador.seleccionar(item.node.name); // Descartado → alerta, nunca confirmación.
+}
+let ultimoDesplazamiento=0;
+function desplazarConMandos(tiempo){ // Joystick vertical: recorre el informe o la lista de razones.
+    if(!dialogo.abierto||!xrSession||tiempo-ultimoDesplazamiento<160)return;
+    for(const fuente of xrSession.inputSources){const ejes=fuente.gamepad?.axes||[],y=ejes[3]??ejes[1]??0;if(Math.abs(y)>.6){dialogo.scroll(y>0?2:-2);ultimoDesplazamiento=tiempo;return;}}
+}
 function controllerHit(controller) {
     controller.updateWorldMatrix(true,false); rotation.identity().extractRotation(controller.matrixWorld);
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
@@ -98,17 +142,17 @@ for(let i=0;i<2;i++) {
     controller.addEventListener('selectend',()=>selecting.delete(controller));
     controller.addEventListener('disconnected',()=>selecting.delete(controller));
     const grip=renderer.xr.getControllerGrip(i);grip.add(factory.createControllerModel(grip));scene.add(grip);
-} // Interacción de esta versión: apuntar con cualquiera de los mandos y pulsar el gatillo. No requiere manos.
+} // Apuntar con un mando y pulsar el gatillo, o con la mano y hacer pinch (Three.js entrega ambos como 'select').
 function impactoPuntero(event){
     const rect=renderer.domElement.getBoundingClientRect();
     raycaster.setFromCamera(new THREE.Vector2((event.clientX-rect.left)/rect.width*2-1,-(event.clientY-rect.top)/rect.height*2+1),camera);
     scene.updateMatrixWorld(true);return raycaster.intersectObjects(objetosInteractivos(),true)[0];
 }
 renderer.domElement.addEventListener('pointerdown',event=>{if(preview&&!renderer.xr.isPresenting&&inicio.hidden)activarImpacto(impactoPuntero(event));});
-renderer.domElement.addEventListener('pointermove',event=>{if(!preview||renderer.xr.isPresenting||!inicio.hidden)return;const id=idImpacto(impactoPuntero(event));renderer.domElement.style.cursor=id?'pointer':'default';ui.setHover(id?[id]:[]);});
-renderer.domElement.addEventListener('pointerleave',()=>ui.setHover([]));
-renderer.domElement.addEventListener('wheel',event=>{if(preview&&inicio.hidden&&ui.menu.isOpen){event.preventDefault();ui.scroll(event.deltaY);}},{passive:false});
-window.addEventListener('keydown',event=>{if(preview&&inicio.hidden)ui.key(event);});
+renderer.domElement.addEventListener('pointermove',event=>{if(!preview||renderer.xr.isPresenting||!inicio.hidden)return;const destino=destinoImpacto(impactoPuntero(event));renderer.domElement.style.cursor=destino?'pointer':'default';aplicarHover([destino]);});
+renderer.domElement.addEventListener('pointerleave',()=>aplicarHover([]));
+renderer.domElement.addEventListener('wheel',event=>{if(!preview||!inicio.hidden)return;if(dialogo.abierto){event.preventDefault();dialogo.scroll(Math.sign(event.deltaY)*3);}else if(ui.menu.isOpen){event.preventDefault();ui.scroll(event.deltaY);}},{passive:false});
+window.addEventListener('keydown',event=>{if(preview&&inicio.hidden)(dialogo.abierto?dialogo:ui).key(event);});
 async function exitVR() {
     if(xrSession) {try{await xrSession.end();}catch(error){console.error(error);}}
     else {resetForm();inicio.hidden=false;document.getElementById('aviso').hidden=true;entrar.focus();}
@@ -123,7 +167,7 @@ entrar.addEventListener('click',async()=>{
     registrarEntrada('Solicitando immersive-vr · gesto activo: '+(navigator.userActivation?.isActive??'sin dato'));
     let session;
     try {
-        session=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']}); // Solicitud dentro del clic: conserva la activación del usuario.
+        session=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor'],optionalFeatures:['hand-tracking']}); // Solicitud dentro del clic: conserva la activación del usuario.
         xrSession=session;registrarEntrada('WebXR aceptó la sesión; configurando el visor…');
         session.addEventListener('end',()=>{
             xrSession=null;entradaVR.reset();centrarAlEntrar=false;restablecerVistaPC();selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
@@ -146,7 +190,7 @@ async function initialize() {
     try {
         const resultado=await cargarEscenario(scene);
         registrarEntrada('Escenario cargado; comprobando las doce tarjetas…');
-        animador=new AnimadorTarjetas(resultado.modelo);
+        animador=new AnimadorTarjetas(resultado.modelo,{apariencia:crearAparienciaTarjetas({mirarHacia:resultado.entrada.position})});
         puntoEntrada=resultado.entrada;entradaVR.configurar(puntoEntrada);restablecerVistaPC();
     } catch(error) {
         console.error('No se pudo cargar Gatex5.glb:',error);
@@ -179,14 +223,14 @@ renderer.setAnimationLoop((tiempo,frame)=>{
         }
     }
     animador?.actualizar(tiempo);scene.updateMatrixWorld(true);
-    const hoverIds=[];
+    const destinos=[];
     for(const {controller,line} of controllers) {
         const hit=renderer.xr.isPresenting?controllerHit(controller):null;
-        const id=idImpacto(hit);const interactive=!!id;
-        line.scale.z=hit?hit.distance:3;line.material.color.set(interactive?'#175cde':'#8292a9');
-        if(interactive)hoverIds.push(id);
+        const destino=destinoImpacto(hit);
+        line.scale.z=hit?hit.distance:3;line.material.color.set(destino?'#175cde':'#8292a9');
+        if(destino)destinos.push(destino);
     }
-    if(renderer.xr.isPresenting)ui.setHover(hoverIds);
+    if(renderer.xr.isPresenting){aplicarHover(destinos);desplazarConMandos(tiempo);}
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
 initialize().catch(error=>{

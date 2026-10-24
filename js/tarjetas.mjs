@@ -1,18 +1,25 @@
 import {ANIMACION_TARJETAS} from './config.js';
 import {TARJETAS_PROVEEDOR} from './proveedores.mjs';
+// Estados que se pueden seleccionar: un candidato abre la confirmación; un descartado o casi elegible, la alerta.
+const SELECCIONABLES=new Set(['candidato','cancelado','casi']);
+const SIN_APARIENCIA={preparar(){},aplicar(){}}; // Las pruebas no necesitan Three.js.
 export class AnimadorTarjetas {
-    constructor(modelo,{descenso_m=ANIMACION_TARJETAS.descenso_m,duracion_ms=ANIMACION_TARJETAS.duracion_ms}={}) {
+    constructor(modelo,{descenso_m=ANIMACION_TARJETAS.descenso_m,duracion_ms=ANIMACION_TARJETAS.duracion_ms,apariencia=SIN_APARIENCIA}={}) {
         this.items=new Map();this.animaciones=new Map();this.duracion=duracion_ms;this.descenso=descenso_m;
+        this.apariencia=apariencia;this.hover=new Set();this.seleccionada=null;this.elegida=null;
         for(const [nombre] of TARJETAS_PROVEEDOR) {
             const matches=[];modelo.traverse(o=>{if(o.name===nombre)matches.push(o);});
             if(matches.length!==1)throw new Error('Debe existir una sola '+nombre+'; encontradas: '+matches.length);
             const node=matches[0];this.items.set(nombre,{node,original:node.position.clone(),estado:'neutral',proveedor_id:null});
         }
+        for(const item of this.items.values())this.apariencia.preparar(item.node);
+        this.refrescar();
     }
     mover(item,destino) {this.animaciones.set(item.node.name,{item,desde:item.node.position.clone(),hasta:destino.clone(),inicio:null});}
     restaurar() {
         this.animaciones.clear();
         for(const item of this.items.values()){item.estado='neutral';item.proveedor_id=null;this.mover(item,item.original);}
+        this.limpiarMarcas();
     }
     aplicar(evaluacion,vinculos,casiPolicy) {
         if(!['panel','arriba'].includes(casiPolicy))throw new Error('Falta definir cómo presentar los casi elegibles.');
@@ -37,6 +44,7 @@ export class AnimadorTarjetas {
             if(entry.estado==='cancelado'||(entry.estado==='casi'&&casiPolicy==='panel'))target.y-=this.descenso;
             this.mover(item,target);
         }
+        this.limpiarMarcas();
     }
     actualizar(tiempo) {
         for(const [key,animation] of this.animaciones){
@@ -46,11 +54,22 @@ export class AnimadorTarjetas {
             if(p===1)this.animaciones.delete(key);
         }
     }
-    seleccionables() {return [...this.items.values()].filter(i=>i.estado==='candidato').map(i=>i.node);}
+    esSeleccionable(item) {return SELECCIONABLES.has(item?.estado);}
+    seleccionables() {return [...this.items.values()].filter(i=>this.esSeleccionable(i)).map(i=>i.node);}
+    candidatas() {return [...this.items.values()].filter(i=>i.estado==='candidato').map(i=>i.node);}
     desdeObjeto(object) {
         for(let current=object;current;current=current.parent){const item=this.items.get(current.name);if(item)return item;}
         return null;
     }
+    // Retroalimentación visual: apuntar (hover), seleccionar y el proveedor que eligió el funcionario.
+    resaltar(nombres) {const next=new Set(nombres);if([...next].sort().join('|')===[...this.hover].sort().join('|'))return;this.hover=next;this.refrescar();}
+    seleccionar(nombre) {if(this.seleccionada===nombre)return;this.seleccionada=nombre;this.refrescar();}
+    marcarElegida(proveedor_id) {
+        const item=[...this.items.values()].find(i=>i.proveedor_id===proveedor_id&&i.estado==='candidato');
+        this.elegida=item?item.node.name:null;this.refrescar();return !!item;
+    }
+    limpiarMarcas() {this.hover=new Set();this.seleccionada=null;this.elegida=null;this.refrescar();}
+    refrescar() {
+        for(const [nombre,item] of this.items)this.apariencia.aplicar(item.node,{estado:item.estado,hover:this.hover.has(nombre),seleccionada:this.seleccionada===nombre,elegida:this.elegida===nombre});
+    }
 }
-
-

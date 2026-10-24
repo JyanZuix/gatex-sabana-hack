@@ -62,5 +62,23 @@ export class API {
         for(const p of data.casi_elegibles)if(!text(p.proveedor_id)||!text(p.nombre)||!text(p.razon?.mensaje)||!text(p.flexibilizar))throw new ErrorAPI('La lista de casi elegibles llegó incompleta.');
         return data;
     }
+    // Contrato de POST /decisiones: solo estos cuatro campos. El backend guarda el snapshot y la hora.
+    async decidir({solicitud_id,proveedor_id,justificacion,escenario_id=null},signal) {
+        const data=await this.llamar('POST','/decisiones',{solicitud_id,proveedor_id,justificacion,escenario_id},signal);
+        if(typeof data?.decision_id!=='string'||data.solicitud_id!==solicitud_id||data.proveedor_id!==proveedor_id||!Array.isArray(data.snapshot?.candidatos)||!Array.isArray(data.snapshot?.cancelados))
+            throw new ErrorAPI('/decisiones: la respuesta no confirma el registro. Si reintentas y ya quedó guardada, el backend lo indicará.',200);
+        return data;
+    }
+    async decision(decision_id,signal) {
+        const data=await this.llamar('GET','/decisiones/'+encodeURIComponent(decision_id),undefined,signal);
+        if(typeof data?.decision_id!=='string'||typeof data.solicitud_id!=='string'||typeof data.proveedor_id!=='string')throw new ErrorAPI('La decisión llegó con un formato no reconocido.');
+        return data;
+    }
+    async informe(decision_id,signal) {
+        const data=await this.llamar('GET','/decisiones/'+encodeURIComponent(decision_id)+'/informe?formato=json',undefined,signal);
+        if(!Array.isArray(data?.secciones)||data.secciones.length!==8||data.secciones.some(s=>typeof s?.titulo!=='string'||!Array.isArray(s.bloques)))throw new ErrorAPI('El informe llegó con un formato no reconocido.');
+        return data;
+    }
+    urlInforme(decision_id) {return this.base+'/decisiones/'+encodeURIComponent(decision_id)+'/informe?descargar=false';} // HTML imprimible con "Descargar PDF".
 }
 

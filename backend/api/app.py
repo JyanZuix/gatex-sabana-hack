@@ -6,7 +6,7 @@ Documentación:   http://localhost:8000/docs
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
-from typing import Callable, Optional
+from typing import Callable, Literal, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -25,7 +25,7 @@ from backend.filtro import RutaNoEncontrada
 from . import esquemas as e
 from .catalogos import construir_catalogos
 from .cors import envolver_cors
-from .informe import construir_informe, nombre_archivo
+from .informe import construir_documento, construir_informe, nombre_archivo
 from .registro import Registro
 from .servicio import ServicioEvaluacion
 
@@ -245,8 +245,10 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         return d
 
     @app.get("/decisiones/{decision_id}/informe", response_class=HTMLResponse, tags=["Decisiones"],
-             summary="Informe descargable (HTML imprimible o guardable como PDF) con todo lo que vio el funcionario")
-    def informe(decision_id: str, descargar: bool = True) -> HTMLResponse:
+             summary="Informe de la decisión en 8 secciones: HTML imprimible (Descargar PDF) o, con "
+                     "?formato=json, el mismo contenido como datos para las gafas",
+             responses={200: {"content": {"application/json": {"schema": e.InformeDecision.model_json_schema()}}}})
+    def informe(decision_id: str, descargar: bool = True, formato: Literal["html", "json"] = "html"):
         d = registro.decision(decision_id)
         if d is None:
             raise HTTPException(status_code=404, detail=f"No existe la decisión {decision_id} (las decisiones "
@@ -254,8 +256,12 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         r = registro.solicitud(d.solicitud_id)
         solicitud = r.escenarios[d.escenario_id][0] if d.escenario_id else r.solicitud
         cliente = next((c.nombre for c in repo.clientes() if c.cliente_id == solicitud.cliente_id), solicitud.cliente_id)
+        vehiculo = next((t.nombre for t in repo.tipos_vehiculo() if t.tipo_vehiculo_id == solicitud.tipo_vehiculo_id),
+                        solicitud.tipo_vehiculo_id)
+        if formato == "json":
+            return JSONResponse(construir_documento(d, solicitud, cliente, vehiculo).model_dump(mode="json"))
         modo = "attachment" if descargar else "inline"
-        return HTMLResponse(construir_informe(d, solicitud, cliente),
+        return HTMLResponse(construir_informe(d, solicitud, cliente, vehiculo),
                             headers={"Content-Disposition": f'{modo}; filename="{nombre_archivo(d)}"'})
 
     @app.post("/solicitudes/{solicitud_id}/cierre", response_model=e.ServicioSalida, status_code=201,

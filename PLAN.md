@@ -42,10 +42,10 @@ Supuestos abiertos: capacidades del catálogo de vehículos a confirmar con nego
 | 1 Filtro | 12/12 | 100 % |
 | 2 Cálculos | 11/11 | 100 % |
 | 3 Simulación | 9/9 | 100 % |
-| 4 API | 13/13 | 100 % |
-| 5 Web de respaldo | 0/9 | 0 % |
+| 4 API | 14/14 | 100 % |
+| 5 Web de respaldo | 1/9 | 11 % |
 | 6 Tableros | 0/6 | 0 % |
-| 7 Gafas | 0/6 | 0 % |
+| 7 Gafas | 3/8 | 38 % |
 | 8 Validación y demo | 0/8 | 0 % |
 
 ---
@@ -117,6 +117,7 @@ Entradas: historial ponderado por recencia. Todas las fórmulas del doc de cálc
 - [x] Cierre de viajes — `POST /solicitudes/{id}/cierre` inserta el resultado real en `transporte.servicio`, recarga el repositorio y devuelve D antes y después; `tests/test_fase6_bd.py` (ciclo evaluar → decidir → cerrar → D cambia) y prueba contra Supabase con ROLLBACK
 - [x] Caché de PostgreSQL con vencimiento y recarga tras escribir — test: relee al vencer, conserva datos si el refresco falla
 - [x] Informe descargable de la decisión — `GET /decisiones/{id}/informe` (HTML imprimible); test: contiene la decisión, todos los descartados con sus razones y escapa el texto
+- [x] Informe en 8 secciones y variante JSON — mismo endpoint con «Descargar PDF» (impresión del navegador) y `?formato=json` para las gafas, ambos desde un solo documento; `tests/test_informe_decision.py`: las 8 secciones en orden con datos reales de una solicitud de prueba, mismo contenido en HTML y JSON, snapshot idéntico a lo mostrado
 - [ ] ~~Persistencia del proveedor elegido, justificación y snapshot en la base~~ — descartada por el equipo el 2026-10-24; el informe cumple ese papel
 
 ## Fase 5 · Web de respaldo (`frontend_web/`)
@@ -129,7 +130,7 @@ Depende de la Fase 4. Misma funcionalidad que las gafas.
 - [ ] Sección "Descartados" — todas las razones y el dato que las causó, siempre visible, también con 0 candidatos
 - [ ] Ordenamiento — por profit, tiempo o confianza sin ocultar ninguna opción ni marcar un "ganador"
 - [ ] Escenarios — controles para bloqueo, plazo y `penal_hora` que llaman a `/escenario`
-- [ ] "Elegir proveedor" — pide confirmación y justificación, llama a `/decisiones` y muestra el registro; ningún texto del tipo "el sistema asignó"
+- [x] "Elegir proveedor" — pide confirmación y justificación, llama a `/decisiones` y muestra el registro; ningún texto del tipo "el sistema asignó" (panel compartido con las gafas; en la web se usa `index.html?preview=1`, ver Fase 7)
 
 ## Fase 6 · Tableros
 - [ ] Precios — costo por viaje, costo/km y costo/ton·km por proveedor y ruta, calculados al vuelo
@@ -144,7 +145,9 @@ Depende de las fases 4 y 5. Sin lógica de negocio. El prototipo actual (`index.
 - [ ] Cliente de la API en el prototipo WebXR — `fetch` a `/solicitudes/evaluar`; no hay cálculos locales (revisión del código)
 - [ ] Formulario en la tablet conectado a la API — los campos del prototipo se amplían con los de la solicitud real
 - [ ] Tarjetas flotantes comparables — muestran los mismos valores que la web
-- [ ] Panel de descartados — todas las razones visibles
+- [x] Panel de descartados — todas las razones visibles: la tarjeta de un descartado abre una alerta con cada razón y el dato requerido frente al disponible, indica si es casi elegible y solo tiene «Entendido»; `tests/decision.test.mjs`
+- [x] Tarjetas interactivas — se seleccionan con mando, pinch o clic, se resaltan al apuntar y al seleccionar; candidato → confirmación con resumen y motivo obligatorio → `POST /decisiones` una sola vez («Registrando…», reintento sin perder el motivo, 409 recupera la decisión ya guardada); descartado en ámbar con insignia «No elegible» y nunca abre la confirmación; `tests/decision.test.mjs` y recorrido en la vista web
+- [x] Informe de la decisión en las gafas — panel legible con desplazamiento (botones, joystick o rueda), «Abrir en el navegador» y «Copiar enlace» para la web o la tableta; mismo contenido que el HTML (`?formato=json`)
 - [ ] Abanico de tiempos y mapa de la ruta con riesgos — datos de la API
 - [ ] Prueba en Quest 3 real por HTTPS — legibilidad y mandos verificados; si falla, se usa la web de respaldo
 
@@ -211,3 +214,4 @@ Una solicitud real entra por la web o las gafas, se filtra (con todas las razone
 | 2026-10-24 | Adaptador PostgreSQL con `tipo_vehiculo` y `cliente`; `GET /catalogos`; 503 si la base cae; ejemplos del contrato | 131 pruebas pasan; `uvicorn` contra Supabase: 15 solicitudes pendientes evaluadas, CORS, escenarios, decisiones y ficha verificados |
 | 2026-10-24 | Solo contenedores (turbo y sencillo obsoletos); persistencia de la solicitud al decidir en `transporte.solicitud`; 409/503 en decisiones; vehículo de los casi elegibles; protección de credenciales | 145 pruebas pasan; INSERT verificado contra Supabase con ROLLBACK (la base sigue con 495 filas); `uvicorn` contra Supabase con IDs `REQ-0498` de la secuencia |
 | 2026-10-24 | Comunicación completa con la base: cierre de viajes en `servicio`, caché con vencimiento, informe descargable; vehículos obsoletos fuera de `/catalogos/formulario` | 156 pruebas pasan (+1 opcional contra Supabase con ROLLBACK: pasa; la base sigue con 495 solicitudes y 480 servicios) |
+| 2026-10-24 | Tarjetas interactivas (candidato → confirmación → `POST /decisiones` → informe; descartado → alerta «No elegible»), panel 3D compartido por gafas y vista web, informe en 8 secciones con `?formato=json`. Se actualizaron las pruebas viejas de `tests/frontend.test.mjs`, que ya fallaban antes (formulario sin `n_contenedores`, `toneladas`, 9 campos) | `backend/pruebas.sh`: 160 pruebas pasan (+4 del informe); `npm test` con Node 22: 8 pruebas pasan, incluidas las 5 pedidas; recorrido completo en `?preview=1` con Chromium sin interfaz y la API simulada con `backend/api/ejemplos/` (sin escribir en Supabase). **Falta probar en Quest 3 real** |

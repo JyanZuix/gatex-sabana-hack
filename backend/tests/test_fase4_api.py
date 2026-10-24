@@ -160,6 +160,7 @@ def test_ejemplos_guardados_cumplen_el_contrato():
     e.CierreEntrada.model_validate(leer("cierre_entrada.json"))
     e.ServicioSalida.model_validate(leer("cierre_respuesta.json"))
     assert (d / "informe_decision_ejemplo.html").read_text(encoding="utf-8").startswith("<!doctype html>")
+    assert len(e.InformeDecision.model_validate(leer("informe_decision_ejemplo.json")).secciones) == 8
     assert ev.candidatos and ev.cancelados
     assert all(sum(c.vehiculos.contenedores_por_vehiculo) == 3 for c in ev.candidatos)
     assert set(leer("error_422_respuesta.json")) == {"detalle", "errores"}

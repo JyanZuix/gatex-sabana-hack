@@ -1,10 +1,11 @@
-import {Desplegable,hitZone,menuLayout} from './desplegables.mjs';
+import {Desplegable,menuLayout} from './desplegables.mjs';
 import {crearSolicitud,Consultas,CAMPOS_API,fechaValida} from './formulario.mjs';
 import {vincularProveedores} from './proveedores.mjs';
+import {LienzoUI,dibujarTeclas} from './lienzo.mjs';
 
-export class TabletOperaciones {
+export class TabletOperaciones extends LienzoUI {
     constructor({canvas,api,onDirty,onResultados,onNuevaConsulta,politicaCasi}) {
-        Object.assign(this,{canvas,api,onDirty,onResultados,onNuevaConsulta,politicaCasi});this.ctx=canvas.getContext('2d');
+        super({canvas,onDirty});Object.assign(this,{api,onResultados,onNuevaConsulta,politicaCasi});
         this.fields=[
             {id:'cliente',label:'Cliente registrado',kind:'text',value:'',hint:'Nombre del cliente'},
             {id:'fecha_servicio',label:'Fecha del servicio',kind:'date',value:'',hint:'AAAA-MM-DD'},
@@ -17,20 +18,13 @@ export class TabletOperaciones {
             {id:'carga',label:'Tipo de carga',kind:'select',value:undefined,hint:'Seleccionar carga'},
             {id:'vehiculo',label:'Tipo de vehículo',kind:'select',value:null,hint:'Automático (backend)'}
         ];
-        this.opciones={};this.etiquetas={};this.menu=new Desplegable(this.opciones);this.consultas=new Consultas(api);this.zones=[];this.hover=new Set();
+        this.opciones={};this.etiquetas={};this.menu=new Desplegable(this.opciones);this.consultas=new Consultas(api);
         this.page=0;this.active=null;this.focus=0;this.keyboardFocus=false;this.catalogos=null;this.catalogLoading=false;this.catalogReady=false;this.catalogEstados={};this.catalogVersion=0;this.catalogControl=null;
         this.errores={};this.mensaje='Conecta con el backend para cargar las opciones.';this.resultado=null;this.proveedorActual=null;this.detallePage=0;this.discardPage=0;this.casiPage=0;this.dirty=false;
         this.vinculos=new Map();this.mappingErrors=[];this.draw();
     }
     field(id) {return this.fields.find(f=>f.id===id);}
     values() {return Object.fromEntries(this.fields.map(f=>[f.id,f.value]));}
-    texto(s,x,y,size=23,color='#16243b',weight=400) {const c=this.ctx;c.fillStyle=color;c.font=`${weight} ${size}px system-ui,sans-serif`;c.textAlign='left';c.fillText(String(s),x,y);}
-    rect(x,y,w,h,color) {const c=this.ctx;c.fillStyle=color;c.beginPath();c.roundRect(x,y,w,h,13);c.fill();}
-    button(id,label,x,y,w,h,action,enabled=true,primary=false) {
-        this.rect(x,y,w,h,enabled?(primary?'#175cde':'#e3ebf7'):'#e3e5e9');this.texto(label,x+14,y+h/2+8,22,enabled?(primary?'white':'#23446d'):'#697587',600);
-        if(enabled)this.zones.push({id,x,y,w,h,action});
-    }
-    wrap(text,width=54) {const words=String(text??'').split(/\s+/),out=[];let line='';for(const w of words){if(line&&(line+' '+w).length>width){out.push(line);line=w;}else line+=(line?' ':'')+w;}if(line)out.push(line);return out;}
     draw() {
         const c=this.ctx;this.zones=[];c.fillStyle='#f5f7fb';c.fillRect(0,0,1440,1080);
         this.texto('GATEX',42,58,32,'#175cde',800);this.texto('OPERACIONES / APOYO A LA DECISIÓN',210,55,20,'#586a82',600);
@@ -53,8 +47,7 @@ export class TabletOperaciones {
             if(this.resultado&&this.dirty)this.texto('Resultado anterior: el formulario cambió. Evalúa para actualizar.',48,795,22,'#9a3412');
         }
         if(this.menu.isOpen)this.drawMenu();
-        this.focus=Math.min(this.focus,Math.max(0,this.zones.length-1));
-        for(const z of this.zones)if(this.hover.has(z.id)||(this.keyboardFocus&&z===this.zones[this.focus])){c.strokeStyle='#175cde';c.lineWidth=5;c.strokeRect(z.x+3,z.y+3,z.w-6,z.h-6);}
+        this.marcarFoco();
         this.onDirty();
     }
     drawFields() {
@@ -118,8 +111,7 @@ export class TabletOperaciones {
     }
     drawKeyboard() {
         this.rect(42,735,1353,300,'#f5f7fb');
-        const rows=['1234567890','QWERTYUIOP','ASDFGHJKLÑ','ZXCVBNM.-/'];
-        rows.forEach((row,r)=>Array.from(row).forEach((key,col)=>this.button('key-'+key,key,42+col*96,737+r*53,88,46,()=>this.edit(key))));
+        dibujarTeclas(this,42,737,key=>this.edit(key));
         this.button('space','Espacio',42,957,300,52,()=>this.edit(' '));this.button('comma',',',357,957,95,52,()=>this.edit(','));
         this.button('delete','Borrar',467,957,220,52,()=>this.edit('DEL'));this.button('next','Siguiente',702,957,260,52,()=>this.edit('NEXT'));this.button('done','Listo',977,957,418,52,()=>this.edit('DONE'),true,true);
     }
@@ -160,7 +152,7 @@ export class TabletOperaciones {
             const evaluation=await pending;if(!evaluation)return;
             this.onResultados(evaluation,this.vinculos,this.politicaCasi);
             this.resultado=evaluation;this.dirty=false;this.page=2;this.detallePage=0;this.discardPage=0;this.casiPage=0;this.proveedorActual=evaluation.candidatos[0]?.proveedor_id||null;
-            this.mensaje=evaluation.sin_candidatos?'No hay proveedores adecuados. Revisa descartados y qué podría flexibilizarse.':`${evaluation.candidatos.length} candidatos disponibles. La decisión final es del operador.`;
+            this.mensaje=evaluation.sin_candidatos?'No hay proveedores adecuados. Revisa descartados y qué podría flexibilizarse.':`${evaluation.candidatos.length} candidatos disponibles. Selecciona una tarjeta para contratar o para ver por qué se descartó. La decisión final es del operador.`;
         } catch(error){this.mensaje=error.message;this.erroresGlobal=true;for(const item of error.errores||[]){const field=CAMPOS_API[item.campo];if(field)this.errores[field]=item.mensaje;}if(Object.keys(this.errores).length)this.page=this.fields.findIndex(f=>this.errores[f.id])<6?0:1;}
         finally {this.draw();}
     }
@@ -170,6 +162,7 @@ export class TabletOperaciones {
         for(const field of this.fields)field.value=field.kind==='select'?(field.id==='vehiculo'?null:undefined):'';
         this.onNuevaConsulta();this.mensaje='Nueva consulta: las tarjetas vuelven a sus posiciones originales.';this.erroresGlobal=false;this.draw();this.conectar();
     }
+    avisarDecision(d) {this.mensaje=`Decisión ${d.decision_id} registrada: ${d.nombre}, elegido por el funcionario. Toca su tarjeta para volver a ver el informe.`;this.erroresGlobal=false;this.draw();}
     seleccionarProveedor(id) {if(!this.resultado?.candidatos.some(p=>p.proveedor_id===id))return;this.proveedorActual=id;this.detallePage=0;this.page=2;this.active=null;this.menu.close();this.draw();}
     drawResultados() {
         const r=this.resultado;if(!r)return;
@@ -205,9 +198,7 @@ export class TabletOperaciones {
             this.button('casi-next','›',1295,941,80,40,()=>{this.casiPage++;this.draw();},this.casiPage<count-1);
         }
     }
-    hit(uv) {return hitZone(this.zones,uv);}
     activate(uv) {const z=this.hit(uv);if(z)z.action();else if(this.menu.isOpen){this.menu.close();this.draw();}}
-    setHover(ids) {const next=new Set(ids.filter(Boolean));if([...next].sort().join('|')===[...this.hover].sort().join('|'))return;this.hover=next;this.draw();}
     scroll(delta) {if(this.menu.isOpen){this.menu.changePage(delta>0?1:-1);this.draw();}}
     key(event) {
         if(event.ctrlKey||event.metaKey||event.altKey)return;

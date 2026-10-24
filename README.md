@@ -214,7 +214,7 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
 | `GET /solicitudes/{id}` | Evaluación original |
 | `POST /solicitudes/{id}/escenario` | "¿Y si…?" con otro `plazo_h` o `penal_hora_cop`; la solicitud original no cambia |
 | `POST /decisiones` · `GET /decisiones/{id}` | Elección del funcionario con justificación obligatoria y snapshot de lo que vio. Inserta la solicitud en `transporte.solicitud`. Una sola decisión por solicitud (409 si se repite); 503 si la base no responde (no queda nada registrado) |
-| `GET /decisiones/{id}/informe` | **Informe descargable** (HTML autocontenido, imprimible o guardable como PDF): solicitud, decisión y justificación, comparación de opciones con gráfico de tiempos, descartados con todas sus razones y cómo se calculó. `?descargar=false` lo abre en el navegador |
+| `GET /decisiones/{id}/informe` | **Informe de decisión** en 8 secciones (encabezado, solicitud, decisión final, resultados predichos de la opción elegida, comparación con los demás candidatos, descartados con todas sus razones, parámetros de la simulación y nota al pie). HTML autocontenido con botón «Descargar PDF» (impresión del navegador). `?descargar=false` lo abre en el navegador; `?formato=json` entrega el mismo contenido como datos (`secciones` → `bloques`) para que las gafas lo muestren |
 | `POST /solicitudes/{id}/cierre` | Registra el **resultado real del viaje** en `transporte.servicio` y actualiza el modelo. Responde el D del proveedor antes y después |
 | `GET /proveedores/{id}` | Ficha: historial, tendencia mensual de D, fortalezas y debilidades |
 
@@ -310,7 +310,7 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
 - `incidente` (`ninguno`, `retraso`, `dano`, `robo`, `varado`, `documental`) vale `ninguno` por defecto y `calificacion` (1–5) vale **3** (neutro) si no se envía; el modelo no usa ninguno de los dos.
 - La API calcula `transito_real_h` (horas desde la recogida) y `a_tiempo` (entrega ≤ `fecha_entrega_limite`). Responde 201 con `desempeno_antes`/`desempeno_despues` y `servicios_antes`/`servicios_despues`; 404 si la solicitud no está en la base, 409 si ya tiene servicio, 422 si la entrega es anterior a la recogida.
 
-**Entrada de `POST /decisiones`:** `{"solicitud_id": "REQ-0496", "proveedor_id": "PROV-01", "justificacion": "…", "escenario_id": null}`. La respuesta trae `decision_id`, `tipo_vehiculo_id` con el que se guardó la solicitud, `flexibilizado` y el `snapshot` completo. En la base se guarda: cliente, ruta, vehículo, tipo de carga, peso total (`n_contenedores × peso_kg`), `fecha_recogida` (00:00 de `fecha_servicio`) y `fecha_entrega_limite` (recogida + `plazo_h`; el del escenario si se decidió sobre uno).
+**Entrada de `POST /decisiones`:** `{"solicitud_id": "REQ-0496", "proveedor_id": "PROV-01", "justificacion": "…", "escenario_id": null}`. No acepta otros campos: el snapshot y la hora los arma el backend con la evaluación que él mismo sirvió. La respuesta trae `decision_id`, `tipo_vehiculo_id` con el que se guardó la solicitud, `flexibilizado` y el `snapshot` completo. En la base se guarda: cliente, ruta, vehículo, tipo de carga, peso total (`n_contenedores × peso_kg`), `fecha_recogida` (00:00 de `fecha_servicio`) y `fecha_entrega_limite` (recogida + `plazo_h`; el del escenario si se decidió sobre uno).
 
 > Si se cambia el contrato, **hay que actualizar este README**, regenerar `backend/api/ejemplos/` y avisar al equipo de frontend y de realidad aumentada.
 

@@ -178,6 +178,43 @@ class Decision(_Esquema):
     snapshot: Evaluacion                 # exactamente lo que vio el funcionario
 
 
+# --- Informe de la decisión (GET /decisiones/{id}/informe?formato=json) -------------
+# Mismo contenido que el HTML imprimible, como datos, para que las gafas lo muestren igual.
+
+class ParInforme(_Esquema):
+    etiqueta: str
+    valor: str
+
+
+class BloqueInforme(_Esquema):
+    """Según `tipo` se llena un campo: datos → `pares`; texto, cita y aviso → `texto`; lista → `items`;
+    tabla → `encabezados`, `filas` y `resaltada`; razones → `razones` (todas las de un descartado)."""
+    tipo: Literal["datos", "texto", "cita", "aviso", "lista", "tabla", "razones"]
+    titulo: Optional[str] = None
+    pares: list[ParInforme] = []
+    texto: Optional[str] = None
+    items: list[str] = []
+    encabezados: list[str] = []
+    filas: list[list[str]] = []
+    resaltada: Optional[int] = None      # fila del proveedor que eligió el funcionario
+    razones: list[RazonSalida] = []
+
+
+class SeccionInforme(_Esquema):
+    numero: int
+    titulo: str
+    bloques: list[BloqueInforme]
+
+
+class InformeDecision(_Esquema):
+    decision_id: str
+    solicitud_id: str
+    proveedor_id: str
+    fecha_hora: datetime                 # cuándo decidió el funcionario
+    generado: datetime                   # cuándo se generó este informe
+    secciones: list[SeccionInforme]      # siempre 8, en el orden del informe impreso
+
+
 # --- Cierre del viaje (resultado real → transporte.servicio) -----------------
 
 Incidente = Literal["ninguno", "retraso", "dano", "robo", "varado", "documental"]

@@ -14,7 +14,8 @@ sin levantar el backend. Se generaron el 2026-10-24 leyendo la base de Supabase 
 | `error_422_respuesta.json` | Error de validación (contenedor que no cabe en ningún vehículo) |
 | `sin_candidatos_entrada.json` → `sin_candidatos_respuesta.json` | 0 candidatos: `casi_elegibles` con qué flexibilizar y qué vehículo tendrían |
 | `decision_repetida_409_respuesta.json` | Segunda decisión sobre la misma solicitud |
-| `informe_decision_ejemplo.html` | `GET /decisiones/{id}/informe`: informe descargable de la decisión |
+| `informe_decision_ejemplo.html` | `GET /decisiones/{id}/informe`: informe imprimible de la decisión (8 secciones, «Descargar PDF») |
+| `informe_decision_ejemplo.json` | `GET /decisiones/{id}/informe?formato=json`: el mismo informe como datos, para las gafas |
 | `cierre_entrada.json` → `cierre_respuesta.json` | `POST /solicitudes/{id}/cierre`: resultado real del viaje (los `null` toman el valor de la decisión o el valor por defecto) |
 
 `backend/tests/test_fase4_api.py` valida que estos archivos sigan cumpliendo el contrato.

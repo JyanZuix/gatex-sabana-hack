@@ -1,0 +1,595 @@
+{
+  "decision_id": "DEC-0001",
+  "solicitud_id": "REQ-0496",
+  "proveedor_id": "PROV-01",
+  "fecha_hora": "2026-10-24T07:13:06.870164Z",
+  "generado": "2026-10-24T07:15:00Z",
+  "secciones": [
+    {
+      "numero": 1,
+      "titulo": "COSCO SHIPPING – Informe de decisión de proveedor",
+      "bloques": [
+        {
+          "tipo": "datos",
+          "titulo": null,
+          "pares": [
+            {
+              "etiqueta": "ID de la solicitud",
+              "valor": "REQ-0496"
+            },
+            {
+              "etiqueta": "ID de la decisión",
+              "valor": "DEC-0001"
+            },
+            {
+              "etiqueta": "Fecha y hora de la decisión",
+              "valor": "2026-10-24 02:13 (hora Colombia)"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        }
+      ]
+    },
+    {
+      "numero": 2,
+      "titulo": "La solicitud",
+      "bloques": [
+        {
+          "tipo": "datos",
+          "titulo": null,
+          "pares": [
+            {
+              "etiqueta": "Origen → destino",
+              "valor": "Buenaventura → Bogotá"
+            },
+            {
+              "etiqueta": "Distancia",
+              "valor": "515 km"
+            },
+            {
+              "etiqueta": "Carga",
+              "valor": "3 contenedor(es) de 20' × 20.000 kg (60.000 kg en total) · General"
+            },
+            {
+              "etiqueta": "Vehículo requerido",
+              "valor": "Tractomula"
+            },
+            {
+              "etiqueta": "Plazo",
+              "valor": "33,0 h"
+            },
+            {
+              "etiqueta": "Cliente",
+              "valor": "Plásticos Bogotá (CLI-016)"
+            },
+            {
+              "etiqueta": "Fecha del servicio",
+              "valor": "2026-11-03"
+            },
+            {
+              "etiqueta": "Presupuesto disponible",
+              "valor": "$30.000.000"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        }
+      ]
+    },
+    {
+      "numero": 3,
+      "titulo": "Decisión final",
+      "bloques": [
+        {
+          "tipo": "datos",
+          "titulo": null,
+          "pares": [
+            {
+              "etiqueta": "Proveedor elegido",
+              "valor": "Transportes Andinos del Sur (PROV-01)"
+            },
+            {
+              "etiqueta": "Vehículo con el que se registró",
+              "valor": "Tractomula"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "cita",
+          "titulo": "Motivo escrito por el funcionario",
+          "pares": [],
+          "texto": "Opción más económica con historial suficiente con este cliente",
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        }
+      ]
+    },
+    {
+      "numero": 4,
+      "titulo": "Resultados predichos para la opción elegida",
+      "bloques": [
+        {
+          "tipo": "datos",
+          "titulo": null,
+          "pares": [
+            {
+              "etiqueta": "Vehículos",
+              "valor": "3 × Tractomula (contenedores por vehículo: 1 + 1 + 1)"
+            },
+            {
+              "etiqueta": "Costo del proveedor",
+              "valor": "$14.370.000"
+            },
+            {
+              "etiqueta": "Ingreso (presupuesto disponible)",
+              "valor": "$30.000.000"
+            },
+            {
+              "etiqueta": "Profit esperado",
+              "valor": "$15.534.366"
+            },
+            {
+              "etiqueta": "Profit en mal escenario (P10)",
+              "valor": "$15.280.000"
+            },
+            {
+              "etiqueta": "Margen",
+              "valor": "51,8 %"
+            },
+            {
+              "etiqueta": "Tiempo típico (P50)",
+              "valor": "26,2 h"
+            },
+            {
+              "etiqueta": "Tiempo en mal caso (P90)",
+              "valor": "40,0 h"
+            },
+            {
+              "etiqueta": "Probabilidad de llegar a tiempo",
+              "valor": "71,6 %"
+            },
+            {
+              "etiqueta": "Probabilidad de incidente",
+              "valor": "No aplica: los incidentes están fuera del modelo (decisión del 2026-10-24)"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "datos",
+          "titulo": "Desempeño (D)",
+          "pares": [
+            {
+              "etiqueta": "Valor",
+              "valor": "72,7 / 100"
+            },
+            {
+              "etiqueta": "Puntualidad (pesa 75 %)",
+              "valor": "69,8 %"
+            },
+            {
+              "etiqueta": "Magnitud de retraso (pesa 25 %)",
+              "valor": "18,8 %"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "datos",
+          "titulo": "Confianza (C)",
+          "pares": [
+            {
+              "etiqueta": "Valor",
+              "valor": "47,7 / 100 · nivel Baja"
+            },
+            {
+              "etiqueta": "Consistencia de tiempos (2/3 de Q)",
+              "valor": "40,9 %"
+            },
+            {
+              "etiqueta": "Cumplimiento con este cliente (1/3 de Q)",
+              "valor": "74,0 %"
+            },
+            {
+              "etiqueta": "Evidencia histórica (F)",
+              "valor": "91,9 %"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "lista",
+          "titulo": "Riesgos y avisos",
+          "pares": [],
+          "texto": null,
+          "items": [
+            "Sin riesgos ni avisos señalados"
+          ],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "texto",
+          "titulo": "Explicación",
+          "pares": [],
+          "texto": "Historial con este cliente de 3.8 servicios efectivos (referencia 2.3); Opción más económica ($14.370.000, 7 % menos que la siguiente); Confianza de 47.7 (referencia 42.2); Probabilidad de llegar a tiempo de 72 % (referencia 82 %); Desempeño de 72.7 (referencia 82.4).",
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        }
+      ]
+    },
+    {
+      "numero": 5,
+      "titulo": "Comparación con los demás candidatos",
+      "bloques": [
+        {
+          "tipo": "texto",
+          "titulo": null,
+          "pares": [],
+          "texto": "Ordenado por identificador del proveedor, no por preferencia: el sistema no impone un ganador.",
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "tabla",
+          "titulo": null,
+          "pares": [],
+          "texto": null,
+          "items": [],
+          "encabezados": [
+            "Proveedor",
+            "Vehículos",
+            "Costo",
+            "Profit esperado",
+            "Profit P10",
+            "Margen",
+            "P50",
+            "P90",
+            "A tiempo",
+            "Desempeño",
+            "Confianza"
+          ],
+          "filas": [
+            [
+              "Transportes Andinos del Sur",
+              "3 × Tractomula",
+              "$14.370.000",
+              "$15.534.366",
+              "$15.280.000",
+              "51,8 %",
+              "26,2 h",
+              "40,0 h",
+              "71,6 %",
+              "72,7",
+              "47,7 Baja"
+            ],
+            [
+              "Carga Segura del Valle",
+              "3 × Tractomula",
+              "$16.530.000",
+              "$13.377.150",
+              "$12.976.818",
+              "44,6 %",
+              "24,0 h",
+              "42,9 h",
+              "79,0 %",
+              "78,3",
+              "43,8 Baja"
+            ],
+            [
+              "Mulas de Oriente",
+              "3 × Tractomula",
+              "$15.450.000",
+              "$14.490.618",
+              "$14.300.000",
+              "48,3 %",
+              "23,0 h",
+              "38,0 h",
+              "85,9 %",
+              "85,7",
+              "36,4 Baja"
+            ],
+            [
+              "Transpesados de Colombia",
+              "3 × Tractomula",
+              "$19.020.000",
+              "$10.929.378",
+              "$10.805.862",
+              "36,4 %",
+              "22,2 h",
+              "36,5 h",
+              "85,6 %",
+              "81,6",
+              "44,4 Baja"
+            ],
+            [
+              "Químicos y Carga Especial",
+              "3 × Tractomula",
+              "$19.530.000",
+              "$10.376.746",
+              "$10.070.000",
+              "34,6 %",
+              "25,0 h",
+              "41,0 h",
+              "76,7 %",
+              "85,9",
+              "51,4 Baja"
+            ],
+            [
+              "Ruta Express Antioquia",
+              "3 × Tractomula",
+              "$17.070.000",
+              "$12.879.549",
+              "$12.625.455",
+              "42,9 %",
+              "20,9 h",
+              "39,1 h",
+              "85,4 %",
+              "84,8",
+              "36,9 Baja"
+            ],
+            [
+              "Integral Cargo SAS",
+              "3 × Tractomula",
+              "$16.560.000",
+              "$13.356.188",
+              "$13.040.000",
+              "44,5 %",
+              "23,8 h",
+              "41,0 h",
+              "79,2 %",
+              "78,5",
+              "40,2 Baja"
+            ]
+          ],
+          "resaltada": 0,
+          "razones": []
+        }
+      ]
+    },
+    {
+      "numero": 6,
+      "titulo": "Proveedores descartados",
+      "bloques": [
+        {
+          "tipo": "razones",
+          "titulo": "Pacífico Express Logística (PROV-02)",
+          "pares": [],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": [
+            {
+              "codigo": "VEHICULO_NO_DISPONIBLE",
+              "mensaje": "No tiene Tractomula disponible",
+              "requerido": "Tractomula",
+              "disponible": "refrigerado"
+            }
+          ]
+        },
+        {
+          "tipo": "razones",
+          "titulo": "FríoCol Transportes (PROV-04)",
+          "pares": [],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": [
+            {
+              "codigo": "SIN_TARIFA",
+              "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+              "requerido": "RUTA-02",
+              "disponible": null
+            },
+            {
+              "codigo": "VEHICULO_NO_DISPONIBLE",
+              "mensaje": "No tiene Tractomula disponible",
+              "requerido": "Tractomula",
+              "disponible": "refrigerado, sencillo"
+            }
+          ]
+        },
+        {
+          "tipo": "razones",
+          "titulo": "Tractocargas del Caribe (PROV-05)",
+          "pares": [],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": [
+            {
+              "codigo": "SIN_CAPACIDAD",
+              "mensaje": "Capacidad agotada para el 03-nov",
+              "requerido": 1,
+              "disponible": 0
+            }
+          ]
+        },
+        {
+          "tipo": "razones",
+          "titulo": "Transportes El Llano (PROV-10)",
+          "pares": [],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": [
+            {
+              "codigo": "VEHICULOS_INSUFICIENTES",
+              "mensaje": "Necesita 3 × Tractomula, solo tiene 2 disponible(s)",
+              "requerido": 3,
+              "disponible": 2
+            }
+          ]
+        },
+        {
+          "tipo": "razones",
+          "titulo": "Carga Nacional TLC (PROV-12)",
+          "pares": [],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": [
+            {
+              "codigo": "SIN_COBERTURA",
+              "mensaje": "No opera el trayecto Buenaventura → Bogotá",
+              "requerido": "RUTA-02",
+              "disponible": null
+            },
+            {
+              "codigo": "SIN_TARIFA",
+              "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+              "requerido": "RUTA-02",
+              "disponible": null
+            },
+            {
+              "codigo": "VEHICULO_NO_DISPONIBLE",
+              "mensaje": "No tiene Tractomula disponible",
+              "requerido": "Tractomula",
+              "disponible": null
+            },
+            {
+              "codigo": "PROVEEDOR_INACTIVO",
+              "mensaje": "Proveedor inactivo",
+              "requerido": "activo",
+              "disponible": "inactivo"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "numero": 7,
+      "titulo": "Parámetros de la simulación",
+      "bloques": [
+        {
+          "tipo": "datos",
+          "titulo": null,
+          "pares": [
+            {
+              "etiqueta": "Simulaciones (N)",
+              "valor": "2.000"
+            },
+            {
+              "etiqueta": "Semilla",
+              "valor": "42"
+            },
+            {
+              "etiqueta": "Escenario",
+              "valor": "Original (sin cambios de supuestos)"
+            },
+            {
+              "etiqueta": "Penalidad por hora de retraso",
+              "valor": "$50.000"
+            },
+            {
+              "etiqueta": "Plazo usado",
+              "valor": "33,0 h"
+            }
+          ],
+          "texto": null,
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "lista",
+          "titulo": "Cómo se calcularon los valores",
+          "pares": [],
+          "texto": null,
+          "items": [
+            "Vehículos: contenedores por vehículo = mín(puestos TEU, ⌊capacidad kg / peso del contenedor⌋); se usa el tipo más económico que cumple.",
+            "Tiempo: simulación Monte Carlo con 2.000 iteraciones y semilla 42 (resultados reproducibles), a partir del historial del proveedor y del mercado en la ruta.",
+            "Profit: presupuesto − costo del proveedor − costo esperado de retraso (penalidad $50.000 por hora sobre el plazo de 33,0 h).",
+            "Desempeño: 100 · [0,75 · puntualidad + 0,25 · (1 − magnitud del retraso)], con recencia de 12 meses y suavizado hacia el mercado.",
+            "Confianza: 100 · Q · F, con Q = 2/3 consistencia de tiempos + 1/3 cumplimiento con este cliente y F = evidencia histórica."
+          ],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        }
+      ]
+    },
+    {
+      "numero": 8,
+      "titulo": "Nota",
+      "bloques": [
+        {
+          "tipo": "texto",
+          "titulo": null,
+          "pares": [],
+          "texto": "Recomendaciones generadas por el sistema; la decisión fue tomada por el funcionario.",
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        },
+        {
+          "tipo": "texto",
+          "titulo": null,
+          "pares": [],
+          "texto": "Generado el 2026-10-24 02:15 (hora Colombia). Este informe reproduce exactamente lo que se mostró al decidir.",
+          "items": [],
+          "encabezados": [],
+          "filas": [],
+          "resaltada": null,
+          "razones": []
+        }
+      ]
+    }
+  ]
+}
