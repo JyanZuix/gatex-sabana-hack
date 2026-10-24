@@ -1,5 +1,5 @@
 // Único lugar donde se configura la dirección HTTP de la API. Sin credenciales de base de datos.
-export const API_BASE = 'https://revision-repairs-alberta-definitions.trycloudflare.com';
+export const API_BASE = 'https://colleges-employees-fighter-allen.trycloudflare.com';
 export const API_TIMEOUT_MS = 30000;
 export const ANIMACION_TARJETAS = { descenso_m: 3, duracion_ms: 850 };
 

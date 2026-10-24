@@ -1,5 +1,5 @@
 param(
-    [string]$Api='https://revision-repairs-alberta-definitions.trycloudflare.com',
+    [string]$Api='https://colleges-employees-fighter-allen.trycloudflare.com',
     [string]$Origen='https://shimmering-mousse-135327.netlify.app'
 )
 $ErrorActionPreference='Stop'
