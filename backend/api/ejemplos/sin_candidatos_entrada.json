@@ -1,0 +1,13 @@
+{
+  "cliente_id": "CLI-016",
+  "origen_id": "Buenaventura",
+  "destino_id": "Cali",
+  "fecha_servicio": "2026-11-03",
+  "plazo_h": 33,
+  "n_contenedores": 3,
+  "peso_kg": 20000,
+  "tipo_carga": "peligrosa",
+  "tipo_vehiculo_id": "tractomula",
+  "presupuesto_cop": 30000000,
+  "penal_hora_cop": 50000
+}

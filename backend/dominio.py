@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class _Modelo(BaseModel):
@@ -44,10 +44,11 @@ class Cliente(_Modelo):
 
 
 class TipoVehiculo(_Modelo):
+    """Catálogo `transporte.tipo_vehiculo`. `cap_teu` = contenedores de 20' que lleva; 0 = no lleva contenedores."""
     tipo_vehiculo_id: str
     nombre: str
     cap_teu: int = Field(ge=0)
-    cap_toneladas: float = Field(ge=0)
+    cap_kg: float = Field(ge=0)
     cap_m3: Optional[float] = Field(default=None, ge=0)
     carga_especial: Optional[CargaEspecial] = None
 
@@ -110,17 +111,13 @@ class ServicioHistorico(_Modelo):
     a_tiempo: Optional[bool] = None
 
 
-class Incidente(_Modelo):
-    servicio_id: str
-    tipo: str
-    severidad: float = Field(ge=0, le=1)
-
-
 class Solicitud(_Modelo):
     """Pedido de transporte A→B.
 
+    Toda carga viaja en contenedores de 20' (1 TEU cada uno); no existe carga sin contenedores.
+    `peso_kg` es el peso de CADA contenedor, con el mismo nombre que usa la base.
+    Si se indica `tipo_vehiculo_id`, es obligatorio: solo se consideran tarifas y flota de ese tipo.
     `solicitud_id` lo asigna el backend (consecutivo); el cliente no lo envía.
-    TODO(esquema): campos definitivos cuando se conecten frontend, gafas y BD.
     """
     solicitud_id: Optional[str] = None
     cliente_id: str
@@ -128,16 +125,10 @@ class Solicitud(_Modelo):
     destino_id: str
     fecha_servicio: date
     plazo_h: float = Field(gt=0)
-    n_teu: int = Field(default=0, ge=0)
-    toneladas: float = Field(default=0, ge=0)
+    n_contenedores: int = Field(ge=1)
+    peso_kg: float = Field(gt=0)
     tipo_carga: Optional[CargaEspecial] = None
     tipo_vehiculo_id: Optional[str] = None
     presupuesto_cop: int = Field(ge=0)
     # None → se usa `escenario.penal_hora_cop` de la configuración.
     penal_hora_cop: Optional[float] = Field(default=None, ge=0)
-
-    @model_validator(mode="after")
-    def _con_carga(self) -> "Solicitud":
-        if self.n_teu == 0 and self.toneladas == 0:
-            raise ValueError("La solicitud debe indicar contenedores (n_teu) o toneladas")
-        return self

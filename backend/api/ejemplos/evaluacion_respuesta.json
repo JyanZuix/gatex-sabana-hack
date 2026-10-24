@@ -1,0 +1,479 @@
+{
+  "solicitud_id": "REQ-0496",
+  "escenario_id": null,
+  "ruta": {
+    "ruta_id": "RUTA-02",
+    "origen": "Buenaventura",
+    "destino": "Bogotá",
+    "distancia_km": 515.0
+  },
+  "candidatos": [
+    {
+      "proveedor_id": "PROV-01",
+      "nombre": "Transportes Andinos del Sur",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 14370000,
+      "profit": {
+        "esperado_cop": 15534366,
+        "p10_cop": 15280000,
+        "margen_pct": 51.8
+      },
+      "tiempo_h": {
+        "p50": 26.2,
+        "p90": 40.0,
+        "prob_a_tiempo": 0.716,
+        "abanico": {
+          "5": 22.8,
+          "10": 23.0,
+          "25": 25.0,
+          "50": 26.2,
+          "75": 36.4,
+          "90": 40.0,
+          "95": 42.0
+        }
+      },
+      "desempeno": {
+        "valor": 72.7,
+        "desglose": {
+          "puntualidad": 0.698,
+          "magnitud_retraso": 0.188
+        }
+      },
+      "confianza": {
+        "valor": 47.7,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.409,
+          "cumplimiento_cliente": 0.74,
+          "evidencia": 0.919
+        }
+      },
+      "riesgos": [],
+      "explicacion": "Historial con este cliente de 3.8 servicios efectivos (referencia 2.3); Opción más económica ($14.370.000, 7 % menos que la siguiente); Confianza de 47.7 (referencia 42.2); Probabilidad de llegar a tiempo de 72 % (referencia 82 %); Desempeño de 72.7 (referencia 82.4).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-03",
+      "nombre": "Carga Segura del Valle",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 16530000,
+      "profit": {
+        "esperado_cop": 13377150,
+        "p10_cop": 12976818,
+        "margen_pct": 44.6
+      },
+      "tiempo_h": {
+        "p50": 24.0,
+        "p90": 42.9,
+        "prob_a_tiempo": 0.79,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.0,
+          "25": 21.8,
+          "50": 24.0,
+          "75": 25.3,
+          "90": 42.9,
+          "95": 45.0
+        }
+      },
+      "desempeno": {
+        "valor": 78.3,
+        "desglose": {
+          "puntualidad": 0.775,
+          "magnitud_retraso": 0.193
+        }
+      },
+      "confianza": {
+        "valor": 43.8,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.333,
+          "cumplimiento_cliente": 0.752,
+          "evidencia": 0.927
+        }
+      },
+      "riesgos": [],
+      "explicacion": "Historial con este cliente de 7.8 servicios efectivos (referencia 1.6); Costo 15 % mayor que la opción más económica ($16.530.000 frente a $14.370.000); Desempeño de 78.3 (referencia 81.5).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-06",
+      "nombre": "Mulas de Oriente",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 15450000,
+      "profit": {
+        "esperado_cop": 14490618,
+        "p10_cop": 14300000,
+        "margen_pct": 48.3
+      },
+      "tiempo_h": {
+        "p50": 23.0,
+        "p90": 38.0,
+        "prob_a_tiempo": 0.859,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.0,
+          "25": 21.4,
+          "50": 23.0,
+          "75": 25.0,
+          "90": 38.0,
+          "95": 42.9
+        }
+      },
+      "desempeno": {
+        "valor": 85.7,
+        "desglose": {
+          "puntualidad": 0.851,
+          "magnitud_retraso": 0.127
+        }
+      },
+      "confianza": {
+        "valor": 36.4,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.432,
+          "cumplimiento_cliente": 0.864,
+          "evidencia": 0.632
+        }
+      },
+      "riesgos": [
+        "Poca evidencia histórica (6.3 servicios efectivos)"
+      ],
+      "explicacion": "Probabilidad de llegar a tiempo de 86 % (referencia 80 %); Desempeño de 85.7 (referencia 80.3); Historial con este cliente de 0.9 servicios efectivos (referencia 2.8); Confianza de 36.4 (referencia 44.1); Costo 8 % mayor que la opción más económica ($15.450.000 frente a $14.370.000).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-07",
+      "nombre": "Transpesados de Colombia",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 19020000,
+      "profit": {
+        "esperado_cop": 10929378,
+        "p10_cop": 10805862,
+        "margen_pct": 36.4
+      },
+      "tiempo_h": {
+        "p50": 22.2,
+        "p90": 36.5,
+        "prob_a_tiempo": 0.856,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.0,
+          "25": 21.4,
+          "50": 22.2,
+          "75": 25.0,
+          "90": 36.5,
+          "95": 41.0
+        }
+      },
+      "desempeno": {
+        "valor": 81.6,
+        "desglose": {
+          "puntualidad": 0.804,
+          "magnitud_retraso": 0.15
+        }
+      },
+      "confianza": {
+        "valor": 44.4,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.368,
+          "cumplimiento_cliente": 0.783,
+          "evidencia": 0.878
+        }
+      },
+      "riesgos": [],
+      "explicacion": "Probabilidad de llegar a tiempo de 86 % (referencia 80 %); Costo 32 % mayor que la opción más económica ($19.020.000 frente a $14.370.000); Historial con este cliente de 1.6 servicios efectivos (referencia 2.6).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-08",
+      "nombre": "Químicos y Carga Especial",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 19530000,
+      "profit": {
+        "esperado_cop": 10376746,
+        "p10_cop": 10070000,
+        "margen_pct": 34.6
+      },
+      "tiempo_h": {
+        "p50": 25.0,
+        "p90": 41.0,
+        "prob_a_tiempo": 0.767,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.0,
+          "25": 21.9,
+          "50": 25.0,
+          "75": 25.3,
+          "90": 41.0,
+          "95": 41.0
+        }
+      },
+      "desempeno": {
+        "valor": 85.9,
+        "desglose": {
+          "puntualidad": 0.857,
+          "magnitud_retraso": 0.134
+        }
+      },
+      "confianza": {
+        "valor": 51.4,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.459,
+          "cumplimiento_cliente": 0.866,
+          "evidencia": 0.865
+        }
+      },
+      "riesgos": [],
+      "explicacion": "Confianza de 51.4 (referencia 41.6); Desempeño de 85.9 (referencia 80.2); Costo 36 % mayor que la opción más económica ($19.530.000 frente a $14.370.000); Historial con este cliente de 0.7 servicios efectivos (referencia 2.8); Probabilidad de llegar a tiempo de 77 % (referencia 81 %).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-09",
+      "nombre": "Ruta Express Antioquia",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 17070000,
+      "profit": {
+        "esperado_cop": 12879549,
+        "p10_cop": 12625455,
+        "margen_pct": 42.9
+      },
+      "tiempo_h": {
+        "p50": 20.9,
+        "p90": 39.1,
+        "prob_a_tiempo": 0.854,
+        "abanico": {
+          "5": 18.0,
+          "10": 18.3,
+          "25": 19.0,
+          "50": 20.9,
+          "75": 21.7,
+          "90": 39.1,
+          "95": 42.4
+        }
+      },
+      "desempeno": {
+        "valor": 84.8,
+        "desglose": {
+          "puntualidad": 0.847,
+          "magnitud_retraso": 0.152
+        }
+      },
+      "confianza": {
+        "valor": 36.9,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.269,
+          "cumplimiento_cliente": 0.856,
+          "evidencia": 0.793
+        }
+      },
+      "riesgos": [],
+      "explicacion": "Probabilidad de llegar a tiempo de 85 % (referencia 80 %); Desempeño de 84.8 (referencia 80.4); Costo 19 % mayor que la opción más económica ($17.070.000 frente a $14.370.000); Historial con este cliente de 0.6 servicios efectivos (referencia 2.8); Confianza de 36.9 (referencia 44.0).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-11",
+      "nombre": "Integral Cargo SAS",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 16560000,
+      "profit": {
+        "esperado_cop": 13356188,
+        "p10_cop": 13040000,
+        "margen_pct": 44.5
+      },
+      "tiempo_h": {
+        "p50": 23.8,
+        "p90": 41.0,
+        "prob_a_tiempo": 0.792,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.2,
+          "25": 22.3,
+          "50": 23.8,
+          "75": 25.3,
+          "90": 41.0,
+          "95": 45.0
+        }
+      },
+      "desempeno": {
+        "valor": 78.5,
+        "desglose": {
+          "puntualidad": 0.775,
+          "magnitud_retraso": 0.186
+        }
+      },
+      "confianza": {
+        "valor": 40.2,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.341,
+          "cumplimiento_cliente": 0.764,
+          "evidencia": 0.834
+        }
+      },
+      "riesgos": [],
+      "explicacion": "Costo 15 % mayor que la opción más económica ($16.560.000 frente a $14.370.000); Confianza de 40.2 (referencia 43.4); Desempeño de 78.5 (referencia 81.5).",
+      "avisos": []
+    }
+  ],
+  "cancelados": [
+    {
+      "proveedor_id": "PROV-02",
+      "nombre": "Pacífico Express Logística",
+      "razones": [
+        {
+          "codigo": "VEHICULO_NO_DISPONIBLE",
+          "mensaje": "No tiene Tractomula disponible",
+          "requerido": "Tractomula",
+          "disponible": "refrigerado"
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-04",
+      "nombre": "FríoCol Transportes",
+      "razones": [
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-02",
+          "disponible": null
+        },
+        {
+          "codigo": "VEHICULO_NO_DISPONIBLE",
+          "mensaje": "No tiene Tractomula disponible",
+          "requerido": "Tractomula",
+          "disponible": "refrigerado, sencillo"
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-05",
+      "nombre": "Tractocargas del Caribe",
+      "razones": [
+        {
+          "codigo": "SIN_CAPACIDAD",
+          "mensaje": "Capacidad agotada para el 03-nov",
+          "requerido": 1,
+          "disponible": 0
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-10",
+      "nombre": "Transportes El Llano",
+      "razones": [
+        {
+          "codigo": "VEHICULOS_INSUFICIENTES",
+          "mensaje": "Necesita 3 × Tractomula, solo tiene 2 disponible(s)",
+          "requerido": 3,
+          "disponible": 2
+        }
+      ]
+    },
+    {
+      "proveedor_id": "PROV-12",
+      "nombre": "Carga Nacional TLC",
+      "razones": [
+        {
+          "codigo": "SIN_COBERTURA",
+          "mensaje": "No opera el trayecto Buenaventura → Bogotá",
+          "requerido": "RUTA-02",
+          "disponible": null
+        },
+        {
+          "codigo": "SIN_TARIFA",
+          "mensaje": "Sin tarifa vigente para esta ruta y un vehículo válido",
+          "requerido": "RUTA-02",
+          "disponible": null
+        },
+        {
+          "codigo": "VEHICULO_NO_DISPONIBLE",
+          "mensaje": "No tiene Tractomula disponible",
+          "requerido": "Tractomula",
+          "disponible": null
+        },
+        {
+          "codigo": "PROVEEDOR_INACTIVO",
+          "mensaje": "Proveedor inactivo",
+          "requerido": "activo",
+          "disponible": "inactivo"
+        }
+      ]
+    }
+  ],
+  "casi_elegibles": [],
+  "sin_candidatos": false,
+  "parametros_escenario": {
+    "plazo_h": 33.0,
+    "penal_hora_cop": 50000.0,
+    "semilla": 42,
+    "n_simulaciones": 2000
+  }
+}

@@ -9,23 +9,25 @@ import pytest
 
 from backend.calculos.confianza import calcular_confianza, nivel_confianza
 from backend.calculos.costos import (
+    contenedores_por_vehiculo,
     opcion_mas_economica,
     opciones_vehiculo,
+    reparto_contenedores,
     tipos_validos,
-    viajes_necesarios,
+    vehiculos_necesarios,
 )
 from backend.calculos.desempeno import calcular_desempeno
-from backend.calculos.historial import Sumas, construir_historial, severidad_por_servicio
+from backend.calculos.historial import Sumas, construir_historial
 from backend.calculos.priors import calcular_prior, prior_por_defecto
 from backend.calculos.profit import calcular_profit, margen_pct
 from backend.calculos.recencia import peso_recencia
-from backend.dominio import Incidente, ServicioHistorico, Solicitud, Tarifa, TipoVehiculo
+from backend.dominio import ServicioHistorico, Solicitud, Tarifa, TipoVehiculo
 
 HOY = date(2026, 10, 23)
 
 # Ejemplo de la sección 4
-A = Sumas(W=30, W_a=27, W_r=2.4, W_inc=1.5, W_c=8, W_ca=7, sigma_obs=0.15)
-B = Sumas(W=4, W_a=4, W_r=0, W_inc=0, W_c=4, W_ca=4, sigma_obs=0.05)
+A = Sumas(W=30, W_a=27, W_r=2.4, W_c=8, W_ca=7, sigma_obs=0.15)
+B = Sumas(W=4, W_a=4, W_r=0, W_c=4, W_ca=4, sigma_obs=0.05)
 
 
 def _servicio(i, dias, real=10.0, prometido=10.0, plazo=11.0, cliente="CLI", ruta="R1", a_tiempo=None):
@@ -44,11 +46,10 @@ def test_peso_recencia(cfg):
     assert peso_recencia(730, H) == pytest.approx(0.25)
 
 
-def test_incidente_grave_de_24_meses_pesa_un_cuarto(cfg):
-    servicios = [_servicio(1, 0), _servicio(2, 730)]
-    sev = {"S1": cfg.severidad.grave, "S2": cfg.severidad.grave}
-    h = construir_historial(servicios, sev, HOY, cfg.recencia.vida_media_dias)
-    assert h.w[1] * h.s[1] == pytest.approx(0.25 * h.w[0] * h.s[0])
+def test_retraso_de_24_meses_pesa_un_cuarto(cfg):
+    servicios = [_servicio(1, 0, real=15), _servicio(2, 730, real=15)]
+    h = construir_historial(servicios, HOY, cfg.recencia.vida_media_dias)
+    assert h.w[1] * h.r[1] == pytest.approx(0.25 * h.w[0] * h.r[0])
 
 
 # --- Sumas ponderadas ------------------------------------------------------
@@ -59,15 +60,11 @@ def test_sumas_ponderadas_a_mano(cfg):
         _servicio(2, 365, real=9, cliente="OTRO"),      # Δ=-0.1, a tiempo
         _servicio(3, 730, real=10, cliente="CLI"),      # Δ=0, a tiempo
     ]
-    incidentes = [Incidente(servicio_id="S1", tipo="leve", severidad=0.3),
-                  Incidente(servicio_id="S1", tipo="grave", severidad=1.0)]
-    h = construir_historial(servicios, severidad_por_servicio(incidentes), HOY,
-                            cfg.recencia.vida_media_dias, cliente_id="CLI")
+    h = construir_historial(servicios, HOY, cfg.recencia.vida_media_dias, cliente_id="CLI")
     s = h.sumas()
     assert s.W == pytest.approx(1.75)
     assert s.W_a == pytest.approx(0.75)
     assert s.W_r == pytest.approx(0.2)
-    assert s.W_inc == pytest.approx(1.0)  # máximo de los incidentes, no la suma
     assert s.W_c == pytest.approx(1.25)
     assert s.W_ca == pytest.approx(0.25)
     media = (0.2 - 0.05 + 0) / 1.75
@@ -81,19 +78,19 @@ def test_historial_calcula_a_tiempo_y_omite_sin_datos(cfg):
         _servicio(2, 0, plazo=None),                               # sin a_tiempo ni plazo → se omite
         _servicio(3, 0, prometido=None),                           # sin prometido y sin respaldo → se omite
     ]
-    h = construir_historial(servicios, {}, HOY, cfg.recencia.vida_media_dias)
+    h = construir_historial(servicios, HOY, cfg.recencia.vida_media_dias)
     assert h.n == 1 and h.a[0] == 0
     assert len(h.omitidos) == 2
 
 
 def test_historial_usa_tiempo_de_tarifa_como_respaldo(cfg):
-    h = construir_historial([_servicio(1, 0, real=12, prometido=None)], {}, HOY,
+    h = construir_historial([_servicio(1, 0, real=12, prometido=None)], HOY,
                             cfg.recencia.vida_media_dias, tiempo_prometido_respaldo=lambda s: 10.0)
     assert h.delta[0] == pytest.approx(0.2)
 
 
 def test_historial_es_de_solo_lectura(cfg):
-    h = construir_historial([_servicio(1, 0)], {}, HOY, cfg.recencia.vida_media_dias)
+    h = construir_historial([_servicio(1, 0)], HOY, cfg.recencia.vida_media_dias)
     with pytest.raises(ValueError):
         h.delta[0] = 5
 
@@ -105,10 +102,10 @@ def test_prior_cae_al_siguiente_nivel(cfg):
     pocos_en_ruta = [_servicio(i, 10, ruta="R1") for i in range(3)]
     en_corredor = [_servicio(100 + i, 10, ruta="R2") for i in range(minimo)]
     otros = [_servicio(200 + i, 10, ruta="R9") for i in range(minimo)]
-    mercado = construir_historial(pocos_en_ruta + en_corredor + otros, {}, HOY, cfg.recencia.vida_media_dias)
+    mercado = construir_historial(pocos_en_ruta + en_corredor + otros, HOY, cfg.recencia.vida_media_dias)
     assert calcular_prior(mercado, "R1", {"R1", "R2"}, cfg).nivel == "corredor"
     assert calcular_prior(mercado, "R1", {"R1"}, cfg).nivel == "nacional"
-    vacio = construir_historial([], {}, HOY, cfg.recencia.vida_media_dias)
+    vacio = construir_historial([], HOY, cfg.recencia.vida_media_dias)
     assert calcular_prior(vacio, "R1", {"R1"}, cfg).nivel == "por_defecto"
 
 
@@ -122,29 +119,28 @@ def test_desempeno_ejemplo(cfg, sumas, P, Ret, D):
     assert d.valor == pytest.approx(D, abs=0.1)
 
 
-@pytest.mark.parametrize("sumas,sigma_aj,S_desv,I,S_inc,S_cump,Q,n_ef,E,F,C", [
-    (A, 0.164, 0.672, 0.050, 0.950, 0.882, 0.825, 46, 0.821, 0.893, 73.7),
-    (B, 0.171, 0.658, 0.036, 0.964, 0.923, 0.834, 12, 0.545, 0.727, 60.6),
+# Q = (2/3)·S_desv + (1/3)·S_cump (sin incidentes, decisión del 2026-10-24)
+@pytest.mark.parametrize("sumas,sigma_aj,S_desv,S_cump,Q,n_ef,E,F,C,nivel", [
+    (A, 0.164, 0.672, 0.882, 0.742, 46, 0.821, 0.893, 66.3, "Media"),
+    (B, 0.171, 0.658, 0.923, 0.746, 12, 0.545, 0.727, 54.3, "Baja"),
 ])
-def test_confianza_ejemplo(cfg, sumas, sigma_aj, S_desv, I, S_inc, S_cump, Q, n_ef, E, F, C):
+def test_confianza_ejemplo(cfg, sumas, sigma_aj, S_desv, S_cump, Q, n_ef, E, F, C, nivel):
     prior = prior_por_defecto(cfg)
     P = calcular_desempeno(sumas, prior, cfg).puntualidad
     c = calcular_confianza(sumas, prior, P, cfg)
     assert c.sigma_ajustada == pytest.approx(sigma_aj, abs=1e-3)
     assert c.consistencia == pytest.approx(S_desv, abs=1e-3)
-    assert c.indice_incidentes == pytest.approx(I, abs=1e-3)
-    assert c.incidentes == pytest.approx(S_inc, abs=1e-3)
     assert c.cumplimiento_cliente == pytest.approx(S_cump, abs=1e-3)
     assert c.calidad == pytest.approx(Q, abs=1e-3)
     assert c.n_efectivo == pytest.approx(n_ef)
     assert c.E == pytest.approx(E, abs=1e-3)
     assert c.evidencia == pytest.approx(F, abs=1e-3)
     assert c.valor == pytest.approx(C, abs=0.1)
-    assert c.nivel == "Media"
+    assert c.nivel == nivel
 
 
 def test_sin_historial_con_cliente_cumplimiento_es_P(cfg):
-    s = Sumas(W=20, W_a=18, W_r=1, W_inc=0.5, W_c=0, W_ca=0, sigma_obs=0.1)
+    s = Sumas(W=20, W_a=18, W_r=1, W_c=0, W_ca=0, sigma_obs=0.1)
     prior = prior_por_defecto(cfg)
     P = calcular_desempeno(s, prior, cfg).puntualidad
     assert calcular_confianza(s, prior, P, cfg).cumplimiento_cliente == pytest.approx(P)
@@ -152,10 +148,10 @@ def test_sin_historial_con_cliente_cumplimiento_es_P(cfg):
 
 def test_proveedor_sin_historial(cfg):
     prior = prior_por_defecto(cfg)
-    vacio = Sumas(W=0, W_a=0, W_r=0, W_inc=0, W_c=0, W_ca=0, sigma_obs=0)
+    vacio = Sumas(W=0, W_a=0, W_r=0, W_c=0, W_ca=0, sigma_obs=0)
     d = calcular_desempeno(vacio, prior, cfg)
     assert d.valor == pytest.approx(100 * (0.75 * prior.P0 + 0.25 * (1 - prior.R0)))
-    Q0 = 0.4 * (1 - prior.sigma0 / 0.5) + 0.4 * (1 - prior.I0) + 0.2 * prior.P0
+    Q0 = (2 / 3) * (1 - prior.sigma0 / 0.5) + (1 / 3) * prior.P0
     c = calcular_confianza(vacio, prior, d.puntualidad, cfg)
     assert c.valor == pytest.approx(100 * Q0 * 0.4)
     assert c.valor > 0  # confianza baja pero real: oportunidad de entrar
@@ -168,14 +164,17 @@ def test_niveles_de_confianza(cfg, valor, nivel):
 
 # --- Costos y vehículos ----------------------------------------------------
 
-PLAT = TipoVehiculo(tipo_vehiculo_id="PLAT", nombre="Plataforma 2 TEU", cap_teu=2, cap_toneladas=34)
-SENC = TipoVehiculo(tipo_vehiculo_id="SENC", nombre="Sencillo 1 TEU", cap_teu=1, cap_toneladas=17)
-REFRI = TipoVehiculo(tipo_vehiculo_id="REFRI", nombre="Refrigerado", cap_teu=2, cap_toneladas=30, carga_especial="refrigerado")
-CAMA = TipoVehiculo(tipo_vehiculo_id="CAMA", nombre="Cama baja", cap_teu=0, cap_toneladas=45, carga_especial="sobredimensionado")
+PLAT = TipoVehiculo(tipo_vehiculo_id="PLAT", nombre="Plataforma 2 TEU", cap_teu=2, cap_kg=34_000)
+SENC = TipoVehiculo(tipo_vehiculo_id="SENC", nombre="Sencillo 1 TEU", cap_teu=1, cap_kg=17_000)
+REFRI = TipoVehiculo(tipo_vehiculo_id="REFRI", nombre="Refrigerado", cap_teu=2, cap_kg=30_000, carga_especial="refrigerado")
+CAMA = TipoVehiculo(tipo_vehiculo_id="CAMA", nombre="Cama baja", cap_teu=2, cap_kg=45_000, carga_especial="sobredimensionado")
+TURBO = TipoVehiculo(tipo_vehiculo_id="TURBO", nombre="Turbo", cap_teu=0, cap_kg=4_500)
+TRACTO = TipoVehiculo(tipo_vehiculo_id="tractomula", nombre="Tractomula", cap_teu=2, cap_kg=34_000)
 
 
 def _solicitud(**kw):
-    base = dict(cliente_id="C", origen_id="A", destino_id="B", fecha_servicio=HOY, plazo_h=40, presupuesto_cop=1)
+    base = dict(cliente_id="C", origen_id="A", destino_id="B", fecha_servicio=HOY, plazo_h=40, peso_kg=10_000,
+                presupuesto_cop=1)
     base.update(kw)
     return Solicitud(**base)
 
@@ -185,38 +184,64 @@ def _tarifa(tipo, precio, horas=20):
                   precio_viaje=precio, tiempo_prometido_h=horas, vigente_desde=date(2025, 1, 1))
 
 
-def test_viajes_3_teu_con_plataforma_2_teu():
-    assert viajes_necesarios(3, 0, PLAT) == 2
+def test_3_contenedores_livianos_con_2_por_vehiculo():
+    assert contenedores_por_vehiculo(10_000, PLAT) == 2          # min(2 puestos, floor(34 000 / 10 000) = 3)
+    assert vehiculos_necesarios(3, 10_000, PLAT) == 2
+    assert reparto_contenedores(3, 2) == (2, 1)                  # se llena un vehículo antes del siguiente
 
 
-def test_viajes_manda_el_peso_si_exige_mas():
-    assert viajes_necesarios(2, 70, PLAT) == 3  # 1 por TEU, 3 por peso
+def test_3_contenedores_de_20000_kg_en_tractomula_de_34000_kg():
+    """Caso pedido por el equipo: el peso limita a 1 contenedor por vehículo → 3 vehículos."""
+    assert contenedores_por_vehiculo(20_000, TRACTO) == 1        # floor(34 000 / 20 000) = 1
+    assert vehiculos_necesarios(3, 20_000, TRACTO) == 3
+    assert reparto_contenedores(3, 1) == (1, 1, 1)
 
 
-def test_viajes_tipo_sin_capacidad_teu_no_sirve():
-    assert viajes_necesarios(1, 0, CAMA) is None
+def test_contenedor_justo_en_el_limite_de_peso():
+    assert contenedores_por_vehiculo(17_000, TRACTO) == 2        # 2 × 17 000 = 34 000: cabe
+    assert contenedores_por_vehiculo(17_001, TRACTO) == 1
+
+
+def test_contenedor_mas_pesado_que_el_vehiculo_no_es_opcion():
+    assert contenedores_por_vehiculo(35_000, TRACTO) == 0
+    assert vehiculos_necesarios(1, 35_000, TRACTO) is None
+
+
+def test_vehiculo_sin_puestos_para_contenedores_no_es_opcion():
+    assert vehiculos_necesarios(1, 1_000, TURBO) is None         # turbo y sencillo: cap_teu = 0
+
+
+@pytest.mark.parametrize("n,por,esperado", [(1, 2, (1,)), (4, 2, (2, 2)), (7, 2, (2, 2, 2, 1)), (5, 3, (3, 2))])
+def test_reparto_llena_antes_de_pasar_al_siguiente(n, por, esperado):
+    assert reparto_contenedores(n, por) == esperado
+    assert sum(esperado) == n
 
 
 def test_tipos_validos_segun_carga():
     todos = [PLAT, SENC, REFRI, CAMA]
-    assert {t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_teu=2), todos)} == {"PLAT", "SENC"}
-    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_teu=2, tipo_carga="refrigerado"), todos)] == ["REFRI"]
-    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(toneladas=40, tipo_carga="sobredimensionado"), todos)] == ["CAMA"]
-    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_teu=2, tipo_vehiculo_id="SENC"), todos)] == ["SENC"]
+    assert {t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=2), todos)} == {"PLAT", "SENC"}
+    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=2, tipo_carga="refrigerado"), todos)] == ["REFRI"]
+    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=1, peso_kg=40_000, tipo_carga="sobredimensionado"), todos)] == ["CAMA"]
+    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=2, tipo_vehiculo_id="SENC"), todos)] == ["SENC"]
+    # Contenedor de 20 000 kg: el sencillo (17 000 kg) ya no sirve
+    assert [t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=2, peso_kg=20_000), todos)] == ["PLAT"]
+    # Tipo exigido que no puede llevar el contenedor: no queda ninguna opción
+    assert tipos_validos(_solicitud(n_contenedores=1, peso_kg=20_000, tipo_vehiculo_id="SENC"), todos) == []
+    assert tipos_validos(_solicitud(n_contenedores=1, tipo_vehiculo_id="TURBO"), todos + [TURBO]) == []
 
 
 def test_costo_elige_vehiculo_mas_economico():
-    s = _solicitud(n_teu=3)
+    s = _solicitud(n_contenedores=3)
     opciones = opciones_vehiculo(s, [PLAT, SENC], [_tarifa("PLAT", 4_000_000), _tarifa("SENC", 2_500_000)],
                                  {"PLAT": 5, "SENC": 5})
     por_tipo = {o.tipo_vehiculo_id: o for o in opciones}
-    assert (por_tipo["PLAT"].viajes, por_tipo["PLAT"].costo) == (2, 8_000_000)
-    assert (por_tipo["SENC"].viajes, por_tipo["SENC"].costo) == (3, 7_500_000)
+    assert (por_tipo["PLAT"].viajes, por_tipo["PLAT"].reparto, por_tipo["PLAT"].costo) == (2, (2, 1), 8_000_000)
+    assert (por_tipo["SENC"].viajes, por_tipo["SENC"].reparto, por_tipo["SENC"].costo) == (3, (1, 1, 1), 7_500_000)
     assert opcion_mas_economica(opciones).tipo_vehiculo_id == "SENC"
 
 
 def test_sin_tarifa_no_es_opcion():
-    assert opciones_vehiculo(_solicitud(n_teu=1), [PLAT], [], {"PLAT": 3}) == []
+    assert opciones_vehiculo(_solicitud(n_contenedores=1), [PLAT], [], {"PLAT": 3}) == []
 
 
 # --- Profit ----------------------------------------------------------------

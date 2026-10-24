@@ -1,4 +1,7 @@
-"""Confianza C (sección 3): C = 100 · Q · F."""
+"""Confianza C (sección 3): C = 100 · Q · F, con Q = (2/3)·S_desv + (1/3)·S_cump.
+
+Los incidentes no forman parte del modelo (docs/decisiones.md, 2026-10-24).
+"""
 from __future__ import annotations
 
 import math
@@ -18,12 +21,10 @@ class Confianza:
     valor: float
     nivel: NivelConfianza
     consistencia: float          # S_desv
-    incidentes: float            # S_inc
     cumplimiento_cliente: float  # S_cump
     evidencia: float             # F
     calidad: float               # Q
     sigma_ajustada: float        # σ_aj
-    indice_incidentes: float     # I
     n_efectivo: float            # n_ef
     E: float
 
@@ -46,17 +47,13 @@ def calcular_confianza(s: Sumas, prior: Prior, P: float, cfg: Config) -> Confian
     sigma_aj = math.sqrt((s.W * s.sigma_obs ** 2 + m * prior.sigma0 ** 2) / (s.W + m))
     S_desv = 1 - min(sigma_aj / c.sigma_max, 1.0)
 
-    # 3.2 Incidentes
-    I = (s.W_inc + m * prior.I0) / (s.W + m)
-    S_inc = 1 - I
-
-    # 3.3 Cumplimiento con este cliente, suavizado hacia P
+    # 3.2 Cumplimiento con este cliente, suavizado hacia P
     S_cump = (s.W_ca + m * P) / (s.W_c + m)
 
-    # 3.4 Calidad del historial
-    Q = c.peso_consistencia * S_desv + c.peso_incidentes * S_inc + c.peso_cumplimiento_cliente * S_cump
+    # 3.3 Calidad del historial
+    Q = c.peso_consistencia * S_desv + c.peso_cumplimiento_cliente * S_cump
 
-    # 3.5 Factor de evidencia
+    # 3.4 Factor de evidencia
     n_ef = s.W + c.alfa_cliente * s.W_c
     E = n_ef / (n_ef + c.k_evidencia)
     F = c.piso_evidencia + (1 - c.piso_evidencia) * E
@@ -64,6 +61,6 @@ def calcular_confianza(s: Sumas, prior: Prior, P: float, cfg: Config) -> Confian
     valor = 100 * Q * F
     return Confianza(
         valor=valor, nivel=nivel_confianza(valor, cfg),
-        consistencia=S_desv, incidentes=S_inc, cumplimiento_cliente=S_cump, evidencia=F,
-        calidad=Q, sigma_ajustada=sigma_aj, indice_incidentes=I, n_efectivo=n_ef, E=E,
+        consistencia=S_desv, cumplimiento_cliente=S_cump, evidencia=F,
+        calidad=Q, sigma_ajustada=sigma_aj, n_efectivo=n_ef, E=E,
     )

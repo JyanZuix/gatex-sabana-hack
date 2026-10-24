@@ -21,14 +21,18 @@ class _Esquema(BaseModel):
 # --- Entradas ---------------------------------------------------------------
 
 class SolicitudEntrada(_Esquema):
-    """Lo que envía el frontend. `solicitud_id` lo asigna el backend."""
+    """Lo que envía el frontend. `solicitud_id` lo asigna el backend.
+
+    Toda carga va en contenedores de 20' (1 TEU cada uno). `peso_kg` es el peso de cada contenedor.
+    `tipo_vehiculo_id`, si se envía, es obligatorio: solo se evalúan tarifas y flota de ese tipo.
+    """
     cliente_id: str
     origen_id: str
     destino_id: str
     fecha_servicio: date
     plazo_h: float = Field(gt=0)
-    n_teu: int = Field(default=0, ge=0)
-    toneladas: float = Field(default=0, ge=0)
+    n_contenedores: int = Field(ge=1)
+    peso_kg: float = Field(gt=0)
     tipo_carga: Optional[CargaEspecial] = None
     tipo_vehiculo_id: Optional[str] = None
     presupuesto_cop: int = Field(ge=0)
@@ -65,8 +69,10 @@ class RutaSalida(_Esquema):
 
 
 class Vehiculos(_Esquema):
+    tipo_vehiculo_id: str                  # clave del catálogo (`tractomula`)
     tipo: str
     cantidad: int
+    contenedores_por_vehiculo: list[int]   # se llena un vehículo antes del siguiente: 3 en 2 por vehículo → [2, 1]
 
 
 class Profit(_Esquema):
@@ -94,7 +100,6 @@ class DesempenoSalida(_Esquema):
 
 class DesgloseConfianza(_Esquema):
     consistencia: float
-    incidentes: float
     cumplimiento_cliente: float
     evidencia: float
 
@@ -112,7 +117,6 @@ class CandidatoSalida(_Esquema):
     costo_cop: int
     profit: Profit
     tiempo_h: TiempoH
-    prob_incidente: float
     desempeno: DesempenoSalida
     confianza: ConfianzaSalida
     riesgos: list[str]
@@ -138,6 +142,7 @@ class CasiElegibleSalida(_Esquema):
     nombre: str
     razon: RazonSalida
     flexibilizar: str
+    vehiculos: Optional[Vehiculos] = None  # lo que tendría que pedirle si se flexibiliza; null si no tiene tarifa
 
 
 class ParametrosEscenario(_Esquema):
@@ -166,10 +171,52 @@ class Decision(_Esquema):
     escenario_id: Optional[str]
     proveedor_id: str
     nombre: str
+    tipo_vehiculo_id: str                # vehículo con el que se registró la solicitud en la base
     flexibilizado: bool                  # eligió un "casi elegible"
     justificacion: str
     fecha_hora: datetime
     snapshot: Evaluacion                 # exactamente lo que vio el funcionario
+
+
+# --- Catálogos (para llenar los desplegables del frontend y las gafas) ----------
+
+class ClienteCatalogo(_Esquema):
+    cliente_id: str
+    nombre: str
+
+
+class UbicacionCatalogo(_Esquema):
+    ubicacion_id: str
+    nombre: str
+    tipo: str
+
+
+class RutaCatalogo(_Esquema):
+    ruta_id: str
+    origen_id: str
+    destino_id: str
+    distancia_km: float
+
+
+class TipoVehiculoCatalogo(_Esquema):
+    tipo_vehiculo_id: str
+    nombre: str
+    cap_teu: int                         # contenedores de 20' por vehículo; 0 = no lleva contenedores
+    cap_kg: float
+    carga_especial: Optional[CargaEspecial]
+
+
+class TipoCargaCatalogo(_Esquema):
+    tipo_carga: Optional[CargaEspecial]  # null = carga general
+    nombre: str
+
+
+class Catalogos(_Esquema):
+    clientes: list[ClienteCatalogo]
+    ubicaciones: list[UbicacionCatalogo]
+    rutas: list[RutaCatalogo]
+    tipos_vehiculo: list[TipoVehiculoCatalogo]
+    tipos_carga: list[TipoCargaCatalogo]
 
 
 # --- Ficha de proveedor -------------------------------------------------------
@@ -188,7 +235,6 @@ class FichaProveedor(_Esquema):
     servicios: int
     ultimo_servicio: Optional[date]
     puntualidad_pct: Optional[float]
-    incidentes_pct: Optional[float]
     desempeno: DesempenoSalida
     confianza: ConfianzaSalida
     tendencia: list[PuntoTendencia]

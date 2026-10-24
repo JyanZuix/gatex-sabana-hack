@@ -10,14 +10,14 @@ from backend.filtro.filtro import evaluar_contextos
 
 FECHA = date(2026, 10, 28)
 RUTA = Ruta(ruta_id="R-BUN-BOG", origen_id="BUN", destino_id="BOG", distancia_km=515, corredor="Buenaventura–Bogotá")
-PLAT = TipoVehiculo(tipo_vehiculo_id="PLAT", nombre="Tractocamión 40'", cap_teu=2, cap_toneladas=34)
-CAMA = TipoVehiculo(tipo_vehiculo_id="CAMA", nombre="Cama baja", cap_teu=0, cap_toneladas=45, carga_especial="sobredimensionado")
+PLAT = TipoVehiculo(tipo_vehiculo_id="PLAT", nombre="Tractocamión 40'", cap_teu=2, cap_kg=34_000)
+CAMA = TipoVehiculo(tipo_vehiculo_id="CAMA", nombre="Cama baja", cap_teu=2, cap_kg=45_000, carga_especial="sobredimensionado")
 
 
 def _ctx(cfg, *, proveedor=None, solicitud=None, tipos=(PLAT,), unidades=None, tarifas=None,
          cobertura=True, capacidad=5):
     solicitud = solicitud or Solicitud(cliente_id="C", origen_id="BUN", destino_id="BOG", fecha_servicio=FECHA,
-                                       plazo_h=40, n_teu=4, presupuesto_cop=20_000_000)
+                                       plazo_h=40, n_contenedores=4, peso_kg=10_000, presupuesto_cop=20_000_000)
     proveedor = proveedor or Proveedor(proveedor_id="P1", nombre="Prov 1", poliza_vigente_hasta=date(2027, 1, 1))
     unidades = {"PLAT": 3} if unidades is None else unidades
     if tarifas is None:
@@ -47,7 +47,7 @@ def test_proveedor_que_cumple_queda_en_candidatos(cfg):
     r = evaluar_contextos([_ctx(cfg)])
     assert len(r.candidatos) == 1 and not r.cancelados
     c = r.candidatos[0]
-    assert (c.opcion.viajes, c.opcion.costo) == (2, 8_000_000)
+    assert (c.opcion.viajes, c.opcion.reparto, c.opcion.costo) == (2, (2, 2), 8_000_000)
 
 
 def test_regla_nueva_se_registra_sin_tocar_nada_mas(cfg):
@@ -70,12 +70,12 @@ def test_sin_tarifa(cfg):
 def test_sin_tarifa_por_vigencia_vencida(cfg, repo):
     # PROV-06 tenía tarifa BOG→BUN hasta 2026-06-30
     s = Solicitud(cliente_id="CLI-0001", origen_id="BOG", destino_id="BUN", fecha_servicio=FECHA,
-                  plazo_h=40, n_teu=2, presupuesto_cop=10_000_000)
+                  plazo_h=40, n_contenedores=2, peso_kg=10_000, presupuesto_cop=10_000_000)
     assert "SIN_TARIFA" in _codigos(filtrar(s, repo, cfg))["PROV-06"]
 
 
 def test_sin_tarifa_para_los_vehiculos_que_tiene(cfg):
-    sencillo = TipoVehiculo(tipo_vehiculo_id="SENC", nombre="Sencillo", cap_teu=1, cap_toneladas=17)
+    sencillo = TipoVehiculo(tipo_vehiculo_id="SENC", nombre="Sencillo", cap_teu=1, cap_kg=17_000)
     # Tiene sencillos pero solo hay tarifa de plataforma, que no tiene
     ctx = _ctx(cfg, tipos=(PLAT, sencillo), unidades={"SENC": 4})
     assert [r.codigo for r in _razones(ctx)] == ["SIN_TARIFA"]
@@ -83,7 +83,7 @@ def test_sin_tarifa_para_los_vehiculos_que_tiene(cfg):
 
 def test_vehiculo_no_disponible(cfg):
     s = Solicitud(cliente_id="C", origen_id="BUN", destino_id="BOG", fecha_servicio=FECHA, plazo_h=40,
-                  toneladas=40, tipo_carga="sobredimensionado", presupuesto_cop=1)
+                  n_contenedores=1, peso_kg=40_000, tipo_carga="sobredimensionado", presupuesto_cop=1)
     p = Proveedor(proveedor_id="P1", nombre="P", cargas_especiales=("sobredimensionado",))
     razones = _razones(_ctx(cfg, solicitud=s, proveedor=p, tipos=(PLAT, CAMA), tarifas=[]))
     codigos = [r.codigo for r in razones]
@@ -94,7 +94,7 @@ def test_vehiculo_no_disponible(cfg):
 
 def test_carga_no_soportada(cfg):
     s = Solicitud(cliente_id="C", origen_id="BUN", destino_id="BOG", fecha_servicio=FECHA, plazo_h=40,
-                  n_teu=2, tipo_carga="peligrosa", tipo_vehiculo_id="PLAT", presupuesto_cop=1)
+                  n_contenedores=2, peso_kg=10_000, tipo_carga="peligrosa", tipo_vehiculo_id="PLAT", presupuesto_cop=1)
     razones = _razones(_ctx(cfg, solicitud=s))
     assert [r.codigo for r in razones] == ["CARGA_NO_SOPORTADA"]
     assert razones[0].mensaje == "No transporta carga peligrosa"
@@ -157,7 +157,7 @@ def test_orden_de_entrada_no_altera_resultado(cfg):
 
 
 def test_elige_vehiculo_que_cumple_plazo_aunque_no_sea_el_mas_barato(cfg):
-    sencillo = TipoVehiculo(tipo_vehiculo_id="SENC", nombre="Sencillo", cap_teu=1, cap_toneladas=17)
+    sencillo = TipoVehiculo(tipo_vehiculo_id="SENC", nombre="Sencillo", cap_teu=1, cap_kg=17_000)
     tarifas = [
         Tarifa(tarifa_id="T1", proveedor_id="P1", ruta_id=RUTA.ruta_id, tipo_vehiculo_id="PLAT",
                precio_viaje=4_000_000, tiempo_prometido_h=30, vigente_desde=date(2025, 1, 1)),
@@ -193,7 +193,7 @@ def test_con_candidatos_no_hay_casi_elegibles(cfg):
 
 def test_ruta_inexistente(cfg, repo):
     s = Solicitud(cliente_id="C", origen_id="BUN", destino_id="MED", fecha_servicio=FECHA, plazo_h=40,
-                  n_teu=1, presupuesto_cop=1)
+                  n_contenedores=1, peso_kg=10_000, presupuesto_cop=1)
     with pytest.raises(RutaNoEncontrada):
         filtrar(s, repo, cfg)
 

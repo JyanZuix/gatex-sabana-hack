@@ -1,0 +1,216 @@
+{
+  "clientes": [
+    {
+      "cliente_id": "CLI-001",
+      "nombre": "Agroquímicos Andinos"
+    },
+    {
+      "cliente_id": "CLI-002",
+      "nombre": "Alimentos La Sabana SAS"
+    },
+    {
+      "cliente_id": "CLI-003",
+      "nombre": "Autopartes del Norte"
+    },
+    {
+      "cliente_id": "CLI-004",
+      "nombre": "Bebidas del Valle"
+    },
+    {
+      "cliente_id": "CLI-005",
+      "nombre": "Café Exportador SAS"
+    },
+    {
+      "cliente_id": "CLI-006",
+      "nombre": "Constructora Atlántico"
+    },
+    {
+      "cliente_id": "CLI-007",
+      "nombre": "Electro Pacífico"
+    },
+    {
+      "cliente_id": "CLI-008",
+      "nombre": "Energía Solar Colombia"
+    },
+    {
+      "cliente_id": "CLI-009",
+      "nombre": "Farmacéutica Nacional"
+    },
+    {
+      "cliente_id": "CLI-010",
+      "nombre": "Flores de la Sabana"
+    },
+    {
+      "cliente_id": "CLI-011",
+      "nombre": "Frutas del Pacífico Ltda"
+    },
+    {
+      "cliente_id": "CLI-012",
+      "nombre": "Hogar y Más SAS"
+    },
+    {
+      "cliente_id": "CLI-013",
+      "nombre": "Lácteos del Caribe"
+    },
+    {
+      "cliente_id": "CLI-014",
+      "nombre": "Moda Express SAS"
+    },
+    {
+      "cliente_id": "CLI-015",
+      "nombre": "Pinturas Industriales SA"
+    },
+    {
+      "cliente_id": "CLI-016",
+      "nombre": "Plásticos Bogotá"
+    },
+    {
+      "cliente_id": "CLI-017",
+      "nombre": "Repuestos Antioquia"
+    },
+    {
+      "cliente_id": "CLI-018",
+      "nombre": "Textiles Medellín SA"
+    }
+  ],
+  "ubicaciones": [
+    {
+      "ubicacion_id": "Barranquilla",
+      "nombre": "Barranquilla",
+      "tipo": "puerto"
+    },
+    {
+      "ubicacion_id": "Bogotá",
+      "nombre": "Bogotá",
+      "tipo": "ciudad"
+    },
+    {
+      "ubicacion_id": "Buenaventura",
+      "nombre": "Buenaventura",
+      "tipo": "puerto"
+    },
+    {
+      "ubicacion_id": "Cali",
+      "nombre": "Cali",
+      "tipo": "ciudad"
+    },
+    {
+      "ubicacion_id": "Cartagena",
+      "nombre": "Cartagena",
+      "tipo": "puerto"
+    },
+    {
+      "ubicacion_id": "Medellín",
+      "nombre": "Medellín",
+      "tipo": "ciudad"
+    },
+    {
+      "ubicacion_id": "Santa Marta",
+      "nombre": "Santa Marta",
+      "tipo": "puerto"
+    }
+  ],
+  "rutas": [
+    {
+      "ruta_id": "RUTA-01",
+      "origen_id": "Buenaventura",
+      "destino_id": "Cali",
+      "distancia_km": 120.0
+    },
+    {
+      "ruta_id": "RUTA-02",
+      "origen_id": "Buenaventura",
+      "destino_id": "Bogotá",
+      "distancia_km": 515.0
+    },
+    {
+      "ruta_id": "RUTA-03",
+      "origen_id": "Buenaventura",
+      "destino_id": "Medellín",
+      "distancia_km": 545.0
+    },
+    {
+      "ruta_id": "RUTA-04",
+      "origen_id": "Cartagena",
+      "destino_id": "Bogotá",
+      "distancia_km": 1050.0
+    },
+    {
+      "ruta_id": "RUTA-05",
+      "origen_id": "Cartagena",
+      "destino_id": "Medellín",
+      "distancia_km": 640.0
+    },
+    {
+      "ruta_id": "RUTA-06",
+      "origen_id": "Barranquilla",
+      "destino_id": "Bogotá",
+      "distancia_km": 1000.0
+    },
+    {
+      "ruta_id": "RUTA-07",
+      "origen_id": "Barranquilla",
+      "destino_id": "Medellín",
+      "distancia_km": 700.0
+    },
+    {
+      "ruta_id": "RUTA-08",
+      "origen_id": "Santa Marta",
+      "destino_id": "Bogotá",
+      "distancia_km": 960.0
+    },
+    {
+      "ruta_id": "RUTA-09",
+      "origen_id": "Bogotá",
+      "destino_id": "Buenaventura",
+      "distancia_km": 515.0
+    },
+    {
+      "ruta_id": "RUTA-10",
+      "origen_id": "Medellín",
+      "destino_id": "Cartagena",
+      "distancia_km": 640.0
+    }
+  ],
+  "tipos_vehiculo": [
+    {
+      "tipo_vehiculo_id": "tractomula",
+      "nombre": "Tractomula",
+      "cap_teu": 2,
+      "cap_kg": 34000.0,
+      "carga_especial": null
+    },
+    {
+      "tipo_vehiculo_id": "refrigerado",
+      "nombre": "Refrigerado",
+      "cap_teu": 2,
+      "cap_kg": 28000.0,
+      "carga_especial": "refrigerado"
+    },
+    {
+      "tipo_vehiculo_id": "cama_baja",
+      "nombre": "Cama baja",
+      "cap_teu": 2,
+      "cap_kg": 45000.0,
+      "carga_especial": "sobredimensionado"
+    }
+  ],
+  "tipos_carga": [
+    {
+      "tipo_carga": null,
+      "nombre": "General"
+    },
+    {
+      "tipo_carga": "refrigerado",
+      "nombre": "Refrigerada"
+    },
+    {
+      "tipo_carga": "sobredimensionado",
+      "nombre": "Sobredimensionada"
+    },
+    {
+      "tipo_carga": "peligrosa",
+      "nombre": "Peligrosa"
+    }
+  ]
+}

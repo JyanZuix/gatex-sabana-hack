@@ -81,67 +81,67 @@
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-23",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-25",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-26",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-27",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-28",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-29",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-30",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-10-31",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-11-01",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-11-02",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-11-03",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-02",
    "fecha": "2026-11-04",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-02",
@@ -156,22 +156,22 @@
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-10-23",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-10-25",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-10-26",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-03",
@@ -186,32 +186,32 @@
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-10-29",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-03",
-   "fecha": "2026-10-30",
-   "servicios_disponibles": 3
-  },
-  {
-   "proveedor_id": "PROV-03",
-   "fecha": "2026-10-31",
-   "servicios_disponibles": 2
-  },
-  {
-   "proveedor_id": "PROV-03",
-   "fecha": "2026-11-01",
-   "servicios_disponibles": 5
-  },
-  {
-   "proveedor_id": "PROV-03",
-   "fecha": "2026-11-02",
    "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-03",
-   "fecha": "2026-11-03",
+   "fecha": "2026-10-30",
    "servicios_disponibles": 2
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "fecha": "2026-10-31",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "fecha": "2026-11-01",
+   "servicios_disponibles": 2
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "fecha": "2026-11-02",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "fecha": "2026-11-03",
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-03",
@@ -221,52 +221,52 @@
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-11-05",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-03",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 3
-  },
-  {
-   "proveedor_id": "PROV-04",
-   "fecha": "2026-10-23",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-04",
-   "fecha": "2026-10-24",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-04",
-   "fecha": "2026-10-25",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-04",
-   "fecha": "2026-10-26",
    "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-04",
-   "fecha": "2026-10-27",
+   "fecha": "2026-10-23",
+   "servicios_disponibles": 2
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "fecha": "2026-10-24",
    "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "fecha": "2026-10-25",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "fecha": "2026-10-26",
+   "servicios_disponibles": 4
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "fecha": "2026-10-27",
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-10-28",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-10-29",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-10-30",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-04",
@@ -276,12 +276,12 @@
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-11-01",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-11-02",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-04",
@@ -291,42 +291,42 @@
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-11-04",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-11-05",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-04",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-10-23",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 5
-  },
-  {
-   "proveedor_id": "PROV-05",
-   "fecha": "2026-10-25",
    "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-05",
-   "fecha": "2026-10-26",
+   "fecha": "2026-10-25",
    "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-05",
+   "fecha": "2026-10-26",
+   "servicios_disponibles": 4
+  },
+  {
+   "proveedor_id": "PROV-05",
    "fecha": "2026-10-27",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-05",
@@ -341,12 +341,12 @@
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-10-30",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-10-31",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-05",
@@ -356,27 +356,27 @@
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-11-02",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-11-03",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-11-04",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-11-05",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-05",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-06",
@@ -386,27 +386,27 @@
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-25",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-26",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-27",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-28",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-06",
@@ -416,17 +416,17 @@
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-30",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-10-31",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-11-01",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-06",
@@ -436,7 +436,7 @@
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-11-03",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-06",
@@ -446,37 +446,37 @@
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-11-05",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-06",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-07",
    "fecha": "2026-10-23",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-07",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-07",
    "fecha": "2026-10-25",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-07",
    "fecha": "2026-10-26",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-07",
    "fecha": "2026-10-27",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-07",
@@ -486,47 +486,47 @@
   {
    "proveedor_id": "PROV-07",
    "fecha": "2026-10-29",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-10-30",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-10-31",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-11-01",
-   "servicios_disponibles": 2
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-11-02",
-   "servicios_disponibles": 2
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-11-03",
-   "servicios_disponibles": 3
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-11-04",
-   "servicios_disponibles": 2
-  },
-  {
-   "proveedor_id": "PROV-07",
-   "fecha": "2026-11-05",
    "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-07",
-   "fecha": "2026-11-06",
+   "fecha": "2026-10-30",
    "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-10-31",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-11-01",
+   "servicios_disponibles": 4
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-11-02",
+   "servicios_disponibles": 1
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-11-03",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-11-04",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-11-05",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "fecha": "2026-11-06",
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-08",
@@ -536,17 +536,17 @@
   {
    "proveedor_id": "PROV-08",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-10-25",
    "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-08",
+   "fecha": "2026-10-25",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-08",
    "fecha": "2026-10-26",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-08",
@@ -556,52 +556,52 @@
   {
    "proveedor_id": "PROV-08",
    "fecha": "2026-10-28",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-08",
    "fecha": "2026-10-29",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-10-30",
-   "servicios_disponibles": 5
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-10-31",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-11-01",
-   "servicios_disponibles": 5
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-11-02",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-11-03",
-   "servicios_disponibles": 5
-  },
-  {
-   "proveedor_id": "PROV-08",
-   "fecha": "2026-11-04",
    "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-08",
+   "fecha": "2026-10-30",
+   "servicios_disponibles": 1
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "fecha": "2026-10-31",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "fecha": "2026-11-01",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "fecha": "2026-11-02",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "fecha": "2026-11-03",
+   "servicios_disponibles": 1
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "fecha": "2026-11-04",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-08",
    "fecha": "2026-11-05",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-08",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-09",
@@ -611,22 +611,22 @@
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-10-25",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-10-26",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-10-27",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-09",
@@ -641,7 +641,7 @@
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-10-30",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-09",
@@ -651,7 +651,7 @@
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-11-01",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-09",
@@ -661,62 +661,62 @@
   {
    "proveedor_id": "PROV-09",
    "fecha": "2026-11-03",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-09",
-   "fecha": "2026-11-04",
-   "servicios_disponibles": 1
-  },
-  {
-   "proveedor_id": "PROV-09",
-   "fecha": "2026-11-05",
    "servicios_disponibles": 5
   },
   {
    "proveedor_id": "PROV-09",
+   "fecha": "2026-11-04",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-09",
+   "fecha": "2026-11-05",
+   "servicios_disponibles": 3
+  },
+  {
+   "proveedor_id": "PROV-09",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-10-23",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-10-24",
-   "servicios_disponibles": 2
+   "servicios_disponibles": 4
   },
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-10-25",
-   "servicios_disponibles": 4
-  },
-  {
-   "proveedor_id": "PROV-10",
-   "fecha": "2026-10-26",
    "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-10",
-   "fecha": "2026-10-27",
-   "servicios_disponibles": 5
-  },
-  {
-   "proveedor_id": "PROV-10",
-   "fecha": "2026-10-28",
+   "fecha": "2026-10-26",
    "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-10",
+   "fecha": "2026-10-27",
+   "servicios_disponibles": 2
+  },
+  {
+   "proveedor_id": "PROV-10",
+   "fecha": "2026-10-28",
+   "servicios_disponibles": 5
+  },
+  {
+   "proveedor_id": "PROV-10",
    "fecha": "2026-10-29",
-   "servicios_disponibles": 4
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-10-30",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-10",
@@ -731,12 +731,12 @@
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-11-02",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 3
   },
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-11-03",
-   "servicios_disponibles": 5
+   "servicios_disponibles": 2
   },
   {
    "proveedor_id": "PROV-10",
@@ -746,12 +746,12 @@
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-11-05",
-   "servicios_disponibles": 3
+   "servicios_disponibles": 1
   },
   {
    "proveedor_id": "PROV-10",
    "fecha": "2026-11-06",
-   "servicios_disponibles": 1
+   "servicios_disponibles": 5
   }
  ]
 }

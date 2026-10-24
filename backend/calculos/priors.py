@@ -22,20 +22,18 @@ class Prior:
     P0: float
     R0: float
     sigma0: float
-    I0: float
     nivel: Nivel
     n_servicios: int
 
 
 def prior_por_defecto(cfg: Config) -> Prior:
     d = cfg.prior.por_defecto
-    return Prior(P0=d.P0, R0=d.R0, sigma0=d.sigma0, I0=d.I0, nivel="por_defecto", n_servicios=0)
+    return Prior(P0=d.P0, R0=d.R0, sigma0=d.sigma0, nivel="por_defecto", n_servicios=0)
 
 
 def prior_de_historial(h: Historial, nivel: Nivel) -> Prior:
     s = h.sumas()
-    return Prior(P0=s.W_a / s.W, R0=s.W_r / s.W, sigma0=s.sigma_obs, I0=s.W_inc / s.W,
-                 nivel=nivel, n_servicios=h.n)
+    return Prior(P0=s.W_a / s.W, R0=s.W_r / s.W, sigma0=s.sigma_obs, nivel=nivel, n_servicios=h.n)
 
 
 def calcular_prior(mercado: Historial, ruta_id: str, rutas_corredor: set[str], cfg: Config) -> Prior:
@@ -49,7 +47,7 @@ def calcular_prior(mercado: Historial, ruta_id: str, rutas_corredor: set[str], c
     for nivel, mascara in segmentos:
         if int(mascara.sum()) >= minimo:
             sub = Historial(*(x[mascara] for x in (mercado.w, mercado.delta, mercado.r, mercado.a,
-                                                    mercado.s, mercado.c, mercado.ruta_id)))
+                                                    mercado.c, mercado.ruta_id)))
             if sub.w.sum() > 0:
                 return prior_de_historial(sub, nivel)
     return prior_por_defecto(cfg)

@@ -5,17 +5,32 @@ mensaje que nombra el parámetro. Así ningún módulo usa un valor implícito.
 """
 from __future__ import annotations
 
+from fractions import Fraction
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, model_validator
 
 RUTA_POR_DEFECTO = Path(__file__).with_name("parametros.yaml")
 
 
 class ErrorConfiguracion(ValueError):
     """La configuración no existe o le falta o sobra algún parámetro."""
+
+
+def _fraccion(valor):
+    """Acepta "2/3" como texto para pesos que no tienen decimal exacto."""
+    if isinstance(valor, str) and "/" in valor:
+        try:
+            return float(Fraction(valor.replace(" ", "")))
+        except (ValueError, ZeroDivisionError):
+            raise ValueError(f"fracción no válida: '{valor}'") from None
+    return valor
+
+
+Peso = Annotated[float, BeforeValidator(_fraccion), Field(ge=0, le=1)]
 
 
 class _Seccion(BaseModel):
@@ -30,7 +45,6 @@ class PriorPorDefecto(_Seccion):
     P0: float = Field(ge=0, le=1)
     R0: float = Field(ge=0, le=1)
     sigma0: float = Field(ge=0)
-    I0: float = Field(ge=0, le=1)
 
 
 class Prior(_Seccion):
@@ -40,8 +54,8 @@ class Prior(_Seccion):
 
 
 class Desempeno(_Seccion):
-    peso_puntualidad: float = Field(ge=0, le=1)
-    peso_magnitud_retraso: float = Field(ge=0, le=1)
+    peso_puntualidad: Peso
+    peso_magnitud_retraso: Peso
 
 
 class Niveles(_Seccion):
@@ -50,9 +64,8 @@ class Niveles(_Seccion):
 
 
 class Confianza(_Seccion):
-    peso_consistencia: float = Field(ge=0, le=1)
-    peso_incidentes: float = Field(ge=0, le=1)
-    peso_cumplimiento_cliente: float = Field(ge=0, le=1)
+    peso_consistencia: Peso
+    peso_cumplimiento_cliente: Peso
     sigma_max: float = Field(gt=0)
     k_evidencia: float = Field(gt=0)
     alfa_cliente: float = Field(ge=0)
@@ -60,18 +73,10 @@ class Confianza(_Seccion):
     niveles: Niveles
 
 
-class Severidad(_Seccion):
-    sin_incidente: float = Field(ge=0, le=1)
-    leve: float = Field(ge=0, le=1)
-    moderado: float = Field(ge=0, le=1)
-    grave: float = Field(ge=0, le=1)
-
-
 class Simulacion(_Seccion):
     n: int = Field(ge=1)
     semilla: int
     min_servicios_ruta: float = Field(ge=0)
-    severidad_media_sin_historial: float = Field(gt=0, le=1)
     percentil_tipico: float = Field(ge=0, le=100)
     percentil_mal_caso: float = Field(ge=0, le=100)
     percentil_profit_mal_caso: float = Field(ge=0, le=100)
@@ -105,7 +110,6 @@ class Config(_Seccion):
     prior: Prior
     desempeno: Desempeno
     confianza: Confianza
-    severidad: Severidad
     simulacion: Simulacion
     escenario: Escenario
     vehiculos: Vehiculos
@@ -116,8 +120,7 @@ class Config(_Seccion):
     @model_validator(mode="after")
     def _pesos_suman_uno(self) -> "Config":
         d = self.desempeno.peso_puntualidad + self.desempeno.peso_magnitud_retraso
-        q = (self.confianza.peso_consistencia + self.confianza.peso_incidentes
-             + self.confianza.peso_cumplimiento_cliente)
+        q = self.confianza.peso_consistencia + self.confianza.peso_cumplimiento_cliente
         if abs(d - 1) > 1e-9:
             raise ValueError(f"Los pesos de desempeño deben sumar 1 (suman {d})")
         if abs(q - 1) > 1e-9:

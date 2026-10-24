@@ -13,7 +13,7 @@ from backend.config.carga import RUTA_POR_DEFECTO, config_desde_dict
 from backend.datos import ErrorDatos, RepositorioSimulado, crear_repositorio
 from backend.datos.postgres import RepositorioPostgres
 from backend.datos.simulado import CARPETA_POR_DEFECTO
-from backend.dominio import CondicionVia, Solicitud, Tarifa
+from backend.dominio import Solicitud, Tarifa
 
 
 def _yaml():
@@ -28,14 +28,13 @@ def test_config_contiene_parametros_del_documento(cfg):
     assert cfg.confianza.k_evidencia == 10
     assert cfg.confianza.alfa_cliente == 2
     assert (cfg.desempeno.peso_puntualidad, cfg.desempeno.peso_magnitud_retraso) == (0.75, 0.25)
-    assert (cfg.confianza.peso_consistencia, cfg.confianza.peso_incidentes,
-            cfg.confianza.peso_cumplimiento_cliente) == (0.40, 0.40, 0.20)
+    assert cfg.confianza.peso_consistencia == pytest.approx(2 / 3)
+    assert cfg.confianza.peso_cumplimiento_cliente == pytest.approx(1 / 3)
     assert cfg.confianza.piso_evidencia == 0.4
     assert cfg.confianza.sigma_max == 0.5
-    assert (cfg.severidad.leve, cfg.severidad.moderado, cfg.severidad.grave) == (0.3, 0.6, 1.0)
     assert cfg.simulacion.n == 2000
     d = cfg.prior.por_defecto
-    assert (d.P0, d.R0, d.sigma0, d.I0) == (0.85, 0.10, 0.20, 0.05)
+    assert (d.P0, d.R0, d.sigma0) == (0.85, 0.10, 0.20)
     assert (cfg.confianza.niveles.alta, cfg.confianza.niveles.media) == (75, 55)
     assert cfg.vehiculos.permitir_tandas is False
     assert cfg.escenario.penal_hora_cop == 0
@@ -62,6 +61,24 @@ def test_config_pesos_deben_sumar_uno():
         config_desde_dict(datos)
 
 
+def test_config_acepta_fracciones_y_rechaza_las_invalidas():
+    datos = _yaml()
+    datos["confianza"]["peso_consistencia"] = "1/2"
+    datos["confianza"]["peso_cumplimiento_cliente"] = "1/2"
+    assert config_desde_dict(datos).confianza.peso_consistencia == 0.5
+    datos["confianza"]["peso_consistencia"] = "1/0"
+    with pytest.raises(ErrorConfiguracion, match="peso_consistencia"):
+        config_desde_dict(datos)
+
+
+def test_config_sin_parametros_de_incidentes():
+    datos = _yaml()
+    assert "severidad" not in datos and "I0" not in datos["prior"]["por_defecto"]
+    datos["confianza"]["peso_incidentes"] = 0.4
+    with pytest.raises(ErrorConfiguracion, match="peso_incidentes"):
+        config_desde_dict(datos)
+
+
 def test_config_archivo_inexistente(tmp_path):
     with pytest.raises(ErrorConfiguracion, match="No existe"):
         cargar_config(tmp_path / "nada.yaml")
@@ -71,24 +88,37 @@ def test_config_archivo_inexistente(tmp_path):
 
 def test_solicitud_desde_diccionario():
     s = Solicitud.model_validate({"cliente_id": "CLI-0001", "origen_id": "BUN", "destino_id": "BOG",
-                                  "fecha_servicio": "2026-10-28", "plazo_h": 40, "n_teu": 3,
-                                  "presupuesto_cop": 10_000_000})
+                                  "fecha_servicio": "2026-10-28", "plazo_h": 40, "n_contenedores": 3,
+                                  "peso_kg": 12_000, "presupuesto_cop": 10_000_000})
     assert s.fecha_servicio == date(2026, 10, 28) and s.solicitud_id is None
+    assert (s.n_contenedores, s.peso_kg) == (3, 12_000)
 
 
-@pytest.mark.parametrize("campo", ["plazo_h", "n_teu", "toneladas", "presupuesto_cop"])
+@pytest.mark.parametrize("campo", ["plazo_h", "n_contenedores", "peso_kg", "presupuesto_cop"])
 def test_solicitud_rechaza_negativos(campo):
     datos = {"cliente_id": "C", "origen_id": "A", "destino_id": "B", "fecha_servicio": "2026-10-28",
-             "plazo_h": 40, "n_teu": 1, "toneladas": 1, "presupuesto_cop": 1}
+             "plazo_h": 40, "n_contenedores": 1, "peso_kg": 1, "presupuesto_cop": 1}
     datos[campo] = -1
     with pytest.raises(ValidationError):
         Solicitud.model_validate(datos)
 
 
-def test_solicitud_sin_carga_es_invalida():
+@pytest.mark.parametrize("cambios,campo", [({"n_contenedores": 0}, "n_contenedores"), ({"peso_kg": 0}, "peso_kg"),
+                                            ({"n_contenedores": None}, "n_contenedores"), ({"peso_kg": None}, "peso_kg")])
+def test_solicitud_sin_contenedores_o_sin_peso_es_invalida(cambios, campo):
+    """No existe carga sin contenedores: n_contenedores ≥ 1 y peso_kg > 0 son obligatorios."""
+    datos = dict(cliente_id="C", origen_id="A", destino_id="B", fecha_servicio=date(2026, 1, 1),
+                 plazo_h=10, n_contenedores=1, peso_kg=1_000, presupuesto_cop=1)
+    datos.update(cambios)
+    datos = {k: v for k, v in datos.items() if v is not None}
+    with pytest.raises(ValidationError, match=campo):
+        Solicitud(**datos)
+
+
+def test_solicitud_ya_no_acepta_teu_ni_toneladas():
     with pytest.raises(ValidationError, match="n_teu"):
         Solicitud(cliente_id="C", origen_id="A", destino_id="B", fecha_servicio=date(2026, 1, 1),
-                  plazo_h=10, presupuesto_cop=1)
+                  plazo_h=10, n_contenedores=1, peso_kg=1_000, n_teu=1, presupuesto_cop=1)
 
 
 def test_tarifa_rechaza_precio_negativo_y_valida_vigencia():
@@ -98,12 +128,6 @@ def test_tarifa_rechaza_precio_negativo_y_valida_vigencia():
     t = Tarifa(tarifa_id="T", proveedor_id="P", ruta_id="R", tipo_vehiculo_id="V", precio_viaje=5,
                tiempo_prometido_h=10, vigente_desde=date(2025, 1, 1), vigente_hasta=date(2025, 12, 31))
     assert t.vigente(date(2025, 6, 1)) and not t.vigente(date(2026, 1, 1))
-
-
-def test_condicion_via_rango_invalido():
-    with pytest.raises(ValidationError):
-        CondicionVia(corredor="X", fecha_hora="2026-10-20T08:00:00", p_evento=0.1,
-                     demora_min_h=10, demora_max_h=2)
 
 
 # --- Capa de datos ---------------------------------------------------------
@@ -146,9 +170,10 @@ def test_repositorio_rechaza_datos_sin_etiqueta(tmp_path):
 
 def test_fabrica_elige_adaptador():
     assert isinstance(crear_repositorio({"REPOSITORIO": "simulado"}), RepositorioSimulado)
+    # Crear el adaptador no abre la conexión: la base se lee en la primera consulta.
     pg = crear_repositorio({"REPOSITORIO": "postgres", "DATABASE_URL": "postgresql://x"})
     assert isinstance(pg, RepositorioPostgres)
-    with pytest.raises(NotImplementedError, match="TODO"):
-        pg.proveedores()
+    with pytest.raises(ValueError, match="DATABASE_URL"):
+        crear_repositorio({"REPOSITORIO": "postgres"})
     with pytest.raises(ValueError):
         crear_repositorio({"REPOSITORIO": "mysql"})

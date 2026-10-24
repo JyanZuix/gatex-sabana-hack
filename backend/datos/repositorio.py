@@ -13,7 +13,6 @@ from backend.dominio import (
     Capacidad,
     Cliente,
     Cobertura,
-    Incidente,
     Proveedor,
     Ruta,
     ServicioHistorico,
@@ -22,6 +21,10 @@ from backend.dominio import (
     Ubicacion,
     VehiculoProveedor,
 )
+
+
+class ErrorDatosNoDisponibles(RuntimeError):
+    """La fuente de datos (p. ej. la base PostgreSQL) no responde o no se puede leer."""
 
 
 class Repositorio(ABC):
@@ -63,6 +66,3 @@ class Repositorio(ABC):
     @abstractmethod
     def servicios_historicos(self, hasta: Optional[date] = None) -> list[ServicioHistorico]:
         """Servicios completados, opcionalmente solo los entregados antes de `hasta` (backtesting)."""
-
-    @abstractmethod
-    def incidentes(self) -> list[Incidente]: ...

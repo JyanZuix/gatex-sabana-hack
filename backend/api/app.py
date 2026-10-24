@@ -16,9 +16,11 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from backend.calculos.costos import contenedores_por_vehiculo
 from backend.config import Config, cargar_config
-from backend.datos import Repositorio, crear_repositorio
-from backend.dominio import Solicitud
+from backend.datos import ErrorDatosNoDisponibles, Repositorio, SolicitudYaDecidida, crear_almacen, crear_repositorio
+from backend.datos.almacen import solicitud_decidida
+from backend.dominio import CARGAS_ESPECIALES, Solicitud
 from backend.filtro import RutaNoEncontrada
 
 from . import esquemas as e
@@ -42,6 +44,8 @@ MENSAJES = {
     "json_invalid": lambda c: "El cuerpo no es un JSON válido",
 }
 
+NOMBRES_CARGA = {"refrigerado": "Refrigerada", "sobredimensionado": "Sobredimensionada", "peligrosa": "Peligrosa"}
+
 GENERICOS = {"Not Found": "Recurso no encontrado", "Method Not Allowed": "Método no permitido"}
 
 
@@ -63,7 +67,7 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
               registro: Optional[Registro] = None, hoy: Callable[[], date] = date.today) -> FastAPI:
     repo = repo or crear_repositorio()
     cfg = cfg or cargar_config()
-    registro = registro or Registro()
+    registro = registro or Registro(crear_almacen())
     servicio = ServicioEvaluacion(repo, cfg)
 
     app = FastAPI(
@@ -86,10 +90,35 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         contenido = detalle if isinstance(detalle, dict) else {"detalle": detalle}
         return JSONResponse(status_code=exc.status_code, content=contenido)
 
+    @app.exception_handler(SolicitudYaDecidida)
+    async def _ya_decidida(_: Request, exc: SolicitudYaDecidida):
+        return JSONResponse(status_code=409, content={"detalle": str(exc)})
+
+    @app.exception_handler(ErrorDatosNoDisponibles)
+    async def _sin_datos(_: Request, exc: ErrorDatosNoDisponibles):
+        return JSONResponse(status_code=503, content={"detalle": str(exc)})
+
     # ------------------------------------------------------------------
     @app.get("/salud", tags=["Sistema"], summary="Estado del servicio")
     def salud():
         return {"estado": "ok", "repositorio": type(repo).__name__.removeprefix("Repositorio").lower()}
+
+    @app.get("/catalogos", response_model=e.Catalogos, tags=["Catálogos"],
+             summary="Clientes, ubicaciones, rutas, tipos de vehículo y de carga con los IDs que acepta la API. "
+                     "Solo se listan vehículos que llevan contenedores (turbo y sencillo quedan obsoletos)")
+    def catalogos() -> e.Catalogos:
+        return e.Catalogos(
+            clientes=[e.ClienteCatalogo(cliente_id=c.cliente_id, nombre=c.nombre) for c in repo.clientes()],
+            ubicaciones=[e.UbicacionCatalogo(ubicacion_id=u.ubicacion_id, nombre=u.nombre, tipo=u.tipo)
+                         for u in repo.ubicaciones()],
+            rutas=[e.RutaCatalogo(ruta_id=r.ruta_id, origen_id=r.origen_id, destino_id=r.destino_id,
+                                  distancia_km=r.distancia_km) for r in repo.rutas()],
+            tipos_vehiculo=[e.TipoVehiculoCatalogo(tipo_vehiculo_id=t.tipo_vehiculo_id, nombre=t.nombre,
+                                                   cap_teu=t.cap_teu, cap_kg=t.cap_kg, carga_especial=t.carga_especial)
+                            for t in repo.tipos_vehiculo() if t.cap_teu > 0],
+            tipos_carga=[e.TipoCargaCatalogo(tipo_carga=None, nombre="General")]
+                        + [e.TipoCargaCatalogo(tipo_carga=c, nombre=NOMBRES_CARGA[c]) for c in CARGAS_ESPECIALES],
+        )
 
     def _evaluar(s: Solicitud, escenario_id: Optional[str] = None) -> e.Evaluacion:
         try:
@@ -102,6 +131,7 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
     def evaluar(entrada: e.SolicitudEntrada) -> e.Evaluacion:
         if entrada.cliente_id not in {c.cliente_id for c in repo.clientes()}:
             raise _error_422(f"El cliente '{entrada.cliente_id}' no existe en el catálogo", "cliente_id")
+        _validar_vehiculo(entrada)
         try:
             Solicitud(**entrada.model_dump())  # valida reglas de dominio antes de gastar un consecutivo
         except ValidationError as ex:
@@ -112,6 +142,26 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         evaluacion = _evaluar(s)
         registro.guardar_solicitud(s, evaluacion)
         return evaluacion
+
+    def _validar_vehiculo(entrada: e.SolicitudEntrada) -> None:
+        """El tipo exigido debe existir y algún vehículo debe poder llevar un contenedor de ese peso."""
+        catalogo = {t.tipo_vehiculo_id: t for t in repo.tipos_vehiculo()}
+        kg = f"{entrada.peso_kg:,.0f}".replace(",", ".")
+        if entrada.tipo_vehiculo_id is not None:
+            t = catalogo.get(entrada.tipo_vehiculo_id)
+            if t is None:
+                raise _error_422(f"El tipo de vehículo '{entrada.tipo_vehiculo_id}' no existe en el catálogo; "
+                                 f"use uno de {sorted(catalogo)}", "tipo_vehiculo_id")
+            if t.cap_teu == 0:
+                raise _error_422(f"{t.nombre} no lleva contenedores y el sistema solo transporta contenedores "
+                                 "(vehículo obsoleto)", "tipo_vehiculo_id")
+            if contenedores_por_vehiculo(entrada.peso_kg, t) == 0:
+                raise _error_422(f"{t.nombre} no puede llevar un contenedor de {kg} kg: soporta "
+                                 f"{t.cap_kg:,.0f} kg".replace(",", "."), "tipo_vehiculo_id")
+        elif not any(contenedores_por_vehiculo(entrada.peso_kg, t) > 0 for t in catalogo.values()):
+            maximo = max((t.cap_kg for t in catalogo.values() if t.cap_teu > 0), default=0)
+            raise _error_422(f"Ningún vehículo del catálogo puede llevar un contenedor de {kg} kg "
+                             f"(máximo {maximo:,.0f} kg)".replace(",", "."), "peso_kg")
 
     def _registrada(solicitud_id: str):
         r = registro.solicitud(solicitud_id)
@@ -138,26 +188,37 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
     @app.post("/decisiones", response_model=e.Decision, status_code=201, tags=["Decisiones"],
               summary="Registra la elección del funcionario con su justificación y un snapshot de lo que vio")
     def decidir(entrada: e.DecisionEntrada) -> e.Decision:
+        """Guarda la solicitud en `transporte.solicitud` (pendiente de servicio) y la decisión en el registro.
+
+        Con PostgreSQL, si la base no responde se devuelve 503 y no queda nada registrado.
+        """
         r = _registrada(entrada.solicitud_id)
-        evaluacion = r.evaluacion
+        solicitud, evaluacion = r.solicitud, r.evaluacion
         if entrada.escenario_id is not None:
             if entrada.escenario_id not in r.escenarios:
                 raise HTTPException(status_code=404, detail=f"No existe el escenario {entrada.escenario_id}")
-            evaluacion = r.escenarios[entrada.escenario_id][1]
-        elegibles = {c.proveedor_id: c.nombre for c in evaluacion.candidatos}
-        casi = {c.proveedor_id: c.nombre for c in evaluacion.casi_elegibles}
-        if entrada.proveedor_id not in elegibles and entrada.proveedor_id not in casi:
+            solicitud, evaluacion = r.escenarios[entrada.escenario_id]
+        previa = registro.decision_de(entrada.solicitud_id)
+        if previa is not None:
+            raise SolicitudYaDecidida(f"La solicitud {entrada.solicitud_id} ya tiene la decisión {previa.decision_id}")
+        elegibles = {c.proveedor_id: c for c in evaluacion.candidatos}
+        casi = {c.proveedor_id: c for c in evaluacion.casi_elegibles}
+        elegido = elegibles.get(entrada.proveedor_id) or casi.get(entrada.proveedor_id)
+        if elegido is None:
             raise _error_422(f"El proveedor {entrada.proveedor_id} no es candidato ni casi elegible en esta evaluación",
                              "proveedor_id")
-        decision = e.Decision(
-            decision_id=registro.nuevo_decision_id(), solicitud_id=entrada.solicitud_id,
-            escenario_id=entrada.escenario_id, proveedor_id=entrada.proveedor_id,
-            nombre=elegibles.get(entrada.proveedor_id) or casi[entrada.proveedor_id],
+        tipo = elegido.vehiculos.tipo_vehiculo_id if elegido.vehiculos is not None else solicitud.tipo_vehiculo_id
+        if tipo is None:
+            raise _error_422(f"{elegido.nombre} no tiene tarifa para ningún vehículo válido en esta ruta: indique "
+                             "tipo_vehiculo_id en la solicitud para poder registrarla", "proveedor_id")
+        nombre_cliente = next(c.nombre for c in repo.clientes() if c.cliente_id == solicitud.cliente_id)
+        fila = solicitud_decidida(solicitud, evaluacion.ruta.ruta_id, nombre_cliente, tipo)
+        return registro.registrar_decision(lambda decision_id: e.Decision(
+            decision_id=decision_id, solicitud_id=entrada.solicitud_id, escenario_id=entrada.escenario_id,
+            proveedor_id=entrada.proveedor_id, nombre=elegido.nombre, tipo_vehiculo_id=tipo,
             flexibilizado=entrada.proveedor_id not in elegibles, justificacion=entrada.justificacion,
             fecha_hora=datetime.now(timezone.utc), snapshot=evaluacion.model_copy(deep=True),
-        )
-        registro.guardar_decision(decision)
-        return decision
+        ), fila)
 
     @app.get("/decisiones/{decision_id}", response_model=e.Decision, tags=["Decisiones"],
              summary="Decisión registrada con su snapshot")

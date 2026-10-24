@@ -64,6 +64,8 @@ class CasiElegible:
     proveedor: Proveedor
     razon: Razon
     flexibilizar: str
+    # Vehículo más económico que tendría si se flexibiliza (None si no tiene tarifa para ninguno válido).
+    opcion: Optional[OpcionVehiculo] = None
 
 
 @dataclass(frozen=True)

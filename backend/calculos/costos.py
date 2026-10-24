@@ -1,8 +1,14 @@
-"""Número de vehículos y costo de una opción (sección 5.3).
+"""Número de vehículos, reparto de contenedores y costo de una opción (sección 5.3).
 
-viajes_v = max(ceil(n_teu / cap_teu_v), ceil(toneladas / cap_toneladas_v))
-costo_v  = viajes_v · precio_viaje(p, ruta, v)
-Se elige el tipo de vehículo más económico que sirve.
+Toda carga va en contenedores de 20' (1 TEU cada uno); `peso_kg` es el peso de cada contenedor.
+
+por_vehiculo = min(cap_teu, floor(cap_kg / peso_kg))
+vehiculos    = ceil(n_contenedores / por_vehiculo)
+costo        = vehiculos · precio_viaje(p, ruta, v)
+
+Si por_vehiculo = 0 (un contenedor excede el peso del vehículo, o el vehículo no lleva
+contenedores) ese tipo no es opción. Se elige el tipo más económico que sirve.
+Reparto: se llena un vehículo antes de pasar al siguiente (3 contenedores, 2 por vehículo → [2, 1]).
 TODO: combinaciones mixtas de vehículos (fuera del alcance de la v1).
 """
 from __future__ import annotations
@@ -18,7 +24,8 @@ from backend.dominio import Solicitud, Tarifa, TipoVehiculo
 class OpcionVehiculo:
     tipo_vehiculo_id: str
     nombre: str
-    viajes: int
+    viajes: int                              # vehículos (un viaje por vehículo)
+    reparto: tuple[int, ...]                 # contenedores en cada vehículo
     unidades_disponibles: int
     precio_viaje: int
     tiempo_prometido_h: float
@@ -32,25 +39,33 @@ class OpcionVehiculo:
         return self.viajes <= self.unidades_disponibles
 
 
-def viajes_necesarios(n_teu: int, toneladas: float, tipo: TipoVehiculo) -> Optional[int]:
-    """Viajes (vehículos) que exige la carga, o `None` si el tipo no puede llevarla."""
-    if n_teu > 0 and tipo.cap_teu <= 0:
+def contenedores_por_vehiculo(peso_kg: float, tipo: TipoVehiculo) -> int:
+    """Contenedores que caben en un vehículo: los limita el número de puestos (TEU) y el peso."""
+    return min(tipo.cap_teu, math.floor(tipo.cap_kg / peso_kg))
+
+
+def vehiculos_necesarios(n_contenedores: int, peso_kg: float, tipo: TipoVehiculo) -> Optional[int]:
+    """Vehículos que exige la carga, o `None` si el tipo no puede llevar ni un contenedor."""
+    por_vehiculo = contenedores_por_vehiculo(peso_kg, tipo)
+    if por_vehiculo == 0:
         return None
-    if toneladas > 0 and tipo.cap_toneladas <= 0:
-        return None
-    por_teu = math.ceil(n_teu / tipo.cap_teu) if n_teu > 0 else 0
-    por_peso = math.ceil(toneladas / tipo.cap_toneladas) if toneladas > 0 else 0
-    return max(por_teu, por_peso, 1)
+    return math.ceil(n_contenedores / por_vehiculo)
+
+
+def reparto_contenedores(n_contenedores: int, por_vehiculo: int) -> tuple[int, ...]:
+    """Llena cada vehículo antes de pasar al siguiente: (7, 2) → (2, 2, 2, 1)."""
+    llenos, resto = divmod(n_contenedores, por_vehiculo)
+    return (por_vehiculo,) * llenos + ((resto,) if resto else ())
 
 
 def tipos_validos(solicitud: Solicitud, tipos: Iterable[TipoVehiculo]) -> list[TipoVehiculo]:
     """Tipos que cumplen el requisito de la carga.
 
-    - Si la solicitud exige un tipo de vehículo, solo ese.
+    - Si la solicitud exige un tipo de vehículo, solo ese (es obligatorio).
     - Si no, el tipo debe corresponder a la carga especial (o ser de carga general).
       Si el catálogo no tiene vehículos para esa carga especial (p. ej. peligrosa va en
       tractomula), sirven los de carga general; la aptitud la exige `CARGA_NO_SOPORTADA`.
-    - En ambos casos debe poder llevar la carga (capacidad en TEU y en toneladas).
+    - En ambos casos debe poder llevar al menos un contenedor (por_vehiculo ≥ 1).
     """
     tipos = list(tipos)
     carga = solicitud.tipo_carga
@@ -63,7 +78,7 @@ def tipos_validos(solicitud: Solicitud, tipos: Iterable[TipoVehiculo]) -> list[T
                 continue
         elif t.carga_especial != carga:
             continue
-        if viajes_necesarios(solicitud.n_teu, solicitud.toneladas, t) is not None:
+        if vehiculos_necesarios(solicitud.n_contenedores, solicitud.peso_kg, t) is not None:
             validos.append(t)
     return validos
 
@@ -81,9 +96,10 @@ def opciones_vehiculo(
         tarifa = por_tipo.get(tipo.tipo_vehiculo_id)
         if tarifa is None:
             continue
+        por_vehiculo = contenedores_por_vehiculo(solicitud.peso_kg, tipo)
+        reparto = reparto_contenedores(solicitud.n_contenedores, por_vehiculo)
         opciones.append(OpcionVehiculo(
-            tipo_vehiculo_id=tipo.tipo_vehiculo_id, nombre=tipo.nombre,
-            viajes=viajes_necesarios(solicitud.n_teu, solicitud.toneladas, tipo),
+            tipo_vehiculo_id=tipo.tipo_vehiculo_id, nombre=tipo.nombre, viajes=len(reparto), reparto=reparto,
             unidades_disponibles=unidades.get(tipo.tipo_vehiculo_id, 0),
             precio_viaje=tarifa.precio_viaje, tiempo_prometido_h=tarifa.tiempo_prometido_h,
         ))

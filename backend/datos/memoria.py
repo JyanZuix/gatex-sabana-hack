@@ -12,7 +12,6 @@ from backend.dominio import (
     Capacidad,
     Cliente,
     Cobertura,
-    Incidente,
     Proveedor,
     Ruta,
     ServicioHistorico,
@@ -38,7 +37,6 @@ class RepositorioEnMemoria(Repositorio):
         flota: list[VehiculoProveedor],
         capacidad: list[Capacidad],
         servicios: list[ServicioHistorico],
-        incidentes: list[Incidente],
         cobertura: Optional[list[Cobertura]] = None,
     ):
         self._proveedores = proveedores
@@ -50,7 +48,6 @@ class RepositorioEnMemoria(Repositorio):
         self._flota = flota
         self._capacidad = capacidad
         self._servicios = servicios
-        self._incidentes = incidentes
         # Si no hay tabla de cobertura, se deduce de las tarifas (docs/decisiones.md).
         if cobertura is None:
             pares = {(t.proveedor_id, t.ruta_id) for t in tarifas}
@@ -100,6 +97,3 @@ class RepositorioEnMemoria(Repositorio):
         if hasta is None:
             return list(self._servicios)
         return [s for s in self._servicios if s.fecha_entrega < hasta]
-
-    def incidentes(self) -> list[Incidente]:
-        return list(self._incidentes)

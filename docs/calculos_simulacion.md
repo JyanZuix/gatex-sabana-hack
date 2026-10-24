@@ -1,5 +1,7 @@
 # Módulo de cálculos: Desempeño, Confianza, Costos y Simulación
 
+> **Actualizado el 2026-10-24:** sin incidentes ni condiciones de vía; Q = (2/3)·S_desv + (1/3)·S_cump; carga siempre en contenedores (sección 5.3). Ver `decisiones.md`.
+>
 > **Para Claude Code / agentes de IA:** este documento es la **especificación** del módulo de cálculo de la Sala de Decisiones (reto COSCO SHIPPING, Sabana Hack 2026). Implementa las fórmulas **exactamente como están aquí**. Si una fórmula no se puede implementar con los datos disponibles, **no la cambies en silencio**: deja un `TODO` y avisa al equipo.
 >
 > Lee primero `../README.md` (contexto general) y `docs/concepto_sala_decisiones.md` (flujo de la sala). La base de datos la construye otro subequipo; la sección 7 dice **qué campos necesita este módulo**.
@@ -9,7 +11,7 @@
 ## 0. Principios del equipo (de aquí salen todos los pesos)
 
 1. **La puntualidad es la mayor causal del Desempeño.** Un retraso puede detener la operación del cliente.
-2. **La Confianza se basa en el equilibrio entre la desviación de tiempos y los incidentes** del historial, ajustado por:
+2. **La Confianza se basa en la consistencia de los tiempos** del historial, ajustada por:
    - la **cantidad de servicios** registrados;
    - el **historial con este cliente**: entre más hemos trabajado con el proveedor para ese cliente, más confiamos;
    - la **tasa de cumplimiento**.
@@ -32,19 +34,11 @@ Para un proveedor `p`, sea `S` el conjunto de sus **servicios históricos comple
 | `a_i` | 1 si llegó dentro del plazo acordado, 0 si no | {0,1} |
 | `Δ_i` | Desviación relativa de tiempo = `(T_real_i − T_prom_i) / T_prom_i` | fracción (puede ser negativa) |
 | `r_i` | Magnitud del retraso = `min(max(Δ_i, 0), 1)` (solo cuenta si llegó tarde; tope 100 %) | [0,1] |
-| `s_i` | Severidad del incidente del servicio (tabla 1.1) | [0,1] |
 | `c_i` | 1 si el servicio fue para **el mismo cliente** de la solicitud actual | {0,1} |
 
-### 1.1 Escala de severidad de incidentes `s_i`
+### 1.1 Incidentes (fuera del modelo)
 
-| Severidad | Valor | Ejemplos |
-|---|---|---|
-| Sin incidente | 0.0 | — |
-| Leve | 0.3 | Novedad documental, demora en cargue o descargue, falta de comunicación |
-| Moderado | 0.6 | Avería mecánica, daño menor a la carga, cambio de vehículo sin aviso |
-| Grave | 1.0 | Daño mayor, pérdida, robo, accidente, contaminación de la carga |
-
-> Si un servicio tiene varios incidentes, `s_i` = el **máximo**, no la suma.
+**Decisión (2026-10-24):** los incidentes no forman parte del modelo. No entran en la Confianza ni se simulan, aunque la base guarde `servicio.incidente`.
 
 ### 1.2 Peso por recencia (vida media de 12 meses)
 
@@ -58,7 +52,6 @@ Sumas ponderadas que se reutilizan en todas las fórmulas:
 W      = Σ w_i                     (volumen efectivo de evidencia)
 W_a    = Σ w_i · a_i
 W_r    = Σ w_i · r_i
-W_inc  = Σ w_i · s_i
 W_c    = Σ w_i · c_i                (volumen efectivo con ESTE cliente)
 W_ca   = Σ w_i · c_i · a_i
 ```
@@ -72,7 +65,6 @@ Se calculan con **todos los proveedores** en el mismo segmento: misma ruta, o si
 | `P0` | Puntualidad promedio del mercado | 0.85 |
 | `R0` | Magnitud de retraso promedio | 0.10 |
 | `σ0` | Desviación estándar típica de `Δ` | 0.20 |
-| `I0` | Severidad media de incidentes | 0.05 |
 
 ---
 
@@ -118,28 +110,20 @@ S_desv = 1 − min( σ_aj / σ_max , 1 )          σ_max = 0.5
 ```
 `σ_max = 0.5` significa que una variación típica de ±50 % del tiempo prometido equivale a consistencia 0.
 
-### 3.2 Seguridad (incidentes) `S_inc`
-```
-I     = ( W_inc + m · I0 ) / ( W + m )
-S_inc = 1 − I
-```
-
-### 3.3 Cumplimiento con este cliente `S_cump` (jerárquico)
+### 3.2 Cumplimiento con este cliente `S_cump` (jerárquico)
 La puntualidad **con este cliente** se suaviza hacia la puntualidad general del proveedor `P`, no hacia el mercado:
 ```
 S_cump = ( W_ca + m · P ) / ( W_c + m )
 ```
 Si nunca ha trabajado con el cliente, `S_cump = P`.
 
-### 3.4 Calidad del historial `Q`
+### 3.3 Calidad del historial `Q`
 ```
-Q = 0.40 · S_desv  +  0.40 · S_inc  +  0.20 · S_cump
+Q = (2/3) · S_desv  +  (1/3) · S_cump
 ```
-**Justificación:**
-- **0.40 y 0.40:** el equipo pidió que lo más importante de la Confianza sea el **equilibrio** entre desviación de tiempos e incidentes. Por eso pesan igual y son mayoría.
-- **0.20 al cumplimiento con el cliente:** se pidió incluir la tasa de cumplimiento, pero la puntualidad ya domina el Desempeño. Con un peso menor evitamos contarla dos veces.
+**Justificación (2026-10-24):** al quitar los incidentes se conserva la proporción original entre consistencia (0.40) y cumplimiento con el cliente (0.20): 0.40 / 0.60 = 2/3 y 0.20 / 0.60 = 1/3. La consistencia sigue mandando y la puntualidad, que ya domina el Desempeño, no se cuenta dos veces. Los pesos viven en `backend/config/parametros.yaml`.
 
-### 3.5 Factor de evidencia `F` (cantidad de servicios + historial con el cliente)
+### 3.4 Factor de evidencia `F` (cantidad de servicios + historial con el cliente)
 ```
 n_ef = W + α · W_c                 α = 2
 E    = n_ef / ( n_ef + k )          k = 10
@@ -149,12 +133,12 @@ F    = 0.4 + 0.6 · E
 - **`k = 10`:** con 10 servicios efectivos, `E = 0.5`.
 - **Piso de 0.4:** un proveedor nuevo no tiene confianza 0, sino una confianza baja pero real. Esto le da **oportunidad de entrar**; la confianza crece a medida que demuestra.
 
-### 3.6 Fórmula
+### 3.5 Fórmula
 ```
 C = 100 · Q · F
 ```
 
-### 3.7 Nivel de confianza (para mostrar en la interfaz)
+### 3.6 Nivel de confianza (para mostrar en la interfaz)
 | `C` | Etiqueta |
 |---|---|
 | ≥ 75 | Alta |
@@ -165,7 +149,7 @@ C = 100 · Q · F
 
 ## 4. Ejemplo resuelto (validar la implementación contra estos números)
 
-Supuestos de mercado: `P0 = 0.85`, `R0 = 0.10`, `σ0 = 0.20`, `I0 = 0.05`, `m = 10`, `k = 10`, `α = 2`.
+Supuestos de mercado: `P0 = 0.85`, `R0 = 0.10`, `σ0 = 0.20`, `m = 10`, `k = 10`, `α = 2`. Recalculado el 2026-10-24 con Q sin incidentes.
 
 | Dato | Proveedor A (veterano) | Proveedor B (nuevo, perfecto) |
 |---|---|---|
@@ -173,7 +157,6 @@ Supuestos de mercado: `P0 = 0.85`, `R0 = 0.10`, `σ0 = 0.20`, `I0 = 0.05`, `m = 
 | `W_a` (a tiempo) | 27 | 4 |
 | `W_r` | 2.4 | 0 |
 | `σ_obs` de Δ | 0.15 | 0.05 |
-| `W_inc` | 1.5 | 0 |
 | `W_c` / `W_ca` (con este cliente) | 8 / 7 | 4 / 4 |
 
 | Resultado | A | B |
@@ -182,11 +165,10 @@ Supuestos de mercado: `P0 = 0.85`, `R0 = 0.10`, `σ0 = 0.20`, `I0 = 0.05`, `m = 
 | `Ret` | 0.085 | 0.071 |
 | **`D`** | **89.4** | **90.2** |
 | `σ_aj` → `S_desv` | 0.164 → 0.672 | 0.171 → 0.658 |
-| `I` → `S_inc` | 0.050 → 0.950 | 0.036 → 0.964 |
 | `S_cump` | 0.882 | 0.923 |
-| `Q` | 0.825 | 0.834 |
+| `Q` = (2/3)·S_desv + (1/3)·S_cump | 0.742 | 0.746 |
 | `n_ef` → `E` → `F` | 46 → 0.821 → 0.893 | 12 → 0.545 → 0.727 |
-| **`C`** | **73.7 (Media)** | **60.6 (Media)** |
+| **`C`** | **66.3 (Media)** | **54.3 (Baja)** |
 
 **Lectura:** B tiene un desempeño apenas mayor porque sus 4 servicios fueron perfectos. Pero el sistema **confía bastante más en A**, porque tiene mucha más evidencia, también con este cliente. Esto es exactamente lo que el equipo quiere que vea el funcionario. **Los tests unitarios deben reproducir estos valores con tolerancia ±0.1.**
 
@@ -218,13 +200,12 @@ rutas (
   UNIQUE (origen_id, destino_id)
 )
 
--- Catálogo de tipos de vehículo y su CAPACIDAD
-tipos_vehiculo (
-  tipo_vehiculo_id  PK,
-  nombre            TEXT,            -- "Tractocamión plataforma 40'", "Cama baja", "Sencillo"
-  cap_teu           INTEGER,         -- contenedores en TEU (1 = 20', 2 = 40')
-  cap_toneladas     REAL,
-  cap_m3            REAL,
+-- Catálogo de tipos de vehículo y su CAPACIDAD (tabla real: transporte.tipo_vehiculo)
+tipo_vehiculo (
+  tipo_vehiculo     PK,              -- turbo | sencillo | tractomula | refrigerado | cama_baja
+  nombre            TEXT,
+  cap_teu           INTEGER,         -- contenedores de 20' que lleva; 0 = no lleva contenedores
+  cap_kg            INTEGER,         -- peso máximo
   carga_especial    TEXT             -- refrigerado | sobredimensionado | peligrosa | NULL
 )
 
@@ -261,25 +242,32 @@ v_tarifa_vigente = tarifas WHERE fecha BETWEEN vigente_desde AND COALESCE(vigent
 - **Es fiel a cómo trabaja el proveedor:** se guarda el precio cotizado, tal cual.
 - **Rutas dirigidas:** importación (puerto→interior) y exportación (interior→puerto) pueden tener precios distintos.
 - **Vigencias:** aunque hoy no modelamos cambios de precio, permite revivir solicitudes pasadas con la tarifa de ese día (*backtesting*) sin rediseñar.
-- **Indicadores derivados para los tableros:** `costo_km = precio_viaje / distancia_km` y `costo_ton_km = precio_viaje / (distancia_km · cap_toneladas)`. Se calculan al vuelo, **no se guardan**.
+- **Indicadores derivados para los tableros:** `costo_km = precio_viaje / distancia_km` y `costo_ton_km = precio_viaje / (distancia_km · cap_kg / 1000)`. Se calculan al vuelo, **no se guardan**.
 
-### 5.3 Cálculo del costo de una opción
+### 5.3 Cálculo del costo de una opción (actualizado el 2026-10-24)
 
-Entrada: solicitud con `ruta_id`, la carga (`n_teu` contenedores y/o `toneladas`) y, si aplica, el tipo de vehículo exigido.
+Entrada: solicitud con la ruta, `n_contenedores` (todos de 20', 1 TEU cada uno; **no existe carga sin contenedores**), `peso_kg` (peso de **cada** contenedor) y, si aplica, el tipo de vehículo exigido.
 
-Para cada tipo de vehículo `v` que el proveedor tenga **y** que cumpla el requisito de la carga:
+Si la solicitud indica `tipo_vehiculo_id`, **solo ese tipo** se considera (tarifas y flota de ese tipo). Si no, se consideran los tipos que corresponden a la carga especial (o de carga general).
+
+Para cada tipo de vehículo `v` válido:
 ```
-viajes_v = max( ceil(n_teu / cap_teu_v),  ceil(toneladas / cap_toneladas_v) )
-costo_v  = viajes_v · precio_viaje(p, ruta, v)
+por_vehiculo_v = min( cap_teu_v,  floor(cap_kg_v / peso_kg) )
+vehiculos_v    = ceil( n_contenedores / por_vehiculo_v )
+costo_v        = vehiculos_v · precio_viaje(p, ruta, v)
 
-Factible solo si:  viajes_v ≤ unidades_disponibles(p, v)   (o se permiten viajes secuenciales; ver nota)
+Si por_vehiculo_v = 0 (un contenedor excede el peso del vehículo, o el vehículo no lleva
+contenedores, como turbo y sencillo con cap_teu = 0, que quedan obsoletos), ese tipo no es opción.
+Factible solo si:  vehiculos_v ≤ unidades_disponibles(p, v)
 ```
 ```
 Costo_opción(p) = min_v costo_v          (tipo de vehículo más económico que sirve)
 ```
-- Se guarda **qué vehículo y cuántos viajes** produjeron el costo, para mostrarlo en la explicación.
+- **Reparto:** se llena un vehículo antes de pasar al siguiente. 3 contenedores con 2 por vehículo → `[2, 1]`.
+- **Ejemplo:** 3 contenedores de 20 000 kg en tractomula de 34 000 kg → `por_vehiculo = min(2, 1) = 1` → 3 vehículos `[1, 1, 1]`.
+- Se guarda **qué vehículo, cuántos y cómo se reparten** los contenedores, para mostrarlo en la explicación.
 - Si el proveedor no tiene tarifa para esa ruta y tipo de vehículo, **no es opción**: se descarta con el motivo "sin tarifa para la ruta".
-- **Nota:** si `viajes_v > unidades_disponibles`, el proveedor queda descartado por capacidad, o se marca "requiere viajes en varias tandas" con un tiempo mayor. Por defecto: **descartar**. Es configurable.
+- Si `vehiculos_v > unidades_disponibles`, el proveedor queda descartado (`VEHICULOS_INSUFICIENTES`). Viajes en varias tandas: por defecto **descartar**; configurable.
 - **Combinaciones mixtas** (por ejemplo, 1 vehículo grande + 1 pequeño): fuera del alcance de la versión 1. Dejar un `TODO`.
 
 ---
@@ -291,31 +279,24 @@ Se corre **solo para los proveedores que pasaron el filtro de requisitos básico
 ### 6.1 Por cada iteración `j`
 1. **Desviación de tiempo `Δ_j`** (*bootstrap* ponderado):
    - con probabilidad `W / (W + m)`: tomar un `Δ_i` del historial del proveedor en esa ruta (si `W_ruta < 5`, usar todo su historial), con probabilidad de selección proporcional a `w_i`;
-   - en otro caso: tomar `Δ` del historial del **mercado** en esa ruta.
+   - en otro caso: tomar `Δ` del historial del **mercado** en esa ruta (si el mercado no tiene datos en la ruta: `Δ ~ Normal(0, σ0)`, con aviso).
 
    Así, con pocos datos el proveedor se parece al mercado; con muchos datos, se parece a sí mismo.
-2. **Condiciones actuales de vía** (de la tabla de condiciones actuales del corredor):
+2. **Tiempo de tránsito:**
    ```
-   con prob. p_evento_corredor:  demora_j ~ Uniforme(d_min, d_max) horas      (en otro caso 0)
+   T_j = T_prom · (1 + Δ_j)
    ```
-3. **Tiempo de tránsito:**
-   ```
-   T_j = T_prom · (1 + Δ_j) + demora_j
-   ```
-4. **¿A tiempo?**
+3. **¿A tiempo?**
    ```
    a_j = 1 si T_j ≤ plazo_solicitud_h
    ```
-5. **Incidente:**
-   ```
-   inc_j ~ Bernoulli( min(1, I / s̄) )    s̄ = severidad media de SUS incidentes (o 0.5 si no tiene); I incluye los servicios sin incidente, por eso I/s̄ = prob. de incidente
-   ```
-   Si ocurre, su severidad se toma de su historial de severidades.
-6. **Costo:**
+4. **Costo:**
    ```
    costo_j = Costo_opción(p)  +  penal_retraso_h · max(0, T_j − plazo_h)
    ```
    `penal_retraso_h` es el costo por hora de retraso para el cliente. Por defecto vale 0 y lo puede ajustar el funcionario en la sala. La tarifa es fija; solo cambia la penalidad.
+
+**Decisión (2026-10-24):** ni las condiciones o bloqueos de vía ni los incidentes se simulan.
 
 ### 6.2 Resultados por opción (lo que muestra la Sala)
 | Resultado | Cálculo |
@@ -324,12 +305,11 @@ Se corre **solo para los proveedores que pasaron el filtro de requisitos básico
 | Tiempo típico y en un mal caso | percentiles 50 y 90 de `T_j` |
 | Costo (tarifa fija) | `Costo_opción(p)` + vehículo + n.º de viajes |
 | Costo esperado con penalidad | `mean(costo_j)` y percentil 90 |
-| Probabilidad de incidente | `mean(inc_j)` |
 | Desempeño `D` y Confianza `C` | Secciones 2 y 3, con su desglose |
 | Explicación | Texto con los 2–3 factores que más suben y que más bajan a la opción |
 
 ### 6.3 Escenarios ("¿y si…?")
-El funcionario puede volver a simular cambiando parámetros: `p_evento_corredor`, `d_min`/`d_max`, el plazo o `penal_retraso_h`. **No se modifican los datos históricos, solo los supuestos del escenario.**
+El funcionario puede volver a simular cambiando dos supuestos: el plazo (`plazo_h`) o la penalidad por hora de retraso (`penal_hora_cop`). **No se modifican los datos históricos, solo los supuestos del escenario.**
 
 ---
 
@@ -338,9 +318,7 @@ El funcionario puede volver a simular cambiando parámetros: `p_evento_corredor`
 | Tabla | Campos mínimos |
 |---|---|
 | `servicios_historicos` | `servicio_id, proveedor_id, cliente_id, ruta_id, tipo_vehiculo_id, fecha_entrega, tiempo_prometido_h, tiempo_real_h, plazo_acordado_h (o fecha_limite), a_tiempo` |
-| `incidentes` | `servicio_id, tipo, severidad (0.3/0.6/1.0)` |
-| `tarifas`, `rutas`, `tipos_vehiculo`, `vehiculos_proveedor` | Ver sección 5.2 |
-| `condiciones_via` | `corredor, fecha_hora, p_evento, demora_min_h, demora_max_h, descripcion` |
+| `tarifas`, `rutas`, `tipo_vehiculo`, `vehiculos_proveedor` | Ver sección 5.2 |
 | `capacidad_actual` | `proveedor_id, fecha_hora, servicios_disponibles` |
 
 > Si `a_tiempo` no viene en los datos, se calcula: `a_tiempo = (tiempo_real_h ≤ plazo_acordado_h)`. Si falta `tiempo_prometido_h`, se usa el de la tarifa.
@@ -356,18 +334,17 @@ El funcionario puede volver a simular cambiando parámetros: `p_evento_corredor`
 | `k` (evidencia media) | 10 | Con 10 servicios efectivos, la mitad del factor de evidencia |
 | `α` (bono por cliente) | 2 | Un servicio con este cliente vale por 3 |
 | Pesos de `D` | 0.75 / 0.25 | Puntualidad como mayor causal |
-| Pesos de `Q` | 0.40 / 0.40 / 0.20 | Equilibrio entre desviación e incidentes; cumplimiento sin contarlo dos veces |
+| Pesos de `Q` | 2/3 / 1/3 | Proporción original consistencia / cumplimiento sin incidentes (2026-10-24) |
 | Piso de `F` | 0.4 | Oportunidad para proveedores nuevos |
 | `σ_max` | 0.5 | ±50 % de variación = consistencia nula |
-| Escala de severidad | 0 / 0.3 / 0.6 / 1.0 | Tabla 1.1 |
 | `N` simulaciones | 2000 | Error de ~1 punto porcentual en la probabilidad de llegar a tiempo |
 
 ---
 
 ## 9. Pruebas obligatorias
 1. El ejemplo de la sección 4 debe dar los mismos valores (±0.1).
-2. Un proveedor sin historial: `D ≈ 100·(0.75·P0 + 0.25·(1−R0))`, `C = 100·Q0·0.4`.
-3. Peso de la recencia: un incidente grave de hace 24 meses pesa 1/4 de uno de hoy.
-4. Costo: carga de 3 TEU con plataforma de 2 TEU → 2 viajes; se elige el vehículo más barato que sirva.
+2. Un proveedor sin historial: `D ≈ 100·(0.75·P0 + 0.25·(1−R0))`, `C = 100·Q0·0.4` con `Q0 = (2/3)·(1 − σ0/σ_max) + (1/3)·P0`.
+3. Peso de la recencia: un retraso de hace 24 meses pesa 1/4 de uno de hoy.
+4. Vehículos: 3 contenedores livianos con 2 por vehículo → 2 vehículos `[2, 1]`; 3 contenedores de 20 000 kg en tractomula de 34 000 kg → 3 vehículos `[1, 1, 1]`; se elige el vehículo más barato que sirva.
 5. Un proveedor sin tarifa para la ruta → descartado con su motivo.
 6. Misma solicitud y misma semilla → mismos resultados de simulación.
