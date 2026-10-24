@@ -13,7 +13,6 @@ from backend.dominio import (
     Capacidad,
     Cliente,
     Cobertura,
-    CondicionVia,
     Incidente,
     Proveedor,
     Ruta,
@@ -67,7 +66,3 @@ class Repositorio(ABC):
 
     @abstractmethod
     def incidentes(self) -> list[Incidente]: ...
-
-    @abstractmethod
-    def condicion_via(self, corredor: str, fecha: date) -> Optional[CondicionVia]:
-        """Condición más reciente del corredor registrada hasta la fecha."""

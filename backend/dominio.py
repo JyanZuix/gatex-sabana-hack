@@ -6,7 +6,7 @@ PostgreSQL del subequipo de base de datos.
 """
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -95,21 +95,6 @@ class Capacidad(_Modelo):
     proveedor_id: str
     fecha: date
     servicios_disponibles: int = Field(ge=0)
-
-
-class CondicionVia(_Modelo):
-    corredor: str
-    fecha_hora: datetime
-    p_evento: float = Field(ge=0, le=1)
-    demora_min_h: float = Field(ge=0)
-    demora_max_h: float = Field(ge=0)
-    descripcion: str = ""
-
-    @model_validator(mode="after")
-    def _rango(self) -> "CondicionVia":
-        if self.demora_min_h > self.demora_max_h:
-            raise ValueError("demora_min_h no puede ser mayor que demora_max_h")
-        return self
 
 
 class ServicioHistorico(_Modelo):

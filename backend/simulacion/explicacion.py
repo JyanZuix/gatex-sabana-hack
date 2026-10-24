@@ -7,10 +7,8 @@ referencia, para que todo texto sea trazable a los datos (regla 3 del README).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from backend.config import Config
-from backend.dominio import CondicionVia
 
 
 @dataclass(frozen=True)
@@ -108,12 +106,9 @@ def explicar(opciones: list[ResumenOpcion], referencia: ReferenciaMercado, cfg: 
     return resultado
 
 
-def riesgos(condicion: Optional[CondicionVia], n_efectivo: float, servicios_con_cliente: float, cfg: Config) -> list[str]:
-    """Riesgos visibles en la tarjeta: vía, poca evidencia y falta de historial con el cliente."""
+def riesgos(n_efectivo: float, servicios_con_cliente: float, cfg: Config) -> list[str]:
+    """Riesgos visibles en la tarjeta: poca evidencia y falta de historial con el cliente."""
     lista = []
-    if condicion is not None and condicion.p_evento > 0:
-        detalle = f": {condicion.descripcion}" if condicion.descripcion else ""
-        lista.append(f"Corredor con {_pct(condicion.p_evento)} de probabilidad de evento en la vía{detalle}")
     if n_efectivo < cfg.confianza.k_evidencia:
         lista.append(f"Poca evidencia histórica ({n_efectivo:.1f} servicios efectivos)")
     if servicios_con_cliente == 0:

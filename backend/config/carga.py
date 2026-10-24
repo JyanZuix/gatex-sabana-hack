@@ -95,6 +95,11 @@ class Explicacion(_Seccion):
     umbral_impacto: float = Field(ge=0)
 
 
+class Ficha(_Seccion):
+    min_servicios_segmento: int = Field(ge=1)
+    umbral_diferencia: float = Field(gt=0, le=1)
+
+
 class Config(_Seccion):
     recencia: Recencia
     prior: Prior
@@ -106,6 +111,7 @@ class Config(_Seccion):
     vehiculos: Vehiculos
     filtro: Filtro
     explicacion: Explicacion
+    ficha: Ficha
 
     @model_validator(mode="after")
     def _pesos_suman_uno(self) -> "Config":

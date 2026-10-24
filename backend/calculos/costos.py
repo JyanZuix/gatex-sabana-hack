@@ -48,14 +48,20 @@ def tipos_validos(solicitud: Solicitud, tipos: Iterable[TipoVehiculo]) -> list[T
 
     - Si la solicitud exige un tipo de vehículo, solo ese.
     - Si no, el tipo debe corresponder a la carga especial (o ser de carga general).
+      Si el catálogo no tiene vehículos para esa carga especial (p. ej. peligrosa va en
+      tractomula), sirven los de carga general; la aptitud la exige `CARGA_NO_SOPORTADA`.
     - En ambos casos debe poder llevar la carga (capacidad en TEU y en toneladas).
     """
+    tipos = list(tipos)
+    carga = solicitud.tipo_carga
+    if carga is not None and not any(t.carga_especial == carga for t in tipos):
+        carga = None
     validos = []
     for t in tipos:
         if solicitud.tipo_vehiculo_id is not None:
             if t.tipo_vehiculo_id != solicitud.tipo_vehiculo_id:
                 continue
-        elif t.carga_especial != solicitud.tipo_carga:
+        elif t.carga_especial != carga:
             continue
         if viajes_necesarios(solicitud.n_teu, solicitud.toneladas, t) is not None:
             validos.append(t)

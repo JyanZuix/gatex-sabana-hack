@@ -1,0 +1,20 @@
+# Despliegue del backend en Render (https://render.com) como Blueprint.
+# DATABASE_URL se escribe en el panel de Render (sync: false): nunca en el repositorio.
+services:
+  - type: web
+    name: sala-simulacion-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.api.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /salud
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: REPOSITORIO
+        value: postgres
+      - key: DATABASE_URL
+        sync: false
+      # Orígenes permitidos, separados por coma. Cambiar "*" por https://<usuario>.github.io al publicar el frontend.
+      - key: CORS_ORIGENES
+        value: "*"
