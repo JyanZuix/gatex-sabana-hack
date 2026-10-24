@@ -1,15 +1,18 @@
-# Tablet 30 % mayor y con inclinación de atril
+# Sustitución por Gatex4.glb
 
-Sustituye únicamente js/main.js por el archivo de esta entrega y recarga completamente la página. Conserva el resto del proyecto. Haz una copia de seguridad del main.js anterior.
+Guarda una copia de seguridad de main.js y escenario.js, y copia estos tres archivos a tu proyecto:
+- js/main.js: sustituye el actual; solo se cambia el nombre de modelo en los errores de carga.
+- js/escenario.js: sustituye el actual; solo se cambia assets/Gatex3.glb por assets/Gatex4.glb y el nombre en su mensaje de error.
+- assets/Gatex4.glb: nuevo, copia binaria idéntica al archivo de Downloads.
 
-La tablet aumenta un 30 % de forma uniforme: la pantalla pasa de 1.15 x 0.8625 m a 1.495 x 1.12125 m. El marco también aumenta. La proporción, el contenido del canvas, sus coordenadas UV y las zonas de interacción no cambian.
+Conserva entrada-vr.mjs, referencia-cono.mjs, catalogos.js, desplegables.mjs, inicio.js e index.html. Gatex3.glb puede permanecer como archivo, pero ya no se carga. No se modificó la carpeta original de OneDrive ni el modelo original.
 
-Después de orientar la tablet con la referencia de la vista del cono, se añade un giro de -45 grados en su X local: el borde superior se aleja del usuario y la pantalla queda orientada hacia arriba, como un atril. Son 45 grados respecto a la orientación que tenía frente a la vista del cono, no un giro de la cámara ni del escenario.
+Todo el resto de los dos archivos JS se conserva exactamente. Esto incluye la entrada 1 cm después de la punta de Usuario y su dirección completa, altura derivada del modelo, cono oculto, calibración una vez por sesión, movimientos naturales, mandos alineados y misma vista en PC.
 
-Se conserva el centro del grupo de la tablet, su descenso de 1 metro y su ubicación delante del punto de entrada. La inclinación y el tamaño se aplican sobre ese centro. Las esquinas y los bordes cambian de altura por el giro y el aumento de tamaño.
+La tablet conserva su centrado, descenso de 1 metro, aumento de 30 %, inclinación de atril de 45 grados, tamaño proporcional, formulario, desplegables y teclado. También se conserva el fondo azul/gris y la ausencia de niebla. No se cambia ninguna transformación, material o jerarquía del GLB nuevo.
 
-La orientación se reinicia con lookAt y la escala se asigna a 1.3 en cada centrado: no acumulan giros ni aumentos al entrar/salir de VR. No cambia la cámara, el escenario Gatex3, la referencia Usuario, el fondo sin niebla, el formulario, los desplegables ni el teclado.
+Se verificó que Usuario conserva transformación, geometría, normales, UV e índices respecto a Gatex3; el cambio de número interno de malla en la exportación no cambia la referencia. El archivo nuevo tiene siete nodos: Tarjeta1, Flecha, Barco, Auto, Signos, Cylinder y Usuario. Se respeta esa organización sin recrear las tarjetas que ya no están como nodos independientes. No contiene SoporteTablet ni AnclajeTablet y no requiere recursos externos.
 
-Solo se cambiaron las líneas de orientación/tamaño dentro de centrarTablet. Se verificó que el resto del código permanece idéntico y que pasa node --check. Falta revisar visualmente en las Quest 3 la inclinación, la legibilidad y la selección con los mandos.
+Pasaron las comprobaciones de sintaxis, la comparación del cono, la comparación binaria de la copia y la verificación de que los cambios de código son únicamente el nombre de archivo en ruta y errores. No se ha realizado renderizado WebGL ni prueba física en Quest 3 de esta versión. Falta comprobar visualmente el escenario actualizado, rendimiento y selección con los mandos.
 
-La carpeta original de OneDrive no se modificó; esta entrega contiene el archivo listo para copiar.
+Recarga completamente la página después de copiar. Para PC usa el servidor HTTP con ?preview=1; para Quest usa HTTPS sin ese parámetro. No abras index.html con doble clic.

@@ -4,8 +4,8 @@ import { identificarCono } from './referencia-cono.mjs';
 
 const activos=new WeakMap();
 export async function cargarEscenario(scene,loader=new GLTFLoader()) {
-    const {scene:nuevo}=await loader.loadAsync(new URL('../assets/Gatex3.glb',import.meta.url).href);
-    if(!nuevo)throw new Error('Gatex3.glb no contiene una escena principal.');
+    const {scene:nuevo}=await loader.loadAsync(new URL('../assets/Gatex4.glb',import.meta.url).href);
+    if(!nuevo)throw new Error('Gatex4.glb no contiene una escena principal.');
     const usuarios=[],prohibidos=[];
     nuevo.traverse(object=>{
         if(object.name==='Usuario')usuarios.push(object);
@@ -35,4 +35,5 @@ export async function cargarEscenario(scene,loader=new GLTFLoader()) {
     console.info('Punto de entrada Usuario',{punta:punta.toArray(),base:base.toArray(),posicion:position.toArray(),direccion:direccion.toArray()});
     return {modelo:nuevo,entrada:{position,orientation},referencia:{punta,base,direccion}};
 }
+
 
