@@ -1,15 +1,46 @@
-# Tablet independiente y centrada
+# Nuevo escenario Gatex1
 
-Copia únicamente js/main.js de esta entrega a js/main.js de tu proyecto, guardando antes una copia del anterior. Conserva altura-vr.mjs, catalogos.js, desplegables.mjs, inicio.js e index.html. No hace falta borrar los archivos GLB o modelo-tablet.js: ya no se importan ni se cargan.
+## Instalar en tu proyecto
+Guarda una copia de seguridad de js/main.js. Copia estos archivos de la entrega a tu proyecto:
+- js/main.js: sustituye el actual.
+- js/escenario.js: archivo nuevo.
+- assets/Gatex1.glb: archivo nuevo.
 
-Esta versión elimina de la escena todo el GLB, incluida la base, AnclajeTablet y Tarjeta1. La tablet utiliza únicamente un marco sencillo y la pantalla interactiva existente, sin modelos externos.
+Conserva index.html, inicio.js, altura-vr.mjs, catalogos.js, desplegables.mjs y los demás archivos del proyecto. No es necesario borrar los GLB anteriores: ya no se importan ni se cargan. Recarga completamente la página después de copiar los archivos. Esta sesión preparó la entrega dentro de outputs, sin modificar la carpeta original de OneDrive.
 
-En PC el centro de la tablet queda en (0, 1.50, -1.35). En VR conserva la calibración inicial de vista a 1.50 m incluso sentado; al obtener la pose válida centra la tablet en la dirección horizontal de la mirada inicial, a 1.35 m y con el centro a 1.50 m. Esto sucede una vez al entrar; después la tablet permanece fija y se conserva el movimiento libre de la cabeza. Al volver a entrar se centra de nuevo.
+## Modelo
+El archivo contiene 10 nodos: Tarjeta1 a Tarjeta5, Flecha, Barco, Auto, Signos y Cylinder. No contiene SoporteTablet ni AnclajeTablet. Todos los recursos están incluidos en el binario; no requiere texturas externas.
 
-Para evitar la inclinación y rotación del GLB, la pantalla queda vertical y mirando al usuario. Se recupera su tamaño independiente original de 1.15 x 0.8625 m, con proporción 4:3. Al centrarla verticalmente en la vista, el borde inferior queda aproximadamente a 1.07 m; esta versión reemplaza la distribución anterior de borde inferior a 75 cm.
+Se carga exclusivamente assets/Gatex1.glb, mediante GLTFLoader, y se añade su escena principal sin cambiar transformaciones, escalas, materiales, nombres ni jerarquía. No se normaliza ni se centra el modelo. El archivo original permanece intacto y su copia entregada coincide byte a byte.
 
-Los desplegables, el teclado, las zonas de selección y los mandos conservan su lógica anterior. No hay envío al backend. El original de OneDrive no se modificó porque esta sesión no tiene escritura en esa carpeta.
+La versión actual del proyecto ya no estaba cargando un GLB. Esta integración no vuelve a importar modelo-tablet.js ni Gatex.glb. El nuevo cargador mantiene una única instancia de escenario por escena: si vuelve a cargarse con éxito, retira la instancia anterior gestionada por él antes de añadir la nueva.
 
-Comprobaciones: sintaxis de main.js; regresión de desplegables y teclado; centrado a 1.35 m y altura 1.50 m en cuatro direcciones horizontales. No se ha verificado visualmente ni en Quest 3: falta probar entrada/salida, lectura y selección con ambos mandos.
+## Tablet
+No cambia su geometría, tamaño, posición, centrado, interfaz, formulario, teclado, desplegables, selección con mandos ni su calibración inicial a 1,50 m. Se verificó por comparación literal que el bloque de código de tablet/formulario/sesión y el bucle de calibración son idénticos a los de tu main.js actual.
 
-Recarga completamente la página servida por HTTPS después de copiar el archivo. Para PC usa ?preview=1; para Quest utiliza la dirección sin ese parámetro.
+## Color del entorno
+Se utiliza azul oscuro #102a4c para el suelo externo al GLB y para la mitad inferior del fondo. La parte superior del fondo continúa en gris claro #e9edf2. La cuadrícula exterior utiliza tonos azules. Se conserva la niebla gris y las luces existentes.
+
+No se recolorea ninguna malla del GLB: la plataforma Cylinder conserva su material original y puede verse gris sobre el suelo azul. Esto respeta la condición de mantener los materiales del nuevo modelo. No se alteró el modelo para ocultarla o pintarla.
+
+## Errores
+Si falta Gatex1.glb, falla la carga o no tiene una escena principal, se muestra un mensaje explícito en el inicio y se mantiene deshabilitada la entrada. No se utiliza otro modelo como sustituto. Si se detectan SoporteTablet o AnclajeTablet en una futura sustitución del archivo, se rechaza la carga con un mensaje que solicita confirmación antes de mostrarlos.
+
+## Posiciones originales
+Las cinco tarjetas están aproximadamente a y=4,89 m. Flecha, Barco, Auto y Signos están a distancias y alturas mayores (varios entre y=10 y 13,5 m y x=22 a 25 m). No se movieron para acercarlos a la cámara ni a la tablet. La niebla y el alcance de cámara existentes pueden limitar la visibilidad de los objetos lejanos. Cualquier ajuste de esas posiciones, de cámara o de tablet requiere tu confirmación.
+
+## Ejecutar
+Desde la carpeta completa del proyecto, con Python instalado:
+
+    py -m http.server 8000
+
+En Ubuntu/WSL:
+
+    python3 -m http.server 8000 --bind 0.0.0.0
+
+Prueba en PC con http://localhost:8000/?preview=1. Para Quest 3 utiliza una dirección HTTPS válida sin preview=1. No abras index.html mediante doble clic. La dependencia Three.js sigue descargándose desde unpkg.com.
+
+## Verificación
+Pasaron node --check, las pruebas de rutas, conservación de datos del modelo, sustitución sin duplicados y propagación de errores con un cargador simulado. Se verificó la igualdad binaria del GLB original y el entregado, su cabecera, sus 10 nodos y la ausencia de recursos externos. Las pruebas de regresión de formulario y desplegables también pasaron.
+
+No se ha realizado renderizado WebGL de esta entrega ni prueba física en Quest 3. Falta comprobar colores, encuadre con las posiciones originales, legibilidad, fluidez, entrada/salida y selección con ambos mandos. El azul no altera los materiales propios del GLB.

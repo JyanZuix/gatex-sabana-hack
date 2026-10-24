@@ -4,14 +4,22 @@ const alturaVR = new AlturaInicialVR(1.5);
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { CATALOGOS } from './catalogos.js';
 import { Desplegable, hitZone, menuLayout } from './desplegables.mjs';
-// Tablet independiente: no se carga el GLB ni se utiliza AnclajeTablet.
+import { cargarEscenario } from './escenario.js'; // El escenario es independiente de la tablet.
 
 const inicio = document.getElementById('inicio'); // Pantalla 1: una única acción de entrada.
 const entrar = document.getElementById('entrar');
 const estado = document.getElementById('estado');
 const preview = new URLSearchParams(location.search).has('preview'); // Prueba de escritorio explícita; no simula soporte WebXR.
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#e9edf2');
+const fondo = document.createElement('canvas'); fondo.width=256; fondo.height=128;
+const fondoCtx = fondo.getContext('2d');
+const degradado=fondoCtx.createLinearGradient(0,0,0,128);
+degradado.addColorStop(0,'#e9edf2');degradado.addColorStop(.48,'#e9edf2');
+degradado.addColorStop(.62,'#102a4c');degradado.addColorStop(1,'#102a4c');
+fondoCtx.fillStyle=degradado;fondoCtx.fillRect(0,0,256,128);
+const fondoTexture=new THREE.CanvasTexture(fondo);
+fondoTexture.mapping=THREE.EquirectangularReflectionMapping;fondoTexture.colorSpace=THREE.SRGBColorSpace;
+scene.background=fondoTexture; // Azul oscuro abajo y gris claro arriba, sin editar materiales del GLB.
 scene.fog = new THREE.Fog('#e9edf2', 8, 28);
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .05, 60);
 camera.position.set(0, 1.5, 0); // WebXR sustituye esta pose por la del visor.
@@ -24,9 +32,9 @@ document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff, 0xa1aabb, 2.4));
 const light = new THREE.DirectionalLight(0xffffff, 2);
 light.position.set(2, 6, 3); scene.add(light);
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({color:'#d7dde5', roughness:1}));
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({color:'#102a4c', roughness:1}));
 floor.rotation.x = -Math.PI / 2; scene.add(floor);
-const grid = new THREE.GridHelper(30, 30, '#b8c6d5', '#cbd3dd');
+const grid = new THREE.GridHelper(30, 30, '#34567d', '#244363');
 grid.position.y = .002; scene.add(grid); // Referencia espacial sin modelos ni texturas pesadas.
 
 const tablet = new THREE.Group();
@@ -257,7 +265,15 @@ entrar.addEventListener('click',async()=>{
 });
 async function initialize() {
     draw();
-    centrarTablet(camera.position,camera.quaternion); // Vista de escritorio centrada y sin depender de modelos externos.
+    centrarTablet(camera.position,camera.quaternion); // Se conserva el centrado original de la tablet.
+    estado.textContent='Cargando el nuevo escenario…';
+    try {
+        await cargarEscenario(scene);
+    } catch(error) {
+        console.error('No se pudo cargar Gatex1.glb:',error);
+        estado.textContent='No se pudo cargar assets/Gatex1.glb. Comprueba que copiaste el archivo y sirve la página por HTTP/HTTPS. Detalle: '+error.message;
+        entrar.disabled=true;return; // Error explícito: no carga otro modelo ni permite entrar fingiendo que terminó.
+    }
     if(preview){entrar.textContent='Abrir prueba en PC';entrar.disabled=false;estado.textContent='Modo de desarrollo. Esta vista no verifica el funcionamiento del visor.';return;}
     if(location.protocol==='file:'||!isSecureContext){estado.textContent='Para usar VR abre esta página desde una dirección HTTPS válida en Meta Quest Browser. No abras index.html con doble clic.';return;}
     try {
