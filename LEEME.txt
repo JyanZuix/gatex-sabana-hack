@@ -1,10 +1,8 @@
-GATEX — QUEST-CAT-02
+GATEX — QUEST-GL-03
 
-Publica ESTA carpeta en Netlify: index.html debe quedar en la raíz junto a js, assets y _headers.
-El sitio debe mostrar QUEST-CAT-02 tras recargar.
-No se ha publicado automáticamente ni modificado el proyecto original.
-Se conservaron main.js, cámara, escenario, mandos y tablet en su ubicación actual.
-Los campos de Ruta y carga muestran su estado incluso sin conexión y permiten reintentar.
-El backend sigue usando la dirección de js/config.js, confirmada por el usuario, sin cambios.
-No se pudo confirmar la conexión real desde esta sesión ni probar físicamente en Quest.
-Si falla: guarda una foto del error de la tablet y abre /salud desde las gafas.
+Copia frontend con diagnóstico de creación de WebGL y un único reintento sin antialiasing.
+Publica esta carpeta: index.html junto con js, assets y _headers.
+No incluye cambios en cámara, tablet, escenario o backend.
+La carpeta original de OneDrive no se editó y no se publicó automáticamente.
+Si falla, guarda el mensaje «Fallo WebGL» con el motivo que indique el navegador.
+Las pruebas de código pasaron; no se ha probado físicamente en Quest.

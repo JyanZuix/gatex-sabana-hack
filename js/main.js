@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { crearRenderizador } from './renderizador.mjs';
 import { EntradaVR } from './entrada-vr.mjs';
 const entradaVR = new EntradaVR();
 let puntoEntrada = null;
@@ -27,7 +28,7 @@ scene.background=fondoTexture; // Azul oscuro abajo y gris claro arriba, sin edi
 scene.fog = null; // Sin niebla: las tarjetas y los objetos lejanos conservan su visibilidad.
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .05, 60);
 camera.position.set(0, 1.5, 0); // WebXR sustituye esta pose por la del visor.
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = crearRenderizador(THREE, {registrar:mensaje=>window.GatexDiagnostico?.registrar(mensaje)});
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); // Limita el coste de la vista convencional.
 renderer.setSize(innerWidth, innerHeight);
 renderer.xr.enabled = true;

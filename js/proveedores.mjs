@@ -5,7 +5,7 @@ export const TARJETAS_PROVEEDOR = [
  ['Tarjeta5','Tractocargas del Caribe'],['Tarjeta6','Mulas de Oriente'],
  ['Tarjeta7','Transpesados de Colombia'],['Tarjeta8','Químicos y Carga Especial'],
  ['Tarjeta9','Ruta Express Antioquia'],['Tarjeta10','Transportes El Llano'],
- ['Tarjeta11','Integral Cargo SAS'],['Tarjeta12','Cargar Nacional TLC']
+ ['Tarjeta11','Integral Cargo SAS'],['Tarjeta12','Carga Nacional TLC']
 ];
 export const normalizarNombre=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 export function vincularProveedores(proveedores) {
