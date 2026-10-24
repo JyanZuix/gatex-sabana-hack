@@ -3,7 +3,7 @@ export class ErrorAPI extends Error {
     constructor(message,status=0,errores=[]) {super(message);this.name='ErrorAPI';this.status=status;this.errores=errores;}
 }
 export class API {
-    constructor(base=API_BASE,fetchImpl=globalThis.fetch,timeout=API_TIMEOUT_MS) {this.base=base.replace(/\/$/,'');this.fetch=fetchImpl;this.timeout=timeout;}
+    constructor(base=API_BASE,fetchImpl=globalThis.fetch,timeout=API_TIMEOUT_MS) {this.base=base.replace(/\/$/,'');this.fetch=(...args)=>fetchImpl(...args);this.timeout=timeout;} // Envuelto: window.fetch llamado como método de otro objeto lanza "Illegal invocation".
     async llamar(method,path,body,signal) {
         let url;
         try {url=new URL(this.base+path);}catch{throw new ErrorAPI('Dirección del backend inválida. Revisa js/config.js.');}
@@ -21,7 +21,7 @@ export class API {
             if(signal?.aborted)throw new DOMException('Consulta cancelada','AbortError');
             if(error instanceof ErrorAPI)throw error;
             // Fetch no permite distinguir DNS, red o CORS cuando el navegador oculta la respuesta.
-            throw new ErrorAPI(path+': '+(controller.signal.aborted?'tiempo de espera agotado. Reintenta.':'sin respuesta accesible. Revisa túnel, red o CORS; el navegador no distingue estas causas.'));
+            throw new ErrorAPI(path+': '+(controller.signal.aborted?'tiempo de espera agotado. Reintenta.':'sin respuesta accesible. Revisa túnel, red o CORS; el navegador no distingue estas causas. ('+(error?.message||error)+')'));
         } finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
     }
     salud(signal) {return this.llamar('GET','/salud',undefined,signal);}
