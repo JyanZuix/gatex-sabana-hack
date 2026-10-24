@@ -1,0 +1,22 @@
+{
+  "servicio_id": 481,
+  "solicitud_id": "REQ-0496",
+  "proveedor_id": "PROV-01",
+  "nombre": "Transportes Andinos del Sur",
+  "precio_cop": 14370000,
+  "fecha_servicio": "2026-11-03",
+  "fecha_entrega_real": "2026-11-04T08:30:00",
+  "transito_real_h": 33,
+  "plazo_h": 33.0,
+  "a_tiempo": true,
+  "incidente": "ninguno",
+  "calificacion": 3,
+  "calificacion_por_defecto": true,
+  "desempeno_antes": 73.2,
+  "desempeno_despues": 73.5,
+  "servicios_antes": 81,
+  "servicios_despues": 82,
+  "avisos": [
+    "Sin calificación: se guardó el valor neutro 3 (el modelo no la usa)"
+  ]
+}

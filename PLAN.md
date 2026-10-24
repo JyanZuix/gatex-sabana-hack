@@ -42,7 +42,7 @@ Supuestos abiertos: capacidades del catálogo de vehículos a confirmar con nego
 | 1 Filtro | 12/12 | 100 % |
 | 2 Cálculos | 11/11 | 100 % |
 | 3 Simulación | 9/9 | 100 % |
-| 4 API | 10/11 | 91 % |
+| 4 API | 13/13 | 100 % |
 | 5 Web de respaldo | 0/9 | 0 % |
 | 6 Tableros | 0/6 | 0 % |
 | 7 Gafas | 0/6 | 0 % |
@@ -114,7 +114,10 @@ Entradas: historial ponderado por recencia. Todas las fórmulas del doc de cálc
 - [x] `GET /proveedores/{id}` — historial, tendencia de D, fortalezas y debilidades; test: proveedor inexistente → 404
 - [x] CORS, documentación OpenAPI y errores en español — verificado con `uvicorn` y preflight CORS desde otro origen; `GET /catalogos` y 503 si la base no responde
 - [x] Persistencia de la solicitud al decidir — número reservado de la secuencia de `transporte.solicitud` al evaluar e INSERT al decidir; 409 si se repite y 503 si la base no responde; test con almacén en memoria y verificación contra Supabase dentro de una transacción con ROLLBACK
-- [ ] Persistencia del proveedor elegido, justificación y snapshot — bloqueado: `transporte.solicitud` no tiene columnas para ellos
+- [x] Cierre de viajes — `POST /solicitudes/{id}/cierre` inserta el resultado real en `transporte.servicio`, recarga el repositorio y devuelve D antes y después; `tests/test_fase6_bd.py` (ciclo evaluar → decidir → cerrar → D cambia) y prueba contra Supabase con ROLLBACK
+- [x] Caché de PostgreSQL con vencimiento y recarga tras escribir — test: relee al vencer, conserva datos si el refresco falla
+- [x] Informe descargable de la decisión — `GET /decisiones/{id}/informe` (HTML imprimible); test: contiene la decisión, todos los descartados con sus razones y escapa el texto
+- [ ] ~~Persistencia del proveedor elegido, justificación y snapshot en la base~~ — descartada por el equipo el 2026-10-24; el informe cumple ese papel
 
 ## Fase 5 · Web de respaldo (`frontend_web/`)
 Depende de la Fase 4. Misma funcionalidad que las gafas.
@@ -207,3 +210,4 @@ Una solicitud real entra por la web o las gafas, se filtra (con todas las razone
 | 2026-10-24 | Fórmula nueva de vehículos y reparto de contenedores | 116 pruebas pasan, incluido 3 × 20 000 kg en tractomula → 3 vehículos `[1, 1, 1]` |
 | 2026-10-24 | Adaptador PostgreSQL con `tipo_vehiculo` y `cliente`; `GET /catalogos`; 503 si la base cae; ejemplos del contrato | 131 pruebas pasan; `uvicorn` contra Supabase: 15 solicitudes pendientes evaluadas, CORS, escenarios, decisiones y ficha verificados |
 | 2026-10-24 | Solo contenedores (turbo y sencillo obsoletos); persistencia de la solicitud al decidir en `transporte.solicitud`; 409/503 en decisiones; vehículo de los casi elegibles; protección de credenciales | 145 pruebas pasan; INSERT verificado contra Supabase con ROLLBACK (la base sigue con 495 filas); `uvicorn` contra Supabase con IDs `REQ-0498` de la secuencia |
+| 2026-10-24 | Comunicación completa con la base: cierre de viajes en `servicio`, caché con vencimiento, informe descargable; vehículos obsoletos fuera de `/catalogos/formulario` | 156 pruebas pasan (+1 opcional contra Supabase con ROLLBACK: pasa; la base sigue con 495 solicitudes y 480 servicios) |

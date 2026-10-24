@@ -15,7 +15,7 @@ import re
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from typing import Optional
 
 from backend.dominio import CargaEspecial, Solicitud
@@ -29,6 +29,59 @@ TIPO_CARGA_BD = {None: "general", "refrigerado": "refrigerada", "sobredimensiona
 
 class SolicitudYaDecidida(ValueError):
     """La solicitud ya tiene una decisión registrada."""
+
+
+class SolicitudNoEncontrada(LookupError):
+    """La solicitud no existe en la base (se guarda al decidir)."""
+
+
+class ViajeYaCerrado(ValueError):
+    """La solicitud ya tiene registrado su servicio."""
+
+
+class CierreInvalido(ValueError):
+    """Los datos del cierre no son coherentes con la solicitud (p. ej. entrega antes de la recogida)."""
+
+
+@dataclass(frozen=True)
+class CierreViaje:
+    """Resultado real de un viaje, tal como lo registra quien lo cierra."""
+    numero_solicitud: int
+    proveedor_numero: int                    # PROV-07 → 7
+    fecha_entrega_real: datetime
+    precio_cop: int
+    incidente: str
+    calificacion: int
+
+
+@dataclass(frozen=True)
+class ServicioRegistrado:
+    servicio_id: int
+    numero_solicitud: int
+    proveedor_numero: int
+    precio_cop: int
+    fecha_servicio: date
+    fecha_entrega_real: datetime
+    transito_real_h: int
+    a_tiempo: bool
+    incidente: str
+    calificacion: int
+    plazo_h: float                           # fecha_entrega_limite − fecha_recogida
+
+
+def resultado_del_viaje(recogida: datetime, limite: datetime, c: CierreViaje) -> dict:
+    """Calcula lo que la base exige de `servicio` a partir de las fechas de la solicitud.
+
+    - `transito_real_h`: horas enteras desde la recogida hasta la entrega real (mínimo 1).
+    - `a_tiempo`: la entrega real no supera `fecha_entrega_limite` (comentario de `servicio.a_tiempo`).
+    - `fecha_servicio`: el día de la recogida, como en los servicios existentes.
+    """
+    if c.fecha_entrega_real <= recogida:
+        raise CierreInvalido(f"La entrega real ({c.fecha_entrega_real:%Y-%m-%d %H:%M}) debe ser posterior a la "
+                             f"recogida de la solicitud ({recogida:%Y-%m-%d %H:%M})")
+    horas = (c.fecha_entrega_real - recogida).total_seconds() / 3600
+    return {"transito_real_h": max(1, int(horas + 0.5)), "a_tiempo": c.fecha_entrega_real <= limite,
+            "fecha_servicio": recogida.date(), "plazo_h": (limite - recogida).total_seconds() / 3600}
 
 
 @dataclass(frozen=True)
@@ -74,6 +127,11 @@ class AlmacenSolicitudes(ABC):
     def registrar(self, s: SolicitudDecidida) -> None:
         """Guarda la solicitud decidida. Lanza `SolicitudYaDecidida` si ese número ya está guardado."""
 
+    @abstractmethod
+    def cerrar_viaje(self, c: CierreViaje) -> ServicioRegistrado:
+        """Registra el resultado real del viaje en `servicio`. Lanza `SolicitudNoEncontrada`, `ViajeYaCerrado`
+        o `CierreInvalido`. Es lo que alimenta el historial con el que se calculan D y C."""
+
 
 class AlmacenEnMemoria(AlmacenSolicitudes):
     """Para los datos sintéticos y las pruebas: nada sale del proceso."""
@@ -82,6 +140,7 @@ class AlmacenEnMemoria(AlmacenSolicitudes):
         self._lock = threading.Lock()
         self._ultimo = ultimo
         self.registradas: dict[int, SolicitudDecidida] = {}
+        self.servicios: dict[int, ServicioRegistrado] = {}
 
     def reservar_numero(self) -> int:
         with self._lock:
@@ -93,6 +152,21 @@ class AlmacenEnMemoria(AlmacenSolicitudes):
             if s.numero in self.registradas:
                 raise SolicitudYaDecidida(f"La solicitud REQ-{s.numero:04d} ya está registrada")
             self.registradas[s.numero] = s
+
+    def cerrar_viaje(self, c: CierreViaje) -> ServicioRegistrado:
+        with self._lock:
+            s = self.registradas.get(c.numero_solicitud)
+            if s is None:
+                raise SolicitudNoEncontrada(f"No existe la solicitud REQ-{c.numero_solicitud:04d}")
+            if c.numero_solicitud in self.servicios:
+                raise ViajeYaCerrado(f"La solicitud REQ-{c.numero_solicitud:04d} ya tiene su servicio registrado")
+            r = resultado_del_viaje(s.fecha_recogida, s.fecha_entrega_limite, c)
+            registrado = ServicioRegistrado(
+                servicio_id=len(self.servicios) + 1, numero_solicitud=c.numero_solicitud,
+                proveedor_numero=c.proveedor_numero, precio_cop=c.precio_cop, fecha_entrega_real=c.fecha_entrega_real,
+                incidente=c.incidente, calificacion=c.calificacion, **r)
+            self.servicios[c.numero_solicitud] = registrado
+            return registrado
 
 
 def _numero(identificador: str, prefijo: str) -> int:
@@ -143,6 +217,42 @@ class AlmacenPostgres(AlmacenSolicitudes):
         con.execute(sql.SQL("INSERT INTO {}.solicitud ({}) VALUES ({})").format(
             sql.Identifier(self.esquema), sql.SQL(", ").join(map(sql.Identifier, p)),
             sql.SQL(", ").join(map(sql.Placeholder, p))), p)
+
+    def cerrar(self, con, c: CierreViaje) -> ServicioRegistrado:
+        """Lee la solicitud, valida y inserta en `servicio` dentro de la transacción de `con`."""
+        from psycopg import sql
+        t = lambda nombre: sql.Identifier(self.esquema, nombre)
+        fila = con.execute(sql.SQL("SELECT fecha_recogida, fecha_entrega_limite FROM {} WHERE solicitud_id = %s "
+                                   "FOR UPDATE").format(t("solicitud")), (c.numero_solicitud,)).fetchone()
+        if fila is None:
+            raise SolicitudNoEncontrada(f"No existe la solicitud REQ-{c.numero_solicitud:04d} en la base")
+        if con.execute(sql.SQL("SELECT 1 FROM {} WHERE solicitud_id = %s").format(t("servicio")),
+                       (c.numero_solicitud,)).fetchone():
+            raise ViajeYaCerrado(f"La solicitud REQ-{c.numero_solicitud:04d} ya tiene su servicio registrado")
+        r = resultado_del_viaje(fila[0], fila[1], c)
+        servicio_id = con.execute(sql.SQL(
+            "INSERT INTO {} (solicitud_id, proveedor_id, precio_cop, fecha_servicio, fecha_entrega_real, "
+            "transito_real_h, a_tiempo, incidente, calificacion) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) "
+            "RETURNING servicio_id").format(t("servicio")),
+            (c.numero_solicitud, c.proveedor_numero, c.precio_cop, r["fecha_servicio"], c.fecha_entrega_real,
+             r["transito_real_h"], r["a_tiempo"], c.incidente, c.calificacion)).fetchone()[0]
+        return ServicioRegistrado(
+            servicio_id=servicio_id, numero_solicitud=c.numero_solicitud, proveedor_numero=c.proveedor_numero,
+            precio_cop=c.precio_cop, fecha_entrega_real=c.fecha_entrega_real, incidente=c.incidente,
+            calificacion=c.calificacion, **r)
+
+    def cerrar_viaje(self, c: CierreViaje) -> ServicioRegistrado:
+        import psycopg
+        try:
+            with self._conectar() as con:
+                return self.cerrar(con, c)
+        except psycopg.errors.UniqueViolation as e:
+            raise ViajeYaCerrado(f"La solicitud REQ-{c.numero_solicitud:04d} ya tiene su servicio registrado") from e
+        except psycopg.errors.ForeignKeyViolation as e:
+            raise CierreInvalido(f"El proveedor PROV-{c.proveedor_numero:02d} no existe en la base") from e
+        except psycopg.Error as e:
+            raise ErrorDatosNoDisponibles(
+                f"No se pudo registrar el viaje en la base ({type(e).__name__}); el servicio no se guardó") from e
 
     def registrar(self, s: SolicitudDecidida) -> None:
         import psycopg

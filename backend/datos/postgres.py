@@ -21,6 +21,8 @@ El desempeño nunca se lee de la base: se calcula del historial (`servicio`). La
 """
 from __future__ import annotations
 
+import threading
+import time
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -112,6 +114,10 @@ class RepositorioPostgres(Repositorio):
         self.cfg = cfg or cargar_config()
         self._leer_tablas = leer_tablas or self._leer_de_postgres
         self._memoria: Optional[RepositorioEnMemoria] = None
+        self._leido_en = 0.0
+        self._lock = threading.Lock()
+        self._reloj = time.monotonic          # reemplazable en pruebas
+        self.aviso_datos: Optional[str] = None  # se llena si no se pudo refrescar y se sirven datos anteriores
 
     def _leer_de_postgres(self) -> dict[str, list[Fila]]:
         import psycopg
@@ -137,13 +143,28 @@ class RepositorioPostgres(Repositorio):
             }
 
     def recargar(self) -> None:
-        """Descarta lo leído; la próxima consulta vuelve a leer la base."""
-        self._memoria = None
+        """Descarta lo leído; la próxima consulta vuelve a leer la base. Se llama tras escribir en ella."""
+        with self._lock:
+            self._memoria = None
 
     def _datos(self) -> RepositorioEnMemoria:
-        if self._memoria is None:
-            self._memoria = self._convertir(self._leer_tablas())
-        return self._memoria
+        """Datos leídos de la base. Se vuelven a leer cuando pasan `datos.refresco_cache_s` segundos o tras `recargar()`.
+
+        Si el refresco falla y ya había datos, se siguen sirviendo los anteriores y se deja `aviso_datos`;
+        si es la primera lectura, el error sube (503 en la API).
+        """
+        with self._lock:
+            vencido = self._memoria is not None and self._reloj() - self._leido_en >= self.cfg.datos.refresco_cache_s
+            if self._memoria is None or vencido:
+                try:
+                    nuevos = self._convertir(self._leer_tablas())
+                except ErrorDatosNoDisponibles as e:
+                    if self._memoria is None:
+                        raise
+                    self.aviso_datos = f"{e} Se usan los datos leídos antes."
+                else:
+                    self._memoria, self._leido_en, self.aviso_datos = nuevos, self._reloj(), None
+            return self._memoria
 
     # ------------------------------------------------------------------
     # Conversión de filas a modelos de dominio

@@ -44,6 +44,14 @@ escenario:
 vehiculos:
   permitir_tandas: false          # viajes en varias tandas: por defecto se descarta
 
+datos:
+  refresco_cache_s: 300           # PostgreSQL se lee de nuevo si lo leído tiene más de 5 min; 0 = en cada consulta
+
+cierre:                           # registro del resultado real de un viaje (transporte.servicio)
+  calificacion_por_defecto: 3     # servicio.calificacion es obligatoria (1-5) y el modelo no la usa; neutro si no la envían
+  incidente_por_defecto: ninguno
+  utc_offset_horas: -5            # la base guarda horas locales sin zona: fechas con zona se pasan a hora Colombia
+
 filtro:
   servicios_requeridos: 1         # capacidad de servicio mínima en la fecha
 

@@ -6,25 +6,27 @@ Documentación:   http://localhost:8000/docs
 from __future__ import annotations
 
 import os
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Callable, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from backend.calculos.costos import contenedores_por_vehiculo
 from backend.config import Config, cargar_config
-from backend.datos import ErrorDatosNoDisponibles, Repositorio, SolicitudYaDecidida, crear_almacen, crear_repositorio
-from backend.datos.almacen import solicitud_decidida
+from backend.datos import (CierreInvalido, CierreViaje, ErrorDatosNoDisponibles, Repositorio, SolicitudNoEncontrada,
+                           SolicitudYaDecidida, ViajeYaCerrado, crear_almacen, crear_repositorio)
+from backend.datos.almacen import numero_solicitud, solicitud_decidida
 from backend.dominio import CARGAS_ESPECIALES, Solicitud
 from backend.filtro import RutaNoEncontrada
 
 from . import esquemas as e
 from .catalogos import construir_catalogos
+from .informe import construir_informe, nombre_archivo
 from .registro import Registro
 from .servicio import ServicioEvaluacion
 
@@ -78,7 +80,8 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         version="1.0.0",
     )
     origenes = [o.strip() for o in os.environ.get("CORS_ORIGENES", "*").split(",") if o.strip()]
-    app.add_middleware(CORSMiddleware, allow_origins=origenes, allow_methods=["*"], allow_headers=["*"])
+    app.add_middleware(CORSMiddleware, allow_origins=origenes, allow_methods=["*"], allow_headers=["*"],
+                       expose_headers=["Content-Disposition"])   # el front lee el nombre del informe
 
     @app.exception_handler(RequestValidationError)
     async def _validacion(_: Request, exc: RequestValidationError):
@@ -94,6 +97,18 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
     @app.exception_handler(SolicitudYaDecidida)
     async def _ya_decidida(_: Request, exc: SolicitudYaDecidida):
         return JSONResponse(status_code=409, content={"detalle": str(exc)})
+
+    @app.exception_handler(ViajeYaCerrado)
+    async def _ya_cerrado(_: Request, exc: ViajeYaCerrado):
+        return JSONResponse(status_code=409, content={"detalle": str(exc)})
+
+    @app.exception_handler(SolicitudNoEncontrada)
+    async def _no_encontrada(_: Request, exc: SolicitudNoEncontrada):
+        return JSONResponse(status_code=404, content={"detalle": str(exc)})
+
+    @app.exception_handler(CierreInvalido)
+    async def _cierre_invalido(_: Request, exc: CierreInvalido):
+        return JSONResponse(status_code=422, content={"detalle": str(exc), "errores": [{"campo": None, "mensaje": str(exc)}]})
 
     @app.exception_handler(ErrorDatosNoDisponibles)
     async def _sin_datos(_: Request, exc: ErrorDatosNoDisponibles):
@@ -232,6 +247,74 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         if d is None:
             raise HTTPException(status_code=404, detail=f"No existe la decisión {decision_id}")
         return d
+
+    @app.get("/decisiones/{decision_id}/informe", response_class=HTMLResponse, tags=["Decisiones"],
+             summary="Informe descargable (HTML imprimible o guardable como PDF) con todo lo que vio el funcionario")
+    def informe(decision_id: str, descargar: bool = True) -> HTMLResponse:
+        d = registro.decision(decision_id)
+        if d is None:
+            raise HTTPException(status_code=404, detail=f"No existe la decisión {decision_id} (las decisiones "
+                                                        "viven en memoria hasta que se reinicia el servidor)")
+        r = registro.solicitud(d.solicitud_id)
+        solicitud = r.escenarios[d.escenario_id][0] if d.escenario_id else r.solicitud
+        cliente = next((c.nombre for c in repo.clientes() if c.cliente_id == solicitud.cliente_id), solicitud.cliente_id)
+        modo = "attachment" if descargar else "inline"
+        return HTMLResponse(construir_informe(d, solicitud, cliente),
+                            headers={"Content-Disposition": f'{modo}; filename="{nombre_archivo(d)}"'})
+
+    @app.post("/solicitudes/{solicitud_id}/cierre", response_model=e.ServicioSalida, status_code=201,
+              tags=["Solicitudes"],
+              summary="Registra el resultado real del viaje en transporte.servicio y actualiza el modelo")
+    def cerrar_viaje(solicitud_id: str, entrada: e.CierreEntrada) -> e.ServicioSalida:
+        """El viaje debe estar guardado en la base (se guarda al decidir; también sirve una solicitud pendiente
+        cargada por el equipo de BD). Desde la respuesta, D y C del proveedor ya incluyen este viaje."""
+        try:
+            numero = numero_solicitud(solicitud_id)
+        except ValueError as ex:
+            raise _error_422(str(ex), None) from None
+        decision = registro.decision_de(solicitud_id)
+        avisos = []
+        proveedor_id = entrada.proveedor_id or (decision.proveedor_id if decision else None)
+        if proveedor_id is None:
+            raise _error_422("Indique proveedor_id: no hay una decisión registrada en memoria para esta solicitud",
+                             "proveedor_id")
+        proveedor = next((p for p in repo.proveedores() if p.proveedor_id == proveedor_id), None)
+        if proveedor is None:
+            raise _error_422(f"El proveedor {proveedor_id} no existe en el catálogo", "proveedor_id")
+        if decision is not None and decision.proveedor_id != proveedor_id:
+            avisos.append(f"El viaje lo hizo {proveedor.nombre}, distinto del elegido en {decision.decision_id} "
+                          f"({decision.nombre})")
+        precio = entrada.precio_cop
+        if precio is None and decision is not None and decision.proveedor_id == proveedor_id:
+            elegido = next((c for c in decision.snapshot.candidatos if c.proveedor_id == proveedor_id), None)
+            precio = elegido.costo_cop if elegido else None
+        if precio is None:
+            raise _error_422("Indique precio_cop: no se conoce el costo pactado de este viaje", "precio_cop")
+        entrega = entrada.fecha_entrega_real
+        if entrega.tzinfo is not None:
+            entrega = entrega.astimezone(timezone(timedelta(hours=cfg.cierre.utc_offset_horas))).replace(tzinfo=None)
+        calificacion = entrada.calificacion if entrada.calificacion is not None else cfg.cierre.calificacion_por_defecto
+        if entrada.calificacion is None:
+            avisos.append(f"Sin calificación: se guardó el valor neutro {calificacion} (el modelo no la usa)")
+
+        corte = max(hoy(), entrega.date()) + timedelta(days=1)   # incluye viajes entregados hoy
+        antes = servicio.ficha(proveedor_id, corte)
+        s = registro.almacen.cerrar_viaje(CierreViaje(
+            numero_solicitud=numero, proveedor_numero=int(proveedor_id.rsplit("-", 1)[-1]),
+            fecha_entrega_real=entrega, precio_cop=precio,
+            incidente=entrada.incidente or cfg.cierre.incidente_por_defecto, calificacion=calificacion))
+        repo.recargar()                                          # el modelo ve el viaje nuevo desde ya
+        despues = servicio.ficha(proveedor_id, corte)
+        aviso_datos = getattr(repo, "aviso_datos", None)
+        if aviso_datos:
+            avisos.append(aviso_datos)
+        return e.ServicioSalida(
+            servicio_id=s.servicio_id, solicitud_id=solicitud_id, proveedor_id=proveedor_id, nombre=proveedor.nombre,
+            precio_cop=s.precio_cop, fecha_servicio=s.fecha_servicio, fecha_entrega_real=s.fecha_entrega_real,
+            transito_real_h=s.transito_real_h, plazo_h=round(s.plazo_h, 2), a_tiempo=s.a_tiempo,
+            incidente=s.incidente, calificacion=s.calificacion, calificacion_por_defecto=entrada.calificacion is None,
+            desempeno_antes=antes.desempeno.valor, desempeno_despues=despues.desempeno.valor,
+            servicios_antes=antes.servicios, servicios_despues=despues.servicios, avisos=avisos)
 
     @app.get("/proveedores/{proveedor_id}", response_model=e.FichaProveedor, tags=["Proveedores"],
              summary="Ficha: historial, tendencia de D, fortalezas y debilidades")

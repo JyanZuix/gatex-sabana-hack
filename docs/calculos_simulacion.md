@@ -322,6 +322,8 @@ El funcionario puede volver a simular cambiando dos supuestos: el plazo (`plazo_
 | `capacidad_actual` | `proveedor_id, fecha_hora, servicios_disponibles` |
 
 > Si `a_tiempo` no viene en los datos, se calcula: `a_tiempo = (tiempo_real_h ≤ plazo_acordado_h)`. Si falta `tiempo_prometido_h`, se usa el de la tarifa.
+>
+> **Viajes nuevos (2026-10-24):** `POST /solicitudes/{id}/cierre` inserta el resultado real en `servicio` con `a_tiempo = fecha_entrega_real ≤ fecha_entrega_limite` y `transito_real_h` = horas enteras desde la recogida. El repositorio se recarga y el viaje entra al historial (con peso de recencia 1) en las evaluaciones siguientes.
 
 ---
 

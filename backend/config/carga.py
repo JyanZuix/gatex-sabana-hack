@@ -8,7 +8,7 @@ from __future__ import annotations
 from fractions import Fraction
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import yaml
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, model_validator
@@ -91,6 +91,16 @@ class Vehiculos(_Seccion):
     permitir_tandas: bool
 
 
+class Datos(_Seccion):
+    refresco_cache_s: float = Field(ge=0)
+
+
+class Cierre(_Seccion):
+    calificacion_por_defecto: int = Field(ge=1, le=5)
+    incidente_por_defecto: Literal["ninguno", "retraso", "dano", "robo", "varado", "documental"]
+    utc_offset_horas: float = Field(ge=-12, le=14)
+
+
 class Filtro(_Seccion):
     servicios_requeridos: int = Field(ge=0)
 
@@ -113,6 +123,8 @@ class Config(_Seccion):
     simulacion: Simulacion
     escenario: Escenario
     vehiculos: Vehiculos
+    datos: Datos
+    cierre: Cierre
     filtro: Filtro
     explicacion: Explicacion
     ficha: Ficha

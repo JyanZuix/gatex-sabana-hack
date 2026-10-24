@@ -16,7 +16,9 @@ Las pruebas no se conectan a la base: usan los datos sintéticos y filas de ejem
 
 ## Datos
 - `REPOSITORIO=postgres` con `DATABASE_URL` (Supabase → Connect → Session pooler): lee el esquema `transporte` (`datos/postgres.py`). Las tablas se leen una vez, en la primera consulta; para ver cambios de la base hay que reiniciar el servidor. Si la base no responde, la API devuelve 503.
-- Escritura (`datos/almacen.py`): al evaluar se reserva el número de la secuencia de `transporte.solicitud`; al decidir se inserta la solicitud. Nunca se escribe en `servicio`. Con `REPOSITORIO=simulado` todo queda en memoria.
+- Escritura (`datos/almacen.py`): al evaluar se reserva el número de la secuencia de `transporte.solicitud`; al decidir se inserta la solicitud; al cerrar el viaje (`POST /solicitudes/{id}/cierre`) se inserta su fila en `servicio` y el repositorio se recarga, así D y C usan el viaje nuevo sin reiniciar. Con `REPOSITORIO=simulado` todo queda en memoria.
+- Caché: lo leído de PostgreSQL se vuelve a leer cada `datos.refresco_cache_s` segundos (300) o tras cada escritura. Si un refresco falla se siguen usando los datos anteriores.
+- Prueba contra Supabase sin dejar datos (transacción con ROLLBACK): `PRUEBAS_BD=1 backend/pruebas.sh -k supabase`.
 - **La contraseña va solo en `.env`.** `tests/test_sin_credenciales.py` falla si aparece en cualquier otro archivo.
 - `REPOSITORIO=simulado` (por defecto si no hay `.env`): lee `datos_sinteticos/*.json`. Para regenerarlos: `.venv/bin/python -m backend.datos_sinteticos.generar`.
 

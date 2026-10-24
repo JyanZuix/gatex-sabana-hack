@@ -28,6 +28,9 @@ class ErrorDatosNoDisponibles(RuntimeError):
 
 
 class Repositorio(ABC):
+    def recargar(self) -> None:
+        """Descarta lo leído para que la próxima consulta vuelva a la fuente. Por defecto no hace nada."""
+
     @abstractmethod
     def proveedores(self) -> list[Proveedor]:
         """Todos los proveedores, también los inactivos (el filtro los descarta con su razón)."""

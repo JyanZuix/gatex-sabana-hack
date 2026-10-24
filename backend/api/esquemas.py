@@ -178,6 +178,41 @@ class Decision(_Esquema):
     snapshot: Evaluacion                 # exactamente lo que vio el funcionario
 
 
+# --- Cierre del viaje (resultado real → transporte.servicio) -----------------
+
+Incidente = Literal["ninguno", "retraso", "dano", "robo", "varado", "documental"]
+
+
+class CierreEntrada(_Esquema):
+    """Resultado real de un viaje ya decidido. Alimenta el historial con el que se calculan D y C."""
+    fecha_entrega_real: datetime            # hora local de Colombia si no trae zona horaria
+    proveedor_id: Optional[str] = None      # por defecto, el de la decisión registrada
+    precio_cop: Optional[int] = Field(default=None, gt=0)   # por defecto, el costo de la opción elegida
+    incidente: Optional[Incidente] = None   # por defecto `cierre.incidente_por_defecto`
+    calificacion: Optional[int] = Field(default=None, ge=1, le=5)   # por defecto `cierre.calificacion_por_defecto`
+
+
+class ServicioSalida(_Esquema):
+    servicio_id: int
+    solicitud_id: str
+    proveedor_id: str
+    nombre: str
+    precio_cop: int
+    fecha_servicio: date
+    fecha_entrega_real: datetime
+    transito_real_h: int
+    plazo_h: float
+    a_tiempo: bool
+    incidente: str
+    calificacion: int
+    calificacion_por_defecto: bool          # true si no la enviaron y se guardó el valor neutro
+    desempeno_antes: float                  # D del proveedor sin este viaje
+    desempeno_despues: float                # D del proveedor con este viaje (el modelo ya lo usa)
+    servicios_antes: int
+    servicios_despues: int
+    avisos: list[str] = []
+
+
 # --- Catálogos (para llenar los desplegables del frontend y las gafas) ----------
 
 class ClienteCatalogo(_Esquema):

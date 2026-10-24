@@ -194,7 +194,7 @@ La base es **PostgreSQL en Supabase**, esquema `transporte`, construida por el s
 | **Catálogos** | `proveedor`, `cliente` (`cliente_id` → `CLI-001`), `ruta` (dirigida, `distancia_km` fija), `tipo_vehiculo` (`cap_teu`, `cap_kg`, `carga_especial`) |
 | **Condiciones actuales** | `tarifa` (proveedor + ruta + tipo de vehículo → `precio_cop`, `transito_estimado_h`), `flota` (`disponibles_semana`), `capacidad_actual` (servicios por día; sin fila = dato desconocido) |
 | **Historial** | `solicitud` (cliente, ruta, vehículo, carga, `peso_kg`, recogida y fecha límite) y `servicio` (tránsito real, `a_tiempo`) |
-| **Operación del sistema** | Al **decidir**, la API inserta la solicitud en `transporte.solicitud` (queda pendiente hasta que se registre su `servicio`). El número sale de la secuencia de la base al evaluar (`REQ-0496`…). La API **nunca** escribe en `servicio`. Evaluaciones, escenarios, proveedor elegido, justificación y snapshot viven en memoria: la base no tiene columnas para ellos |
+| **Operación del sistema** | Al **decidir**, la API inserta la solicitud en `transporte.solicitud` (queda pendiente). El número sale de la secuencia de la base al evaluar (`REQ-0496`…). Al **cerrar el viaje** con su resultado real (`POST /solicitudes/{id}/cierre`), la API inserta la fila de `transporte.servicio` y el modelo la usa de inmediato: así cada viaje nuevo actualiza D y C. Evaluaciones, escenarios, proveedor elegido, justificación y snapshot viven en memoria (la base no tiene columnas para ellos); el informe descargable de cada decisión los deja por escrito |
 
 Lo que la base no guarda se deduce (cobertura = rutas con tarifa) o sale de `backend/datos/mapeo_postgres.yaml` (qué ubicaciones son puertos). La base también trae vistas (`v_desempeno_proveedor`, `v_candidatos`…); el backend **no** las usa: calcula todo desde el historial.
 
@@ -214,6 +214,8 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
 | `GET /solicitudes/{id}` | Evaluación original |
 | `POST /solicitudes/{id}/escenario` | "¿Y si…?" con otro `plazo_h` o `penal_hora_cop`; la solicitud original no cambia |
 | `POST /decisiones` · `GET /decisiones/{id}` | Elección del funcionario con justificación obligatoria y snapshot de lo que vio. Inserta la solicitud en `transporte.solicitud`. Una sola decisión por solicitud (409 si se repite); 503 si la base no responde (no queda nada registrado) |
+| `GET /decisiones/{id}/informe` | **Informe descargable** (HTML autocontenido, imprimible o guardable como PDF): solicitud, decisión y justificación, comparación de opciones con gráfico de tiempos, descartados con todas sus razones y cómo se calculó. `?descargar=false` lo abre en el navegador |
+| `POST /solicitudes/{id}/cierre` | Registra el **resultado real del viaje** en `transporte.servicio` y actualiza el modelo. Responde el D del proveedor antes y después |
 | `GET /proveedores/{id}` | Ficha: historial, tendencia mensual de D, fortalezas y debilidades |
 
 **Entrada de `POST /solicitudes/evaluar`:**
@@ -301,6 +303,12 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
 - `avisos`: datos faltantes que no descartan pero deben verse (p. ej. sin dato de capacidad para la fecha).
 - `casi_elegibles` solo se llena si `sin_candidatos` es `true`; cada uno trae `vehiculos` (lo que habría que pedirle si se flexibiliza, o `null` si no tiene tarifa).
 - `solicitud_id` sale de la secuencia de `transporte.solicitud`: no se reinicia, pero puede saltar números (cada evaluación reserva uno aunque no se decida).
+
+**Entrada de `POST /solicitudes/{id}/cierre`:** `{"fecha_entrega_real": "2026-11-04T08:30:00", "proveedor_id": null, "precio_cop": null, "incidente": null, "calificacion": null}`.
+- `fecha_entrega_real` es obligatoria (hora local de Colombia; si trae zona horaria se convierte).
+- `proveedor_id` y `precio_cop` toman por defecto el proveedor y el costo de la decisión registrada; si el servidor se reinició o la solicitud la cargó el equipo de BD, hay que enviarlos.
+- `incidente` (`ninguno`, `retraso`, `dano`, `robo`, `varado`, `documental`) vale `ninguno` por defecto y `calificacion` (1–5) vale **3** (neutro) si no se envía; el modelo no usa ninguno de los dos.
+- La API calcula `transito_real_h` (horas desde la recogida) y `a_tiempo` (entrega ≤ `fecha_entrega_limite`). Responde 201 con `desempeno_antes`/`desempeno_despues` y `servicios_antes`/`servicios_despues`; 404 si la solicitud no está en la base, 409 si ya tiene servicio, 422 si la entrega es anterior a la recogida.
 
 **Entrada de `POST /decisiones`:** `{"solicitud_id": "REQ-0496", "proveedor_id": "PROV-01", "justificacion": "…", "escenario_id": null}`. La respuesta trae `decision_id`, `tipo_vehiculo_id` con el que se guardó la solicitud, `flexibilizado` y el `snapshot` completo. En la base se guarda: cliente, ruta, vehículo, tipo de carga, peso total (`n_contenedores × peso_kg`), `fecha_recogida` (00:00 de `fecha_servicio`) y `fecha_entrega_limite` (recogida + `plazo_h`; el del escenario si se decidió sobre uno).
 
@@ -392,6 +400,8 @@ El registro completo y fechado está en `docs/decisiones.md`.
 - [x] **Persistencia:** la solicitud se guarda en `transporte.solicitud` al decidir (2026-10-24).
 
 **Pendientes**
-- [ ] `transporte.solicitud` no tiene columnas para el proveedor elegido, la justificación, el snapshot ni `n_contenedores`: hoy viven en memoria. Pedir al equipo de BD esas columnas o una tabla de decisiones.
+- [ ] `transporte.solicitud` no tiene columnas para el proveedor elegido, la justificación, el snapshot ni `n_contenedores`: viven en memoria (decisión del 2026-10-24: no agregar columnas). El informe descargable deja el registro por escrito; hay que descargarlo antes de reiniciar el servidor.
+- [ ] El usuario `postgres` de la conexión tiene todos los permisos. Para el testeo conviene un rol que solo lea las tablas y escriba en `solicitud` y `servicio`.
+- [ ] Las pruebas de la demo escriben en la base real: definir cómo identificar o limpiar esos viajes de prueba.
 - [ ] Las solicitudes de prueba #487, #491 y #495 de la base piden turbo o sencillo: con la decisión anterior siempre dan 422. Actualizarlas o quitarlas.
 - [ ] Capacidades del catálogo de vehículos: confirmar con negocio.
