@@ -276,8 +276,8 @@ async function initialize() {
         const resultado=await cargarEscenario(scene);
         puntoEntrada=resultado.entrada;entradaVR.configurar(puntoEntrada);restablecerVistaPC();
     } catch(error) {
-        console.error('No se pudo cargar Gatex4.glb:',error);
-        estado.textContent='No se pudo cargar assets/Gatex4.glb. Comprueba que copiaste el archivo y sirve la página por HTTP/HTTPS. Detalle: '+error.message;
+        console.error('No se pudo cargar Gatex5.glb:',error);
+        estado.textContent='No se pudo cargar assets/Gatex5.glb. Comprueba que copiaste el archivo y sirve la página por HTTP/HTTPS. Detalle: '+error.message;
         entrar.disabled=true;return; // Error explícito: no carga otro modelo ni permite entrar fingiendo que terminó.
     }
     if(preview){entrar.textContent='Abrir prueba en PC';entrar.disabled=false;estado.textContent='Modo de desarrollo. Esta vista no verifica el funcionamiento del visor.';return;}
@@ -312,6 +312,7 @@ renderer.setAnimationLoop((tiempo,frame)=>{
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
 initialize();
+
 
 
 
