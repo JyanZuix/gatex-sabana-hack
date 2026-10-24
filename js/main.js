@@ -44,7 +44,9 @@ let centrarAlEntrar = false;
 function centrarTablet(posicion, orientacion) {
     const frente=new THREE.Vector3(0,0,-1).applyQuaternion(orientacion).normalize();
     tablet.position.copy(posicion).addScaledVector(frente,1.35); // Centrada en la mirada completa del punto de entrada, incluida la inclinación.
-    tablet.lookAt(posicion); // Conserva geometría, tamaño, materiales e interfaz; cambia solo su ubicación autorizada.
+    tablet.lookAt(posicion); // Reinicia la orientación usando la vista del cono en cada centrado.
+    tablet.rotateX(-Math.PI / 4); // Atril a 45° respecto a esa vista: borde superior más lejos y pantalla hacia arriba.
+    tablet.scale.setScalar(1.3); // Aumenta marco y pantalla un 30 %, sin acumular escala al volver a entrar.
     tablet.position.y -= 1; // Baja exactamente 1 metro en el eje vertical del mundo, conservando su orientación.
 }
 function restablecerVistaPC() {
@@ -310,6 +312,7 @@ renderer.setAnimationLoop((tiempo,frame)=>{
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
 initialize();
+
 
 
 
