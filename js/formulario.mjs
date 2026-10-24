@@ -25,7 +25,7 @@ export function crearSolicitud(values,catalogos) {
     const peso=numeroES(values.peso),plazo=numeroES(values.plazo_h),presupuesto=numeroES(values.presupuesto);
     if(!Number.isFinite(peso)||peso<=0)errores.peso='El peso por contenedor en kg debe ser mayor que cero.';
     if(!Number.isFinite(plazo)||plazo<=0)errores.plazo_h='El plazo en horas debe ser mayor que cero.';
-    if(!Number.isFinite(presupuesto)||presupuesto<0||!Number.isSafeInteger(presupuesto*1000))errores.presupuesto='Introduce un presupuesto en miles de COP que produzca pesos enteros.';
+    if(!Number.isFinite(presupuesto)||presupuesto<=0||!Number.isSafeInteger(presupuesto*1000))errores.presupuesto='Introduce un presupuesto mayor que cero, en miles de COP que produzcan pesos enteros.';
     if(Object.keys(errores).length)return {errores};
     return {errores:{},datos:{cliente_id:clientes[0].id,origen_id:values.origen,destino_id:values.destino,fecha_servicio:values.fecha_servicio,plazo_h:plazo,n_contenedores:contenedores,peso_kg:peso,presupuesto_cop:presupuesto*1000,tipo_carga:values.carga,tipo_vehiculo_id:values.vehiculo}};
 }

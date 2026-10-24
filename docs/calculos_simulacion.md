@@ -196,7 +196,7 @@ rutas (
   origen_id         FK → ubicaciones,
   destino_id        FK → ubicaciones,
   distancia_km      REAL NOT NULL,   -- fija
-  corredor          TEXT,            -- p. ej. "Buenaventura–Bogotá" (para riesgos de vía)
+  corredor          TEXT,            -- p. ej. "Buenaventura–Bogotá" (para los priors del mercado)
   UNIQUE (origen_id, destino_id)
 )
 
@@ -290,13 +290,8 @@ Se corre **solo para los proveedores que pasaron el filtro de requisitos básico
    ```
    a_j = 1 si T_j ≤ plazo_solicitud_h
    ```
-4. **Costo:**
-   ```
-   costo_j = Costo_opción(p)  +  penal_retraso_h · max(0, T_j − plazo_h)
-   ```
-   `penal_retraso_h` es el costo por hora de retraso para el cliente. Por defecto vale 0 y lo puede ajustar el funcionario en la sala. La tarifa es fija; solo cambia la penalidad.
 
-**Decisión (2026-10-24):** ni las condiciones o bloqueos de vía ni los incidentes se simulan.
+**Decisión (2026-10-24):** ni las condiciones o bloqueos de vía ni los incidentes se simulan. Tampoco el costo: **el costo por retraso se eliminó**, la tarifa es fija y el profit (`presupuesto − costo`) no depende de la simulación.
 
 ### 6.2 Resultados por opción (lo que muestra la Sala)
 | Resultado | Cálculo |
@@ -304,12 +299,38 @@ Se corre **solo para los proveedores que pasaron el filtro de requisitos básico
 | Probabilidad de llegar a tiempo | `mean(a_j)` |
 | Tiempo típico y en un mal caso | percentiles 50 y 90 de `T_j` |
 | Costo (tarifa fija) | `Costo_opción(p)` + vehículo + n.º de viajes |
-| Costo esperado con penalidad | `mean(costo_j)` y percentil 90 |
 | Desempeño `D` y Confianza `C` | Secciones 2 y 3, con su desglose |
 | Explicación | Texto con los 2–3 factores que más suben y que más bajan a la opción |
 
 ### 6.3 Escenarios ("¿y si…?")
-El funcionario puede volver a simular cambiando dos supuestos: el plazo (`plazo_h`) o la penalidad por hora de retraso (`penal_hora_cop`). **No se modifican los datos históricos, solo los supuestos del escenario.**
+El funcionario puede volver a simular cambiando el plazo (`plazo_h`). **No se modifican los datos históricos, solo los supuestos del escenario.** El orden y el Top 4 se recalculan.
+
+### 6.4 Puntaje y orden: ¿qué pesa más? (decisión 2026-10-24)
+Antes de puntuar, el filtro ya garantizó lo no negociable: cubre la ruta, tiene el vehículo, las unidades y la capacidad, su tiempo pactado cabe en el plazo, maneja la carga, está activo **y no da pérdida** (`SIN_MARGEN`: costo ≤ presupuesto). Entre los que quedan, cuando precio, tiempo y confiabilidad apuntan en direcciones distintas, decide una fórmula pública:
+
+```
+S = 100 · ( 0.40 · M  +  0.30 · P_a  +  0.15 · D/100  +  0.15 · C/100 )
+
+M   = profit / mejor profit entre los candidatos     (el que más deja = 1; los demás en proporción)
+P_a = probabilidad de llegar a tiempo (sección 6.2)
+D   = Desempeño (sección 2);  C = Confianza (sección 3)
+```
+
+- **El profit pesa más (40 %)**, porque es el objetivo de negocio de COSCO. Pero **tiempo y confiabilidad juntos pesan 60 %** (30 % llegar a tiempo en esta solicitud, 15 % historial de desempeño, 15 % confianza en esos datos): un proveedor barato e impuntual no gana solo por precio.
+- **`M` es relativo al mejor candidato** y no al presupuesto: con un margen de referencia fijo, un presupuesto holgado llevaba a todos al tope y el precio dejaba de diferenciar. Con un presupuesto ajustado, las diferencias de profit pesan más, que es cuando más importan.
+- **Desempate determinista:** mayor `P_a`, luego menor costo, luego `proveedor_id`.
+- Se sugieren los **4 primeros** (`top_n`). El resto de candidatos sigue visible y elegible; el funcionario puede elegir fuera del Top 4 y su justificación queda en el informe.
+- Pesos y `top_n` en `parametros.yaml` (sección `puntaje`); deben sumar 1. La API los devuelve en `parametros_escenario.pesos_puntaje` y cada candidato trae el `desglose` de puntos por factor.
+
+**Ejemplo** (Buenaventura → Bogotá, 3 contenedores, presupuesto $30.000.000, plazo 33 h; `backend/api/ejemplos/evaluacion_respuesta.json`):
+
+| # | Proveedor | Costo | P_a | D | C | Profit (pts) | A tiempo | Desemp. | Conf. | **S** |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | PROV-06 | $15.450.000 | 85,9 % | 85,7 | 36,4 | 37,2 | 25,8 | 12,9 | 5,5 | **81,3** |
+| 2 | PROV-01 (el más barato) | $14.370.000 | 71,6 % | 72,7 | 47,7 | 40,0 | 21,5 | 10,9 | 7,2 | **79,5** |
+| 6 | PROV-07 | $19.020.000 | 85,6 % | 81,6 | 44,4 | 28,1 | 25,7 | 12,2 | 6,7 | **72,7** |
+
+El más barato queda segundo porque llega a tiempo solo el 72 % de las veces; si el plazo baja a 26 h (escenario), cae al puesto 6.
 
 ---
 
@@ -319,7 +340,7 @@ El funcionario puede volver a simular cambiando dos supuestos: el plazo (`plazo_
 |---|---|
 | `servicios_historicos` | `servicio_id, proveedor_id, cliente_id, ruta_id, tipo_vehiculo_id, fecha_entrega, tiempo_prometido_h, tiempo_real_h, plazo_acordado_h (o fecha_limite), a_tiempo` |
 | `tarifas`, `rutas`, `tipo_vehiculo`, `vehiculos_proveedor` | Ver sección 5.2 |
-| `capacidad_actual` | `proveedor_id, fecha_hora, servicios_disponibles` |
+| `capacidad_actual` | `proveedor_id, fecha, servicios_disponibles` |
 
 > Si `a_tiempo` no viene en los datos, se calcula: `a_tiempo = (tiempo_real_h ≤ plazo_acordado_h)`. Si falta `tiempo_prometido_h`, se usa el de la tarifa.
 >
@@ -340,6 +361,8 @@ El funcionario puede volver a simular cambiando dos supuestos: el plazo (`plazo_
 | Piso de `F` | 0.4 | Oportunidad para proveedores nuevos |
 | `σ_max` | 0.5 | ±50 % de variación = consistencia nula |
 | `N` simulaciones | 2000 | Error de ~1 punto porcentual en la probabilidad de llegar a tiempo |
+| Pesos del puntaje `S` | 0.40 / 0.30 / 0.15 / 0.15 | Profit / a tiempo / desempeño / confianza (sección 6.4); acordados por el grupo el 2026-10-24 |
+| `top_n` | 4 | Candidatos sugeridos |
 
 ---
 

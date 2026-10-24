@@ -5,10 +5,11 @@ from datetime import date
 import numpy as np
 import pytest
 
-from backend.calculos.confianza import calcular_confianza
+from backend.calculos.confianza import Confianza, calcular_confianza
 from backend.calculos.desempeno import calcular_desempeno
 from backend.calculos.historial import construir_historial
 from backend.calculos.priors import calcular_prior
+from backend.calculos.profit import calcular_profit, margen_pct
 from backend.filtro import filtrar
 from backend.simulacion import (
     EntradaSimulacion,
@@ -25,13 +26,16 @@ from backend.simulacion import (
 
 def _entrada(**kw):
     base = dict(
-        clave="P1", tiempo_prometido_h=26.0, plazo_h=40.0, costo_cop=8_000_000, presupuesto_cop=12_000_000,
-        penal_hora_cop=0.0,
+        clave="P1", tiempo_prometido_h=26.0, plazo_h=40.0,
         deltas_proveedor=np.array([0.0, 0.1, 0.2, -0.05]), pesos_proveedor=np.array([1.0, 1.0, 1.0, 1.0]),
         deltas_mercado=np.array([0.3, 0.4]), pesos_mercado=np.array([1.0, 1.0]), sigma0=0.2,
     )
     base.update(kw)
     return EntradaSimulacion(**base)
+
+
+# Desviaciones continuas: con pocas desviaciones distintas los percentiles no cambian con la semilla
+DELTAS_CONTINUAS = dict(deltas_proveedor=np.random.default_rng(0).normal(0.1, 0.15, 200), pesos_proveedor=np.ones(200))
 
 
 # --- Desviación de tiempo --------------------------------------------------
@@ -61,7 +65,7 @@ def test_preparar_entrada_usa_todo_el_historial_si_hay_poco_en_la_ruta(cfg, repo
     servicios = [s for s in repo.servicios_historicos() if s.proveedor_id == "PROV-09"]
     h = construir_historial(servicios, date(2026, 10, 23), cfg.recencia.vida_media_dias)
     mercado = construir_historial(repo.servicios_historicos(), date(2026, 10, 23), cfg.recencia.vida_media_dias)
-    e = preparar_entrada("PROV-09", h, mercado, "R-BUN-BOG", 0.2, 26, 40, 1, 1, 0, cfg)
+    e = preparar_entrada("PROV-09", h, mercado, "R-BUN-BOG", 0.2, 26, 40, cfg)
     assert e.deltas_proveedor.size == h.n  # W_ruta < 5 → todo su historial
 
 
@@ -75,31 +79,21 @@ def test_tiempo_y_llegada_a_tiempo_calculados_a_mano(cfg):
     assert simular(replace(e, plazo_h=38.0), cfg).prob_a_tiempo == 0.0
 
 
-# --- Costo y profit --------------------------------------------------------
+# --- Profit ----------------------------------------------------------------
 
-def test_sin_penal_no_hay_costo_de_retraso(cfg):
-    r = simular(_entrada(plazo_h=20.0), cfg)
-    assert r.costo_esperado_retraso_cop == 0
-    assert r.profit_esperado_cop == 12_000_000 - 8_000_000
-
-
-def test_costo_de_retraso_crece_con_la_penal(cfg):
-    corto = _entrada(plazo_h=20.0)
-    bajo = simular(replace(corto, penal_hora_cop=10_000), cfg)
-    alto = simular(replace(corto, penal_hora_cop=50_000), cfg)
-    assert 0 < bajo.costo_esperado_retraso_cop < alto.costo_esperado_retraso_cop
-    assert alto.profit_esperado_cop == pytest.approx(12_000_000 - 8_000_000 - alto.costo_esperado_retraso_cop)
-    assert alto.profit_p10_cop <= alto.profit_esperado_cop
+def test_profit_es_presupuesto_menos_costo():
+    assert calcular_profit(12_000_000, 8_000_000) == 4_000_000
+    assert margen_pct(4_000_000, 12_000_000) == pytest.approx(100 / 3)
+    assert margen_pct(1, 0) is None
 
 
 def test_resultado_golden(cfg):
     """Caso guardado: si cambia, cambió el algoritmo o la semilla."""
-    r = simular(_entrada(penal_hora_cop=20_000, plazo_h=30.0), cfg)
+    r = simular(_entrada(plazo_h=30.0), cfg)
     assert (r.n, r.semilla) == (2000, 42)
     assert r.tiempo_p50_h == pytest.approx(GOLDEN["p50"], abs=1e-6)
     assert r.tiempo_p90_h == pytest.approx(GOLDEN["p90"], abs=1e-6)
     assert r.prob_a_tiempo == pytest.approx(GOLDEN["prob"], abs=1e-9)
-    assert r.profit_esperado_cop == pytest.approx(GOLDEN["profit"], abs=1e-3)
 
 
 # --- Reproducibilidad ------------------------------------------------------
@@ -127,21 +121,20 @@ def test_resultado_no_depende_del_orden_de_los_candidatos(cfg):
 def test_escenario_no_toca_el_historial(cfg):
     e = _entrada()
     deltas = e.deltas_proveedor.copy()
-    nueva = aplicar_escenario(e, Escenario(plazo_h=20, penal_hora_cop=50_000))
-    assert np.array_equal(e.deltas_proveedor, deltas) and (e.plazo_h, e.penal_hora_cop) == (40.0, 0.0)
-    assert simular(nueva, cfg).profit_esperado_cop < simular(e, cfg).profit_esperado_cop
+    nueva = aplicar_escenario(e, Escenario(plazo_h=20))
+    assert np.array_equal(e.deltas_proveedor, deltas) and e.plazo_h == 40.0
+    assert simular(nueva, cfg).prob_a_tiempo < simular(e, cfg).prob_a_tiempo
 
 
-def test_escenario_cambia_plazo_y_penal(cfg):
-    e = aplicar_escenario(_entrada(), Escenario(plazo_h=20, penal_hora_cop=10_000))
-    assert (e.plazo_h, e.penal_hora_cop) == (20, 10_000)
+def test_escenario_cambia_plazo(cfg):
+    e = aplicar_escenario(_entrada(), Escenario(plazo_h=20))
+    assert e.plazo_h == 20
     assert simular(e, cfg).prob_a_tiempo == 0.0
 
 
-@pytest.mark.parametrize("kw", [dict(plazo_h=-1), dict(penal_hora_cop=-5)])
-def test_escenario_invalido(kw):
+def test_escenario_invalido():
     with pytest.raises(ValueError):
-        Escenario(**kw)
+        Escenario(plazo_h=-1)
 
 
 # --- Explicaciones ---------------------------------------------------------
@@ -175,11 +168,23 @@ def test_explicacion_opcion_unica_usa_mercado(cfg):
     assert exp.a_favor and exp.a_favor[0].referencia in {REF.prob_a_tiempo, REF.desempeno, REF.confianza, 0.0}
 
 
-def test_riesgos(cfg):
-    lista = riesgos(n_efectivo=4, servicios_con_cliente=0, cfg=cfg)
-    assert lista[0].startswith("Poca evidencia histórica")
-    assert lista[1] == "Sin historial con este cliente"
-    assert riesgos(n_efectivo=50, servicios_con_cliente=5, cfg=cfg) == []
+def _conf(valor, nivel, n_efectivo, consistencia):
+    return Confianza(valor=valor, nivel=nivel, consistencia=consistencia, cumplimiento_cliente=0.8, evidencia=0.5,
+                     calidad=0.6, sigma_ajustada=0.2, n_efectivo=n_efectivo, E=0.3)
+
+
+def test_riesgos_con_su_dato(cfg):
+    lista = riesgos(n_servicios=4, conf=_conf(36.4, "Baja", 4.1, 0.55), servicios_con_cliente=0,
+                    prob_a_tiempo=0.62, cfg=cfg)
+    assert lista == ["Pocos datos: 4 servicios en su historial", "Nunca ha trabajado con este cliente",
+                     "Llega a tiempo solo en el 62 % de las simulaciones (se espera al menos 70 %)",
+                     "Confianza baja (36/100): pocos datos y tiempos algo variables"]
+    assert all("efectivo" not in r for r in lista)
+    # Con mucho historial la confianza baja se explica solo por la variabilidad
+    assert riesgos(n_servicios=60, conf=_conf(48, "Baja", 50, 0.2), servicios_con_cliente=5, prob_a_tiempo=0.9,
+                   cfg=cfg) == ["Confianza baja (48/100): tiempos muy variables"]
+    assert riesgos(n_servicios=60, conf=_conf(70, "Media", 50, 0.8), servicios_con_cliente=5, prob_a_tiempo=0.9,
+                   cfg=cfg) == []
 
 
 # --- Integración con datos sintéticos --------------------------------------
@@ -201,8 +206,7 @@ def test_flujo_completo_filtro_calculo_simulacion(cfg, repo, solicitud_base):
         d = calcular_desempeno(h.sumas(), prior, cfg)
         conf = calcular_confianza(h.sumas(), prior, d.puntualidad, cfg)
         e = preparar_entrada(pid, h, mercado, resultado.ruta.ruta_id, prior.sigma0,
-                             c.opcion.tiempo_prometido_h, s.plazo_h, c.opcion.costo, s.presupuesto_cop,
-                             cfg.escenario.penal_hora_cop, cfg)
+                             c.opcion.tiempo_prometido_h, s.plazo_h, cfg)
         resultados[pid] = (d, conf, simular(e, cfg))
 
     assert set(resultados) == {"PROV-01", "PROV-02", "PROV-03", "PROV-06", "PROV-09"}
@@ -215,5 +219,6 @@ def test_flujo_completo_filtro_calculo_simulacion(cfg, repo, solicitud_base):
     assert resultados["PROV-03"][1].valor > resultados["PROV-06"][1].valor
 
 
-# Regenerado el 2026-10-24 al quitar la demora por vía de la simulación.
-GOLDEN = {"p50": 33.8, "p90": 36.4, "prob": 0.2305, "profit": 3926152.0}
+# Regenerado el 2026-10-24 al quitar la demora por vía de la simulación. Sin profit desde que se
+# eliminó el costo por retraso: el tiempo no cambió porque la secuencia aleatoria es la misma.
+GOLDEN = {"p50": 33.8, "p90": 36.4, "prob": 0.2305}

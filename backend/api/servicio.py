@@ -1,7 +1,8 @@
 """Orquestación: filtro → Desempeño y Confianza → simulación → explicación.
 
 La API solo traduce HTTP; toda la lógica sale de `filtro/`, `calculos/` y `simulacion/`.
-No ordena ni elige: devuelve las opciones y el funcionario decide.
+Ordena los candidatos por el puntaje ponderado y marca el Top N sugerido; no elige:
+el funcionario decide y justifica (docs/decisiones.md, 2026-10-24).
 """
 from __future__ import annotations
 
@@ -13,6 +14,8 @@ from backend.calculos.costos import OpcionVehiculo
 from backend.calculos.desempeno import Desempeno, calcular_desempeno
 from backend.calculos.historial import Historial, Sumas, construir_historial
 from backend.calculos.priors import Prior, calcular_prior
+from backend.calculos.profit import calcular_profit, margen_pct
+from backend.calculos.puntaje import EntradaPuntaje, ordenar
 from backend.config import Config
 from backend.datos import Repositorio
 from backend.dominio import Solicitud
@@ -21,6 +24,7 @@ from backend.filtro.modelos import Razon
 from backend.simulacion import ReferenciaMercado, ResumenOpcion, explicar, preparar_entrada, riesgos, simular
 
 from . import esquemas as e
+from . import textos as t
 
 SUMAS_VACIAS = Sumas(W=0, W_a=0, W_r=0, W_c=0, W_ca=0, sigma_obs=0)
 
@@ -36,12 +40,20 @@ def _razon(r: Razon) -> e.RazonSalida:
 
 def _desempeno(d: Desempeno) -> e.DesempenoSalida:
     return e.DesempenoSalida(valor=round(d.valor, 1), desglose=e.DesgloseDesempeno(
-        puntualidad=round(d.puntualidad, 3), magnitud_retraso=round(d.magnitud_retraso, 3)))
+        puntualidad=round(d.puntualidad, 3), magnitud_retraso=round(d.magnitud_retraso, 3)),
+        texto=t.texto_desempeno(d))
 
 
-def _confianza(c: Confianza) -> e.ConfianzaSalida:
+def _confianza(c: Confianza, n_servicios: int, n_cliente: Optional[int], cfg: Config) -> e.ConfianzaSalida:
     return e.ConfianzaSalida(valor=round(c.valor, 1), nivel=c.nivel, desglose=e.DesgloseConfianza(
-        consistencia=round(c.consistencia, 3), cumplimiento_cliente=round(c.cumplimiento_cliente, 3), evidencia=round(c.evidencia, 3)))
+        consistencia=round(c.consistencia, 3), cumplimiento_cliente=round(c.cumplimiento_cliente, 3), evidencia=round(c.evidencia, 3)),
+        texto=t.texto_confianza(c, n_servicios, n_cliente, cfg))
+
+
+def _pesos(cfg: Config) -> e.PesosPuntaje:
+    p = cfg.puntaje
+    return e.PesosPuntaje(profit=p.peso_profit, a_tiempo=p.peso_a_tiempo, desempeno=p.peso_desempeno,
+                          confianza=p.peso_confianza, top_n=p.top_n)
 
 
 def referencia_mercado(prior: Prior, cfg: Config) -> ReferenciaMercado:
@@ -64,6 +76,13 @@ class ServicioEvaluacion:
         rutas = {r.ruta_id for r in self.repo.rutas() if corredor is not None and r.corredor == corredor}
         return calcular_prior(mercado, ruta_id, rutas, self.cfg)
 
+    def _nombres_segmentos(self, nombres: Optional[dict[str, str]] = None) -> tuple[dict[str, str], dict[str, str]]:
+        """Nombres legibles de rutas ("Buenaventura → Bogotá") y de tipos de vehículo."""
+        nombres = nombres or {u.ubicacion_id: u.nombre for u in self.repo.ubicaciones()}
+        rutas = {r.ruta_id: f"{nombres.get(r.origen_id, r.origen_id)} → {nombres.get(r.destino_id, r.destino_id)}"
+                 for r in self.repo.rutas()}
+        return rutas, {x.tipo_vehiculo_id: x.nombre for x in self.repo.tipos_vehiculo()}
+
     # ------------------------------------------------------------------
     def evaluar(self, s: Solicitud, escenario_id: Optional[str] = None) -> e.Evaluacion:
         """Lanza `RutaNoEncontrada` si no existe la ruta origen→destino."""
@@ -73,42 +92,60 @@ class ServicioEvaluacion:
         nombres = {u.ubicacion_id: u.nombre for u in self.repo.ubicaciones()}
         todos, mercado = self._mercado(s.fecha_servicio)
         prior = self._prior(mercado, ruta.ruta_id, ruta.corredor)
-        penal = cfg.escenario.penal_hora_cop if s.penal_hora_cop is None else s.penal_hora_cop
 
-        calculos = []
+        rutas_txt, tipos_txt = self._nombres_segmentos(nombres)
+        relevantes = {("ruta", ruta.ruta_id), ("carga", s.tipo_carga or "general")}
+        calculos = {}
         for c in resultado.candidatos:
             pid = c.proveedor.proveedor_id
-            h = construir_historial([x for x in todos if x.proveedor_id == pid], s.fecha_servicio,
-                                    cfg.recencia.vida_media_dias, cliente_id=s.cliente_id)
+            propios = [x for x in todos if x.proveedor_id == pid]
+            h = construir_historial(propios, s.fecha_servicio, cfg.recencia.vida_media_dias, cliente_id=s.cliente_id)
             sumas = h.sumas()
             d = calcular_desempeno(sumas, prior, cfg)
             conf = calcular_confianza(sumas, prior, d.puntualidad, cfg)
             entrada = preparar_entrada(pid, h, mercado, ruta.ruta_id, prior.sigma0,
-                                       c.opcion.tiempo_prometido_h, s.plazo_h, c.opcion.costo,
-                                       s.presupuesto_cop, penal, cfg)
-            calculos.append((c, sumas, d, conf, simular(entrada, cfg)))
+                                       c.opcion.tiempo_prometido_h, s.plazo_h, cfg)
+            fuertes, flojas = t.fortalezas_y_debilidades(propios, s.fecha_servicio, cfg, rutas_txt, tipos_txt)
+            calculos[pid] = (c, h, sumas, d, conf, simular(entrada, cfg), fuertes, flojas)
 
-        resumenes = [ResumenOpcion(c.proveedor.proveedor_id, c.opcion.costo, sim.prob_a_tiempo, d.valor,
-                                   conf.valor, sumas.W_c)
-                     for c, sumas, d, conf, sim in calculos]
+        resumenes = [ResumenOpcion(pid, c.opcion.costo, sim.prob_a_tiempo, d.valor, conf.valor, int(h.c.sum()))
+                     for pid, (c, h, sumas, d, conf, sim, _, _) in calculos.items()]
         explicaciones = explicar(resumenes, referencia_mercado(prior, cfg), cfg)
 
+        entradas = [EntradaPuntaje(pid, c.opcion.costo, calcular_profit(s.presupuesto_cop, c.opcion.costo),
+                                   sim.prob_a_tiempo, d.valor, conf.valor)
+                    for pid, (c, h, sumas, d, conf, sim, _, _) in calculos.items()]
+
         candidatos = []
-        for c, sumas, d, conf, sim in calculos:
-            lista_riesgos = riesgos(conf.n_efectivo, sumas.W_c, cfg)
-            if c.opcion.costo > s.presupuesto_cop:
-                lista_riesgos.append("El costo supera el presupuesto")
+        for puesto, (x, pje) in enumerate(ordenar(entradas, cfg), start=1):
+            c, h, sumas, d, conf, sim, fuertes, flojas = calculos[x.proveedor_id]
+            margen = margen_pct(x.profit_cop, s.presupuesto_cop)
+            n_cliente = int(h.c.sum())
+            relevantes_p = relevantes | {("vehiculo", c.opcion.tipo_vehiculo_id)}
             candidatos.append(e.CandidatoSalida(
                 proveedor_id=c.proveedor.proveedor_id, nombre=c.proveedor.nombre,
+                puesto=puesto, top=puesto <= cfg.puntaje.top_n,
+                puntaje=e.PuntajeSalida(valor=round(pje.valor, 1), desglose=e.DesglosePuntaje(
+                    profit=round(pje.profit, 1), a_tiempo=round(pje.a_tiempo, 1),
+                    desempeno=round(pje.desempeno, 1), confianza=round(pje.confianza, 1))),
                 vehiculos=_vehiculos(c.opcion),
                 costo_cop=c.opcion.costo,
-                profit=e.Profit(esperado_cop=round(sim.profit_esperado_cop), p10_cop=round(sim.profit_p10_cop),
-                                margen_pct=None if sim.margen_pct is None else round(sim.margen_pct, 1)),
+                profit=e.Profit(cop=round(x.profit_cop), margen_pct=None if margen is None else round(margen, 1)),
                 tiempo_h=e.TiempoH(p50=round(sim.tiempo_p50_h, 1), p90=round(sim.tiempo_p90_h, 1),
                                    prob_a_tiempo=round(sim.prob_a_tiempo, 3),
-                                   abanico={f"{p:g}": round(v, 1) for p, v in sim.abanico_h.items()}),
-                desempeno=_desempeno(d), confianza=_confianza(conf),
-                riesgos=lista_riesgos, explicacion=explicaciones[c.proveedor.proveedor_id].texto,
+                                   abanico={f"{p:g}": round(v, 1) for p, v in sim.abanico_h.items()},
+                                   resumen=t.resumen_tiempo(sim.tiempo_p50_h, sim.tiempo_p90_h, s.plazo_h,
+                                                            sim.prob_a_tiempo)),
+                capacidad=e.CapacidadSalida(
+                    vehiculos_necesarios=c.opcion.viajes, vehiculos_libres=c.opcion.unidades_disponibles,
+                    servicios_libres_dia=None if c.capacidad is None else c.capacidad.servicios_disponibles,
+                    texto=t.texto_capacidad(c.opcion, c.capacidad, s.fecha_servicio)),
+                historial=e.HistorialSalida(servicios=h.n, servicios_con_cliente=n_cliente),
+                desempeno=_desempeno(d), confianza=_confianza(conf, h.n, n_cliente, cfg),
+                fortalezas=t.para_tarjeta(fuertes, relevantes_p, cfg.ficha.max_en_tarjeta),
+                debilidades=t.para_tarjeta(flojas, relevantes_p, cfg.ficha.max_en_tarjeta),
+                riesgos=riesgos(h.n, conf, n_cliente, sim.prob_a_tiempo, cfg),
+                explicacion=explicaciones[c.proveedor.proveedor_id].texto,
                 avisos=list(c.avisos) + list(sim.avisos),
             ))
 
@@ -124,8 +161,9 @@ class ServicioEvaluacion:
                                                  vehiculos=None if x.opcion is None else _vehiculos(x.opcion))
                             for x in resultado.casi_elegibles],
             sin_candidatos=resultado.sin_candidatos,
-            parametros_escenario=e.ParametrosEscenario(plazo_h=s.plazo_h, penal_hora_cop=penal,
-                                                       semilla=cfg.simulacion.semilla, n_simulaciones=cfg.simulacion.n),
+            parametros_escenario=e.ParametrosEscenario(
+                plazo_h=s.plazo_h, pesos_puntaje=_pesos(cfg),
+                semilla=cfg.simulacion.semilla, n_simulaciones=cfg.simulacion.n),
         )
 
     # ------------------------------------------------------------------
@@ -151,34 +189,13 @@ class ServicioEvaluacion:
             tendencia.append(e.PuntoTendencia(mes=mes, servicios=hm.n,
                                               desempeno=round(calcular_desempeno(hm.sumas(), nacional, cfg).valor, 1)))
 
-        fortalezas, debilidades = [], []
-        if h.n:
-            punt = float(h.a.mean())
-            nombres = {u.ubicacion_id: u.nombre for u in self.repo.ubicaciones()}
-            rutas = {r.ruta_id: f"{nombres.get(r.origen_id, r.origen_id)} → {nombres.get(r.destino_id, r.destino_id)}"
-                     for r in self.repo.rutas()}
-            tipos = {t.tipo_vehiculo_id: t.nombre for t in self.repo.tipos_vehiculo()}
-            segmentos = [(f"la ruta {rutas.get(r, r)}", [x for x in propios if x.ruta_id == r])
-                         for r in sorted({x.ruta_id for x in propios})]
-            segmentos += [(f"vehículo {tipos.get(t, t)}", [x for x in propios if x.tipo_vehiculo_id == t])
-                          for t in sorted({x.tipo_vehiculo_id for x in propios})]
-            u = cfg.ficha.umbral_diferencia
-            for nombre, servicios in segmentos:
-                hs = construir_historial(servicios, hoy, H)
-                if hs.n < cfg.ficha.min_servicios_segmento:
-                    continue
-                p_seg = float(hs.a.mean())
-                detalle = f"{hs.n} servicios"
-                if p_seg >= punt + u:
-                    fortalezas.append(f"Puntualidad de {p_seg:.0%} en {nombre} (su promedio: {punt:.0%}; {detalle})")
-                elif p_seg <= punt - u:
-                    debilidades.append(f"Puntualidad de {p_seg:.0%} en {nombre} (su promedio: {punt:.0%}; {detalle})")
+        fuertes, flojas = t.fortalezas_y_debilidades(propios, hoy, cfg, *self._nombres_segmentos())
 
         return e.FichaProveedor(
             proveedor_id=p.proveedor_id, nombre=p.nombre, estado=p.estado,
             cargas_especiales=list(p.cargas_especiales), servicios=h.n,
             ultimo_servicio=max((x.fecha_entrega for x in propios), default=None),
             puntualidad_pct=round(100 * float(h.a.mean()), 1) if h.n else None,
-            desempeno=_desempeno(d), confianza=_confianza(conf), tendencia=tendencia,
-            fortalezas=fortalezas, debilidades=debilidades,
+            desempeno=_desempeno(d), confianza=_confianza(conf, h.n, None, cfg), tendencia=tendencia,
+            fortalezas=[x.texto for x in fuertes], debilidades=[x.texto for x in flojas],
         )

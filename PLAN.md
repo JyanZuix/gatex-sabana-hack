@@ -23,6 +23,7 @@ Registro completo en `docs/decisiones.md`. Resumen:
 | 2026-10-23 | PostgreSQL (subequipo BD) | Definido por el equipo |
 | 2026-10-23 | Gafas Meta Quest 3, Three.js + WebXR | Visor disponible |
 | 2026-10-23 | `Profit = presupuesto − costo_proveedor − costo_esperado_retraso` | Confirmado por el equipo |
+| 2026-10-24 | **Sin costo por retraso:** `Profit = presupuesto − costo_proveedor`; sin `penal_hora_cop`; sin columna `prioridad` | Decisión del grupo tras la revisión de la demo (reemplaza las filas de profit y penalidad) |
 | 2026-10-23 | Acceso a datos por interfaz de repositorio con adaptador simulado y adaptador PostgreSQL | Avanzar sin la BD real |
 | 2026-10-23 | Tests con `pytest`; configuración en YAML dentro de `backend/config/` | Estándar y legible |
 | 2026-10-23 | Dinero en COP como enteros; tiempos en horas (float); aleatoriedad con `numpy.random.default_rng(semilla)` | Reproducibilidad (regla 7) |
@@ -55,8 +56,8 @@ Supuestos abiertos: capacidades del catálogo de vehículos a confirmar con nego
 - [x] Estructura de paquetes en `backend/` — `import backend.filtro, backend.calculos, backend.simulacion, backend.api` funciona; los `.gitkeep` se reemplazan por `__init__.py` (`backend/api/` se crea en la Fase 4)
 - [x] `backend/config/parametros.yaml` — contiene **todos** los parámetros de la sección 8 del doc de cálculos (H=365, m=10, k=10, α=2, pesos de D y Q, piso de F=0.4, σ_max=0.5, severidades, N=2000, semilla, priors P0/R0/σ0/I0, umbrales de nivel de confianza 75/55, tandas=descartar, penal_hora=0)
 - [x] Cargador de configuración — `cargar_config()` devuelve un objeto tipado; test: falta un parámetro → error claro que nombra el parámetro; no hay números mágicos en `calculos/` ni `simulacion/` (revisión con grep)
-- [x] Modelos de dominio (pydantic) — `Solicitud`, `Proveedor`, `TipoVehiculo`, `Tarifa`, `ServicioHistorico`, `Incidente`, `CondicionVia`; test: se construyen desde un diccionario de ejemplo y rechazan valores negativos
-- [x] Interfaz `Repositorio` — métodos para proveedores activos, tarifas vigentes por ruta, flota, cobertura, capacidad, historial, incidentes y condiciones de vía; documentada con docstrings
+- [x] Modelos de dominio (pydantic) — `Solicitud`, `Proveedor`, `TipoVehiculo`, `Tarifa`, `ServicioHistorico`, `Incidente`; test: se construyen desde un diccionario de ejemplo y rechazan valores negativos
+- [x] Interfaz `Repositorio` — métodos para proveedores activos, tarifas vigentes por ruta, flota, cobertura, capacidad, historial e incidentes; documentada con docstrings
 - [x] Adaptador simulado en memoria — implementa `Repositorio` leyendo JSON desde una carpeta configurable; test: devuelve los datos cargados
 - [x] Datos sintéticos etiquetados — 10 proveedores, 4 rutas, 4 tipos de vehículo y 413 servicios con `"sintetico": true` en cada archivo, en `backend/datos_sinteticos/` (no en `demo/`, ver Decisiones) y generados por `generar.py` con semilla fija; test: ningún dato sintético se carga sin la etiqueta
 - [x] Adaptador PostgreSQL — `RepositorioPostgres` lee las 9 tablas de `transporte` en Supabase (incluidas `tipo_vehiculo` y `cliente`); el backend arranca con `REPOSITORIO=simulado|postgres` desde el entorno; `tests/test_fase5_postgres.py` y verificación contra la base real
@@ -128,7 +129,7 @@ Depende de la Fase 4. Misma funcionalidad que las gafas.
 - [ ] Abanico de tiempos simulados — gráfica de distribución con P50, P90 y el plazo marcado
 - [ ] Sección "Descartados" — todas las razones y el dato que las causó, siempre visible, también con 0 candidatos
 - [ ] Ordenamiento — por profit, tiempo o confianza sin ocultar ninguna opción ni marcar un "ganador"
-- [ ] Escenarios — controles para bloqueo, plazo y `penal_hora` que llaman a `/escenario`
+- [ ] Escenarios — controles para plazo y `penal_hora` que llaman a `/escenario`
 - [ ] "Elegir proveedor" — pide confirmación y justificación, llama a `/decisiones` y muestra el registro; ningún texto del tipo "el sistema asignó"
 
 ## Fase 6 · Tableros
@@ -149,7 +150,7 @@ Depende de las fases 4 y 5. Sin lógica de negocio. El prototipo actual (`index.
 - [ ] Prueba en Quest 3 real por HTTPS — legibilidad y mandos verificados; si falla, se usa la web de respaldo
 
 ## Fase 8 · Validación y demo
-- [ ] Backtesting — reproduce solicitudes históricas con tarifas y condiciones de ese día; informe: porcentaje de veces que el proveedor elegido por COSCO estaba entre los candidatos
+- [ ] Backtesting — reproduce solicitudes históricas con las tarifas y la flota de ese día; informe: porcentaje de veces que el proveedor elegido por COSCO estaba entre los candidatos
 - [ ] Calibración del tiempo — compara P50/P90 simulados con los tiempos reales; informe con el error medio
 - [ ] Caso demo 1: típico — varios candidatos y descartados con razones
 - [ ] Caso demo 2: urgente — plazo corto que descarta a varios por `PLAZO_INCUMPLIBLE`
@@ -159,6 +160,13 @@ Depende de las fases 4 y 5. Sin lógica de negocio. El prototipo actual (`index.
 - [ ] Guion de presentación — 5 minutos, ligado a los criterios de evaluación del README
 
 ---
+
+## Correcciones tras la revisión de la demo (2026-10-24)
+Plan por ciclos aprobado por el grupo.
+- [x] Ciclo 1 · Limpieza — sin costo por retraso (`penal_hora_cop`, profit simulado, P10), sin columna `prioridad`, opción "Automático"; verificación: pruebas del backend en verde y ninguna mención en código ni SQL
+- [x] Ciclo 2 · Modelo de decisión — regla `SIN_MARGEN` (descarta a quien da pérdida), puntaje ponderado (40/30/15/15, profit relativo al mejor) y Top 4 ordenado en API, informe, tablet y tarjetas 3D; verificación: pruebas de regla, puntaje y API
+- [x] Ciclo 3 · Claridad — textos llanos de tiempo, capacidad, desempeño, confianza e historial con el cliente; fortalezas (también por carga), debilidades y riesgos con su dato; tarjeta en orden fijo; glosario en el informe; verificación: `test_ciclo3_textos.py` y prueba enfocada del frontend
+- [ ] Ciclo 4 · Presentación — respuestas a "el más adecuado" y "qué pesa más"; `docs/concepto_sala_decisiones.md` y `docs/valor_negocio.md`
 
 ## Dependencias entre fases
 ```
@@ -204,6 +212,11 @@ Una solicitud real entra por la web o las gafas, se filtra (con todas las razone
 | 2026-10-23 | Fase 1: 8 reglas registrables, orquestador que evalúa todas, opción de vehículo más barata que cumple el plazo y casi elegibles | `tests/test_fase1_filtro.py`: 21 pruebas pasan, incluido 52 h vs 40 h y el caso PROV-07 del README con datos sintéticos |
 | 2026-10-23 | Fase 3: Monte Carlo con semilla por (solicitud, proveedor), escenarios inmutables, explicaciones trazables y riesgos | `tests/test_fase3_simulacion.py`: 25 pruebas pasan, incluido un caso *golden* y el flujo filtro → cálculos → simulación con datos sintéticos |
 | 2026-10-23 | Revisión de parámetros hardcodeados en `filtro/`, `calculos/` y `simulacion/` | grep de literales numéricos: solo 0, 1 y la base 0.5 de la fórmula de recencia. Total: 92 pruebas pasan con `backend/pruebas.sh` |
+| 2026-10-23 | Adaptador PostgreSQL para el esquema `transporte`: lectura única, conversión a modelos de dominio y supuestos en `datos/mapeo_postgres.yaml`; `RepositorioEnMemoria` compartido con el simulado | `tests/test_postgres.py` con los CSV del subequipo (incluye el filtro de la solicitud 1): 13 pruebas; total 105 pasan. Sin prueba contra un servidor PostgreSQL real |
+| 2026-10-23 | Carga peligrosa: si el catálogo no tiene vehículo dedicado a una carga especial, sirven los de carga general (`calculos/costos.py`, `tipos_validos`) | Prueba nueva en fase 2 y caso 4 de la BD (solo PROV-08 queda candidato, en tractomula); total 106 pasan |
+| 2026-10-23 | Tabla `capacidad_actual` en `01_esquema.sql`, datos en `02_datos.sql` y `csv/` (generados al final para no alterar el resto de la semilla) y lectura en el adaptador PostgreSQL | Diff de `02_datos.sql`: solo filas nuevas y el perfil de Tractocargas; `tests/test_postgres.py` verifica `SIN_CAPACIDAD` de PROV-05 el 3-nov y candidatos sin aviso; total 107 pasan |
+| 2026-10-23 | Se quitó toda la lógica de condiciones de vía: modelo `CondicionVia`, `Repositorio.condicion_via`, `condiciones_via.json`, la demora del Monte Carlo, `p_evento`/`d_min`/`d_max` de los escenarios y el riesgo de vía en las tarjetas. `corredor` se conserva para los priors | 101 pruebas pasan; el caso *golden* se recalculó porque cambió la secuencia aleatoria (ahora con desviaciones continuas) |
+| 2026-10-23 | Fase 4: API FastAPI (`/salud`, `/solicitudes/evaluar`, `/solicitudes/{id}`, `/solicitudes/{id}/escenario`, `/decisiones`, `/decisiones/{id}`, `/proveedores/{id}`), CORS por `CORS_ORIGENES`, errores en español, registro en memoria y `render.yaml` | `tests/test_fase4_api.py`: 21 pruebas (incluye comparar la respuesta con el ejemplo del README); total 122 pasan. Recorrido manual contra Supabase: evaluar, escenario, decisión con snapshot idéntico y fichas |
 | 2026-10-24 | Suite reparada (pruebas que importaban `CondicionVia`); Python 3.12.7 con `uv` | `backend/pruebas.sh`: 87 pruebas pasan |
 | 2026-10-24 | Sin incidentes en dominio, cálculos, simulación, API y datos sintéticos; `Q = (2/3)·S_desv + (1/3)·S_cump` | 87 pruebas pasan; ejemplo de la sección 4 recalculado (A 66.3, B 54.3) |
 | 2026-10-24 | Solicitud con `n_contenedores` y `peso_kg`; tipo de vehículo indicado obligatorio; primera suite de la API | 107 pruebas pasan |
@@ -211,3 +224,6 @@ Una solicitud real entra por la web o las gafas, se filtra (con todas las razone
 | 2026-10-24 | Adaptador PostgreSQL con `tipo_vehiculo` y `cliente`; `GET /catalogos`; 503 si la base cae; ejemplos del contrato | 131 pruebas pasan; `uvicorn` contra Supabase: 15 solicitudes pendientes evaluadas, CORS, escenarios, decisiones y ficha verificados |
 | 2026-10-24 | Solo contenedores (turbo y sencillo obsoletos); persistencia de la solicitud al decidir en `transporte.solicitud`; 409/503 en decisiones; vehículo de los casi elegibles; protección de credenciales | 145 pruebas pasan; INSERT verificado contra Supabase con ROLLBACK (la base sigue con 495 filas); `uvicorn` contra Supabase con IDs `REQ-0498` de la secuencia |
 | 2026-10-24 | Comunicación completa con la base: cierre de viajes en `servicio`, caché con vencimiento, informe descargable; vehículos obsoletos fuera de `/catalogos/formulario` | 156 pruebas pasan (+1 opcional contra Supabase con ROLLBACK: pasa; la base sigue con 495 solicitudes y 480 servicios) |
+| 2026-10-24 | Ciclo 1 de correcciones: sin costo por retraso ni `prioridad`; opción "Automático"; ejemplos del contrato actualizados | 156 pruebas pasan (sin `test_postgres.py`, que ya fallaba: espera el mapeo viejo de vehículos) |
+| 2026-10-24 | Ciclo 2 de correcciones: `SIN_MARGEN`, puntaje ponderado, Top 4 en API, informe, tablet y tarjetas | 171 pruebas del backend pasan; prueba enfocada del frontend (contrato, tarjetas, tablet, formulario) pasa |
+| 2026-10-24 | Ciclo 3 de correcciones: tarjeta en lenguaje llano, capacidad visible, riesgos y fortalezas con su dato, ejemplos regenerados desde los CSV | 179 pruebas del backend pasan (sin `test_postgres.py`) |

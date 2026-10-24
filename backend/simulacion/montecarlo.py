@@ -4,7 +4,9 @@ Por iteración j:
   1. Δ_j: con prob. W/(W+m) del historial del proveedor (ponderado por w_i), si no del mercado.
   2. T_j = T_prom · (1 + Δ_j)
   3. a_j = T_j ≤ plazo
-  4. costo_j = Costo_opción + penal_hora · max(0, T_j − plazo)
+
+Solo simula el tiempo: el profit (presupuesto − costo) es determinista y se calcula
+en `calculos/profit.py`. El costo por retraso se eliminó (docs/decisiones.md, 2026-10-24).
 
 Incidentes y condiciones de vía no forman parte del modelo (docs/decisiones.md, 2026-10-24).
 """
@@ -17,7 +19,6 @@ from typing import Optional
 import numpy as np
 
 from backend.calculos.historial import Historial
-from backend.calculos.profit import margen_pct
 from backend.config import Config
 
 
@@ -26,9 +27,6 @@ class EntradaSimulacion:
     clave: str                       # identifica la opción (proveedor) dentro de la semilla
     tiempo_prometido_h: float
     plazo_h: float
-    costo_cop: int
-    presupuesto_cop: float
-    penal_hora_cop: float
     deltas_proveedor: np.ndarray
     pesos_proveedor: np.ndarray
     deltas_mercado: np.ndarray
@@ -47,13 +45,6 @@ class ResultadoSimulacion:
     tiempo_p50_h: float
     tiempo_p90_h: float
     prob_a_tiempo: float
-    costo_cop: int
-    costo_esperado_retraso_cop: float
-    costo_esperado_cop: float
-    costo_p90_cop: float
-    profit_esperado_cop: float
-    profit_p10_cop: float
-    margen_pct: Optional[float]
     abanico_h: dict[float, float]    # percentil → horas, para el gráfico de abanico
     peso_historial_propio: float     # W/(W+m): cuánto se parece la simulación al proveedor
     avisos: tuple[str, ...] = ()
@@ -67,9 +58,6 @@ def preparar_entrada(
     sigma0: float,
     tiempo_prometido_h: float,
     plazo_h: float,
-    costo_cop: int,
-    presupuesto_cop: float,
-    penal_hora_cop: float,
     cfg: Config,
 ) -> EntradaSimulacion:
     """Arma la entrada desde los historiales: ruta del proveedor (o todo si W_ruta < mínimo) y mercado en la ruta."""
@@ -78,8 +66,7 @@ def preparar_entrada(
         propio = historial_proveedor
     mercado = historial_mercado.filtrar_ruta(ruta_id)
     return EntradaSimulacion(
-        clave=clave, tiempo_prometido_h=tiempo_prometido_h, plazo_h=plazo_h, costo_cop=costo_cop,
-        presupuesto_cop=presupuesto_cop, penal_hora_cop=penal_hora_cop,
+        clave=clave, tiempo_prometido_h=tiempo_prometido_h, plazo_h=plazo_h,
         deltas_proveedor=propio.delta, pesos_proveedor=propio.w,
         deltas_mercado=mercado.delta, pesos_mercado=mercado.w, sigma0=sigma0,
     )
@@ -122,25 +109,11 @@ def simular(e: EntradaSimulacion, cfg: Config, semilla: Optional[int] = None) ->
     T = e.tiempo_prometido_h * (1 + delta)
     a_tiempo = T <= e.plazo_h
 
-    # 4. Costo y profit
-    retraso_h = np.maximum(0.0, T - e.plazo_h)
-    penalidad = e.penal_hora_cop * retraso_h
-    costo_j = e.costo_cop + penalidad
-    profit_j = e.presupuesto_cop - costo_j
-    profit_esperado = float(profit_j.mean())
-
     return ResultadoSimulacion(
         n=n, semilla=semilla,
         tiempo_p50_h=float(np.percentile(T, s.percentil_tipico)),
         tiempo_p90_h=float(np.percentile(T, s.percentil_mal_caso)),
         prob_a_tiempo=float(a_tiempo.mean()),
-        costo_cop=e.costo_cop,
-        costo_esperado_retraso_cop=float(penalidad.mean()),
-        costo_esperado_cop=float(costo_j.mean()),
-        costo_p90_cop=float(np.percentile(costo_j, s.percentil_mal_caso)),
-        profit_esperado_cop=profit_esperado,
-        profit_p10_cop=float(np.percentile(profit_j, s.percentil_profit_mal_caso)),
-        margen_pct=margen_pct(profit_esperado, e.presupuesto_cop),
         abanico_h={p: float(np.percentile(T, p)) for p in s.percentiles_abanico},
         peso_historial_propio=peso_propio,
         avisos=tuple(avisos),

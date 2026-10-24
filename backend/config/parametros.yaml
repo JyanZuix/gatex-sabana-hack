@@ -35,11 +35,7 @@ simulacion:
   min_servicios_ruta: 5           # si W_ruta < 5 se usa todo el historial del proveedor
   percentil_tipico: 50
   percentil_mal_caso: 90
-  percentil_profit_mal_caso: 10
   percentiles_abanico: [5, 10, 25, 50, 75, 90, 95]
-
-escenario:
-  penal_hora_cop: 0               # costo por hora de retraso; lo ajusta el funcionario
 
 vehiculos:
   permitir_tandas: false          # viajes en varias tandas: por defecto se descarta
@@ -59,6 +55,22 @@ explicacion:
   max_factores: 3                 # factores a favor y en contra que se muestran
   umbral_impacto: 0.02            # impacto mínimo para mencionar un factor
 
+puntaje:                          # orden de los candidatos: S = 100·(w_p·M + w_t·P_a + w_d·D/100 + w_c·C/100)
+  # Valores iniciales acordados por el grupo el 2026-10-24 (docs/decisiones.md); deben sumar 1.
+  peso_profit: 0.40               # M = profit / mejor profit entre los candidatos
+  peso_a_tiempo: 0.30             # P_a = probabilidad de llegar a tiempo (simulación)
+  peso_desempeno: 0.15            # D = Desempeño histórico (0-100)
+  peso_confianza: 0.15            # C = Confianza (0-100)
+  top_n: 4                        # candidatos que se sugieren (el resto sigue visible)
+
 ficha:                            # ficha de proveedor (GET /proveedores/{id})
   min_servicios_segmento: 5       # servicios mínimos en una ruta o vehículo para opinar de él
   umbral_diferencia: 0.10         # diferencia frente a su promedio para llamarlo fortaleza o debilidad
+  max_en_tarjeta: 2               # fortalezas y debilidades (cada una) que se copian a la tarjeta del candidato
+
+riesgo:                           # riesgos visibles en la tarjeta del candidato, cada uno con su dato
+  min_a_tiempo: 0.70              # por debajo de esta probabilidad de llegar a tiempo se avisa
+
+textos:                           # palabras para describir la consistencia de tiempos (S_desv, sección 3.1)
+  consistencia_estable: 0.70      # S_desv ≥ 0.70 → "tiempos estables"
+  consistencia_variable: 0.40     # 0.40 ≤ S_desv < 0.70 → "tiempos algo variables"; menos → "muy variables"

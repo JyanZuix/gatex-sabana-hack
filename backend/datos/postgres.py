@@ -47,6 +47,10 @@ from backend.dominio import (
 )
 
 from .memoria import RepositorioEnMemoria
+
+# `solicitud.tipo_carga` de la base → nombres de la API (la base usa femenino y escribe "general").
+CARGA_DE_BD = {"general": "general", "refrigerada": "refrigerado", "sobredimensionada": "sobredimensionado",
+               "peligrosa": "peligrosa"}
 from .repositorio import ErrorDatosNoDisponibles, Repositorio
 
 TABLAS = ("proveedor", "flota", "capacidad_actual", "ruta", "tarifa", "solicitud", "servicio", "tipo_vehiculo")
@@ -245,7 +249,7 @@ class RepositorioPostgres(Repositorio):
                 tiempo_prometido_h=prometido.get((f["proveedor_id"], so["ruta_id"], so["tipo_vehiculo"])),
                 tiempo_real_h=f["transito_real_h"],
                 plazo_acordado_h=_horas(so["fecha_recogida"], so["fecha_entrega_limite"]),
-                a_tiempo=f["a_tiempo"],
+                a_tiempo=f["a_tiempo"], tipo_carga=CARGA_DE_BD.get(so.get("tipo_carga")),
             ))
 
         return RepositorioEnMemoria(

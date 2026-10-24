@@ -13,7 +13,8 @@
     "desglose": {
       "puntualidad": 0.94,
       "magnitud_retraso": 0.071
-    }
+    },
+    "texto": "94/100: entrega a tiempo el 94 % de sus servicios y su retraso medio es del 7 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
   },
   "confianza": {
     "valor": 63.7,
@@ -22,7 +23,8 @@
       "consistencia": 0.659,
       "cumplimiento_cliente": 0.94,
       "evidencia": 0.847
-    }
+    },
+    "texto": "Media (64/100): se basa en 41 servicios; sus tiempos son algo variables."
   },
   "tendencia": [
     {
@@ -83,6 +85,6 @@
   ],
   "fortalezas": [],
   "debilidades": [
-    "Puntualidad de 83% en la ruta Buenaventura → Medellín (su promedio: 98%; 6 servicios)"
+    "Puntualidad de 83 % en la ruta Buenaventura → Medellín (su promedio: 98 %; 6 servicios)"
   ]
 }

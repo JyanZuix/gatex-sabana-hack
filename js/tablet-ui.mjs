@@ -15,7 +15,7 @@ export class TabletOperaciones {
             {id:'origen',label:'Ciudad / puerto de origen',kind:'select',value:undefined,hint:'Seleccionar origen'},
             {id:'destino',label:'Ciudad / puerto de destino',kind:'select',value:undefined,hint:'Seleccionar destino'},
             {id:'carga',label:'Tipo de carga',kind:'select',value:undefined,hint:'Seleccionar carga'},
-            {id:'vehiculo',label:'Tipo de vehículo',kind:'select',value:null,hint:'Automático (backend)'}
+            {id:'vehiculo',label:'Tipo de vehículo',kind:'select',value:null,hint:'Automático'}
         ];
         this.opciones={};this.etiquetas={};this.menu=new Desplegable(this.opciones);this.consultas=new Consultas(api);this.zones=[];this.hover=new Set();
         this.page=0;this.active=null;this.focus=0;this.keyboardFocus=false;this.catalogos=null;this.catalogLoading=false;this.catalogReady=false;this.catalogEstados={};this.catalogVersion=0;this.catalogControl=null;
@@ -136,7 +136,7 @@ export class TabletOperaciones {
             this.catalogEstados={cliente:estados.formulario,origen:estados.formulario,destino:estados.formulario,carga:estados.formulario,vehiculo:estados.vehiculos};
             const mapping=vincularProveedores(catalogos.proveedores);this.vinculos=mapping.porId;this.mappingErrors=mapping.errores;
             const asOptions=list=>list.map(o=>({value:o.id,label:o.nombre}));
-            Object.assign(this.opciones,{cliente:asOptions(catalogos.clientes),origen:asOptions(catalogos.origenes),destino:asOptions(catalogos.destinos),carga:asOptions(catalogos.tipos_carga),vehiculo:estados.vehiculos==='disponible'?[{value:null,label:'Automático (backend)'},...asOptions(catalogos.tipos_vehiculo)]:[]});
+            Object.assign(this.opciones,{cliente:asOptions(catalogos.clientes),origen:asOptions(catalogos.origenes),destino:asOptions(catalogos.destinos),carga:asOptions(catalogos.tipos_carga),vehiculo:estados.vehiculos==='disponible'?[{value:null,label:'Automático'},...asOptions(catalogos.tipos_vehiculo)]:[]});
             // Un fallo de red no invalida una elección: solo un catálogo nuevo y válido puede hacerlo.
             const invalid=[];for(const id of ['origen','destino','carga','vehiculo']){const f=this.field(id);if(this.catalogEstados[id]==='disponible'&&f.value!==undefined&&!this.opciones[id].some(o=>o.value===f.value)){f.value=undefined;invalid.push(f.label);this.dirty=true;}}
             const avisos=invalid.length?' Selecciona de nuevo: '+invalid.join(', '):'';
@@ -160,7 +160,7 @@ export class TabletOperaciones {
             const evaluation=await pending;if(!evaluation)return;
             this.onResultados(evaluation,this.vinculos,this.politicaCasi);
             this.resultado=evaluation;this.dirty=false;this.page=2;this.detallePage=0;this.discardPage=0;this.casiPage=0;this.proveedorActual=evaluation.candidatos[0]?.proveedor_id||null;
-            this.mensaje=evaluation.sin_candidatos?'No hay proveedores adecuados. Revisa descartados y qué podría flexibilizarse.':`${evaluation.candidatos.length} candidatos disponibles. La decisión final es del operador.`;
+            this.mensaje=evaluation.sin_candidatos?'No hay proveedores adecuados. Revisa descartados y qué podría flexibilizarse.':`${evaluation.candidatos.length} candidatos, ordenados por puntaje. Se sugieren los ${evaluation.parametros_escenario.pesos_puntaje.top_n} primeros; la decisión final es del operador.`;
         } catch(error){this.mensaje=error.message;this.erroresGlobal=true;for(const item of error.errores||[]){const field=CAMPOS_API[item.campo];if(field)this.errores[field]=item.mensaje;}if(Object.keys(this.errores).length)this.page=this.fields.findIndex(f=>this.errores[f.id])<6?0:1;}
         finally {this.draw();}
     }
@@ -173,12 +173,21 @@ export class TabletOperaciones {
     seleccionarProveedor(id) {if(!this.resultado?.candidatos.some(p=>p.proveedor_id===id))return;this.proveedorActual=id;this.detallePage=0;this.page=2;this.active=null;this.menu.close();this.draw();}
     drawResultados() {
         const r=this.resultado;if(!r)return;
-        const items=r.candidatos,index=Math.max(0,items.findIndex(p=>p.proveedor_id===this.proveedorActual)),p=items[index];
+        const items=[...r.candidatos].sort((a,b)=>a.puesto-b.puesto),index=Math.max(0,items.findIndex(p=>p.proveedor_id===this.proveedorActual)),p=items[index];
         this.texto('Solicitud '+r.solicitud_id+(this.dirty?' · resultado anterior':''),42,238,26,'#16243b',700);
         if(!p){this.texto('No hay proveedores adecuados.',42,291,29,'#9a3412',700);this.texto('Revisa los motivos y las alternativas del panel derecho.',42,338,22);return;}
-        this.texto(p.nombre,42,282,26,'#175cde',700);
+        this.texto(`#${p.puesto} ${p.nombre}`+(p.top?' · Sugerido':''),42,282,26,p.top?'#175cde':'#4b5a70',700);
         const money=n=>n==null?'No disponible':new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);
-        const rows=[`Vehículo: ${p.vehiculos.tipo} · Cantidad: ${p.vehiculos.cantidad}`,`Costo: ${money(p.costo_cop)} · Profit esperado: ${money(p.profit.esperado_cop)}`,`Profit P10: ${money(p.profit.p10_cop)} · Margen: ${p.profit.margen_pct==null?'No disponible':p.profit.margen_pct+' %'}`,`Tránsito P50: ${p.tiempo_h.p50} h · P90: ${p.tiempo_h.p90} h`,`A tiempo: ${(p.tiempo_h.prob_a_tiempo*100).toFixed(1)} %`+(Number.isFinite(p.prob_incidente)?` · Incidente: ${(p.prob_incidente*100).toFixed(1)} %`:''),`Desempeño: ${p.desempeno.valor} · Confianza: ${p.confianza.valor} (${p.confianza.nivel})`,...(Array.isArray(p.vehiculos.contenedores_por_vehiculo)?['Contenedores por vehículo: '+p.vehiculos.contenedores_por_vehiculo.join(' · ')]:[]),p.explicacion,...p.riesgos.map(s=>'Riesgo: '+s),...p.avisos.map(s=>'Aviso: '+s)].flatMap(s=>this.wrap(s,75));
+        const d=p.puntaje.desglose,pts=n=>Number(n).toLocaleString('es-CO',{maximumFractionDigits:1});
+        const rows=[`Puntaje: ${pts(p.puntaje.valor)} / 100 = profit ${pts(d.profit)} + a tiempo ${pts(d.a_tiempo)} + desempeño ${pts(d.desempeno)} + confianza ${pts(d.confianza)}`,
+            `Costo: ${money(p.costo_cop)} · Ganancia: ${money(p.profit.cop)}`+(p.profit.margen_pct==null?'':` (${pts(p.profit.margen_pct)} % del presupuesto)`),
+            'Tiempo: '+p.tiempo_h.resumen,
+            'Capacidad: '+p.capacidad.texto,
+            `Vehículos: ${p.vehiculos.cantidad} × ${p.vehiculos.tipo}`+(Array.isArray(p.vehiculos.contenedores_por_vehiculo)?' · contenedores por vehículo: '+p.vehiculos.contenedores_por_vehiculo.join(' · '):''),
+            'Desempeño '+p.desempeno.texto,
+            'Confianza: '+p.confianza.texto,
+            ...p.fortalezas.map(s=>'Fortaleza: '+s),...p.debilidades.map(s=>'Debilidad: '+s),
+            ...p.riesgos.map(s=>'Riesgo: '+s),'Por qué: '+p.explicacion,...p.avisos.map(s=>'Aviso: '+s)].flatMap(s=>this.wrap(s,75));
         const pages=Math.max(1,Math.ceil(rows.length/7));this.detallePage=Math.min(this.detallePage,pages-1);
         rows.slice(this.detallePage*7,this.detallePage*7+7).forEach((s,i)=>this.texto(s,42,325+i*29,21));
         this.button('detail-prev','Texto anterior',42,540,210,48,()=>{this.detallePage--;this.draw();},this.detallePage>0);

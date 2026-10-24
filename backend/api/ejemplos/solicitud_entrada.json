@@ -8,6 +8,5 @@
   "peso_kg": 20000,
   "tipo_carga": null,
   "tipo_vehiculo_id": "tractomula",
-  "presupuesto_cop": 30000000,
-  "penal_hora_cop": 50000
+  "presupuesto_cop": 30000000
 }

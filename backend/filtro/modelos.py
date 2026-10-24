@@ -50,6 +50,7 @@ class Candidato:
     proveedor: Proveedor
     opcion: OpcionVehiculo                # vehículo más económico que cumple
     avisos: tuple[str, ...] = ()          # datos faltantes que no descartan pero deben verse
+    capacidad: Optional[Capacidad] = None # servicios que acepta en la fecha (None = sin dato)
 
 
 @dataclass(frozen=True)

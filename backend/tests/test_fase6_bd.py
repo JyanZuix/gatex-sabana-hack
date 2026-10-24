@@ -36,7 +36,7 @@ class AlmacenTablas(AlmacenSolicitudes):
     def registrar(self, s):
         if any(f["solicitud_id"] == s.numero for f in self.t["solicitud"]):
             raise SolicitudYaDecidida("ya existe")
-        self.t["solicitud"].append({**parametros_insert(s), "prioridad": "balanceado"})
+        self.t["solicitud"].append(parametros_insert(s))
 
     def cerrar_viaje(self, c: CierreViaje):
         so = next((f for f in self.t["solicitud"] if f["solicitud_id"] == c.numero_solicitud), None)

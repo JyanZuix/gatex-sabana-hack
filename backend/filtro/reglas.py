@@ -29,6 +29,10 @@ def _horas(h: float) -> str:
     return f"{h:g} h"
 
 
+def _cop(x: float) -> str:
+    return "$" + f"{x:,.0f}".replace(",", ".")
+
+
 @regla
 def sin_cobertura(ctx: ContextoProveedor) -> list[Razon]:
     if ctx.tiene_cobertura:
@@ -96,6 +100,26 @@ def plazo_incumplible(ctx: ContextoProveedor) -> list[Razon]:
 
 
 @regla
+def sin_margen(ctx: ContextoProveedor) -> list[Razon]:
+    """Descarta a quien da pérdida: su opción más barata cuesta más que el presupuesto.
+
+    Se evalúa sobre las mismas opciones con las que se elige el vehículo del candidato
+    (suficientes y dentro del plazo); si no hay, sobre las más viables que tenga.
+    """
+    plazo = ctx.solicitud.plazo_h
+    en_plazo = [o for o in ctx.suficientes if o.tiempo_prometido_h <= plazo]
+    evaluadas = en_plazo or ctx.suficientes or ctx.operables or ctx.opciones
+    if not evaluadas:
+        return []
+    costo = min(o.costo for o in evaluadas)
+    presupuesto = ctx.solicitud.presupuesto_cop
+    if costo <= presupuesto:
+        return []
+    return [Razon("SIN_MARGEN", f"Costo {_cop(costo)} supera el presupuesto de {_cop(presupuesto)}",
+                  requerido=presupuesto, disponible=costo)]
+
+
+@regla
 def carga_no_soportada(ctx: ContextoProveedor) -> list[Razon]:
     carga = ctx.solicitud.tipo_carga
     if carga is None or carga in ctx.proveedor.cargas_especiales:
@@ -124,6 +148,7 @@ FLEXIBILIZAR = {
     "VEHICULOS_INSUFICIENTES": lambda r: f"Aceptar viajes en varias tandas o dividir la carga (tiene {r.disponible} de {r.requerido})",
     "SIN_CAPACIDAD": lambda r: "Cambiar la fecha del servicio",
     "PLAZO_INCUMPLIBLE": lambda r: f"Ampliar el plazo a {_horas(r.disponible)}",
+    "SIN_MARGEN": lambda r: f"Aumentar el presupuesto a {_cop(r.disponible)}",
     "CARGA_NO_SOPORTADA": lambda r: "El proveedor no maneja este tipo de carga",
     "PROVEEDOR_INACTIVO": lambda r: "Habría que regularizar al proveedor",
 }

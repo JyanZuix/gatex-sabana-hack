@@ -72,7 +72,6 @@ def _datos_solicitud(s: Solicitud, ev: e.Evaluacion, cliente: str) -> str:
                   f"{NOMBRES_CARGA.get(s.tipo_carga, s.tipo_carga)}"),
         ("Vehículo exigido", _t(vehiculo)),
         ("Presupuesto disponible", _cop(s.presupuesto_cop)),
-        ("Penalidad por hora de retraso", _cop(ev.parametros_escenario.penal_hora_cop)),
     ]
     if ev.escenario_id:
         filas.append(("Escenario", f"{_t(ev.escenario_id)} (supuestos cambiados por el funcionario)"))
@@ -89,15 +88,19 @@ def _bloque_elegido(d: e.Decision, ev: e.Evaluacion) -> str:
         cifras = [
             ("Vehículos", f"{v.cantidad} × {_t(v.tipo)} · contenedores por vehículo: {_reparto(v)}"),
             ("Costo", _cop(c.costo_cop)),
-            ("Profit esperado / mal escenario (P10)", f"{_cop(c.profit.esperado_cop)} / {_cop(c.profit.p10_cop)}"),
+            ("Profit", _cop(c.profit.cop)),
             ("Margen", "—" if c.profit.margen_pct is None else f"{_num(c.profit.margen_pct)} %"),
-            ("Tránsito típico (P50) / mal caso (P90)", f"{_horas(c.tiempo_h.p50)} / {_horas(c.tiempo_h.p90)}"),
-            ("Probabilidad de llegar a tiempo", _pct(c.tiempo_h.prob_a_tiempo)),
-            ("Desempeño", f"{_num(c.desempeno.valor)} {_barra(c.desempeno.valor)}"),
-            ("Confianza", f"{_num(c.confianza.valor)} ({_t(c.confianza.nivel)}) {_barra(c.confianza.valor, clase='conf')}"),
+            ("Puesto y puntaje", f"#{c.puesto} · {_num(c.puntaje.valor)} / 100"),
+            ("Tiempo", _t(c.tiempo_h.resumen)),
+            ("Capacidad", _t(c.capacidad.texto)),
+            ("Desempeño", f"{_barra(c.desempeno.valor)} {_t(c.desempeno.texto)}"),
+            ("Confianza", f"{_barra(c.confianza.valor, clase='conf')} {_t(c.confianza.texto)}"),
         ]
         cuerpo = "<dl class='datos'>" + "".join(f"<dt>{k}</dt><dd>{v}</dd>" for k, v in cifras) + "</dl>"
         cuerpo += f"<p><strong>Explicación:</strong> {_t(c.explicacion)}</p>"
+        for titulo, lista in (("Fortalezas", c.fortalezas), ("Debilidades", c.debilidades)):
+            if lista:
+                cuerpo += f"<p><strong>{titulo}:</strong> " + "; ".join(_t(x) for x in lista) + ".</p>"
         if c.riesgos or c.avisos:
             cuerpo += "<ul class='riesgos'>" + "".join(f"<li>{_t(r)}</li>" for r in [*c.riesgos, *c.avisos]) + "</ul>"
     elif casi is not None:
@@ -115,28 +118,31 @@ def _comparacion(d: e.Decision, ev: e.Evaluacion) -> str:
     if not ev.candidatos:
         return "<p>No hubo candidatos que cumplieran todos los requisitos.</p>"
     filas = []
-    for c in sorted(ev.candidatos, key=lambda x: x.proveedor_id):
+    top_n = ev.parametros_escenario.pesos_puntaje.top_n
+    for c in sorted(ev.candidatos, key=lambda x: x.puesto):
         marca = " class='fila-elegida'" if c.proveedor_id == d.proveedor_id else ""
         etiqueta = " <span class='sello'>Elegido por el funcionario</span>" if marca else ""
+        sugerido = f" <span class='sello top'>Top {top_n}</span>" if c.top else ""
         filas.append(
-            f"<tr{marca}><td>{_t(c.nombre)}{etiqueta}</td>"
+            f"<tr{marca}><td class='n'>{c.puesto}</td><td>{_t(c.nombre)}{sugerido}{etiqueta}</td>"
+            f"<td class='n'>{_num(c.puntaje.valor)}</td>"
             f"<td>{c.vehiculos.cantidad} × {_t(c.vehiculos.tipo)}</td>"
-            f"<td class='n'>{_cop(c.costo_cop)}</td><td class='n'>{_cop(c.profit.esperado_cop)}</td>"
+            f"<td class='n'>{_cop(c.costo_cop)}</td><td class='n'>{_cop(c.profit.cop)}</td>"
             f"<td class='n'>{'—' if c.profit.margen_pct is None else _num(c.profit.margen_pct) + ' %'}</td>"
             f"<td class='n'>{_horas(c.tiempo_h.p50)}</td><td class='n'>{_horas(c.tiempo_h.p90)}</td>"
             f"<td class='n'>{_pct(c.tiempo_h.prob_a_tiempo)}</td>"
             f"<td class='n'>{_num(c.desempeno.valor)}</td>"
             f"<td class='n'>{_num(c.confianza.valor)} <span class='tenue'>{_t(c.confianza.nivel)}</span></td></tr>")
-    tabla = _tabla(["Proveedor", "Vehículos", "Costo", "Profit esperado", "Margen", "P50", "P90", "A tiempo",
+    tabla = _tabla(["#", "Proveedor", "Puntaje", "Vehículos", "Costo", "Profit", "Margen", "Tiempo habitual", "Día malo", "A tiempo",
                     "Desempeño", "Confianza"], filas, "comparacion")
-    return ("<p class='tenue'>Ordenado por identificador del proveedor, no por preferencia: el sistema no impone "
-            "un ganador.</p>" + tabla + _grafico_tiempos(d, ev))
+    return (f"<p class='tenue'>Ordenado por puntaje, de mayor a menor. El sistema sugiere los {top_n} primeros; "
+            "la elección y su justificación son del funcionario.</p>" + tabla + _grafico_tiempos(d, ev))
 
 
 def _grafico_tiempos(d: e.Decision, ev: e.Evaluacion) -> str:
     """Rango P10–P90 simulado de cada candidato, con P50 y el plazo marcados (SVG en línea)."""
     plazo = ev.parametros_escenario.plazo_h
-    cands = sorted(ev.candidatos, key=lambda x: x.proveedor_id)
+    cands = sorted(ev.candidatos, key=lambda x: x.puesto)
     extremos = [plazo] + [v for c in cands for v in c.tiempo_h.abanico.values()]
     lo, hi = 0.0, max(extremos) * 1.08
     ancho, izq, alto_fila = 720, 210, 26
@@ -159,7 +165,7 @@ def _grafico_tiempos(d: e.Decision, ev: e.Evaluacion) -> str:
     for h in range(0, int(hi) + 1, max(1, int(hi // 6) or 1)):
         partes.append(f'<text x="{x(h):.1f}" y="{y_fin + 18}" text-anchor="middle" class="eje">{h} h</text>')
     partes.append("</svg>")
-    return ("<figure><figcaption>Tiempo de tránsito simulado: barra del percentil 10 al 90, raya en el P50 "
+    return ("<figure><figcaption>Tiempo de tránsito simulado: la barra va de un día bueno (percentil 10) a un día malo (percentil 90), la raya es el tiempo habitual (mediana) "
             "y línea roja en el plazo.</figcaption>" + "".join(partes) + "</figure>")
 
 
@@ -201,7 +207,7 @@ blockquote{margin:0 0 16px;padding:10px 14px;background:var(--suave);border-left
 .barra span{display:block;height:100%;background:var(--acento);border-radius:4px}.barra.conf span{background:#0f766e}
 table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:7px 8px;border-bottom:1px solid var(--linea);text-align:left;vertical-align:top}
 th{background:var(--suave);font-weight:600}td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.fila-elegida td{background:#e8f0ff;font-weight:600}.sello{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:10px;background:var(--acento);color:#fff;font-size:11px;font-weight:600}
+.fila-elegida td{background:#e8f0ff;font-weight:600}.sello{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:10px;background:var(--acento);color:#fff;font-size:11px;font-weight:600}.sello.top{background:#2f7d4f}
 .descartados ul{margin:0;padding-left:18px}code{background:var(--suave);padding:0 4px;border-radius:3px;font-size:12px}
 .aviso{background:var(--aviso);padding:10px 14px;border-radius:6px}.riesgos{color:var(--rojo)}
 figure{margin:16px 0 0}figcaption{color:var(--tenue);font-size:13px;margin-bottom:4px}svg{width:100%;height:auto}
@@ -221,6 +227,7 @@ def construir_informe(d: e.Decision, solicitud: Solicitud, cliente: str,
     generado = (generado or datetime.now(timezone.utc)).astimezone(HORA_COLOMBIA)
     decidido = d.fecha_hora.astimezone(HORA_COLOMBIA)
     p = ev.parametros_escenario
+    w = p.pesos_puntaje
     flex = " · proveedor casi elegible (flexibilizado)" if d.flexibilizado else ""
     return f"""<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -244,12 +251,22 @@ def construir_informe(d: e.Decision, solicitud: Solicitud, cliente: str,
 <ul>
 <li><strong>Vehículos:</strong> contenedores por vehículo = mín(puestos TEU, ⌊capacidad kg / peso del contenedor⌋); se usa el tipo más económico que cumple.</li>
 <li><strong>Tiempo:</strong> simulación Monte Carlo con {p.n_simulaciones} iteraciones y semilla {p.semilla} (resultados reproducibles), a partir del historial del proveedor y del mercado en la ruta.</li>
-<li><strong>Profit:</strong> presupuesto − costo del proveedor − costo esperado de retraso (penalidad {_cop(p.penal_hora_cop)} por hora sobre el plazo de {_horas(p.plazo_h)}).</li>
+<li><strong>Profit:</strong> presupuesto − costo del proveedor. Quien da pérdida se descarta (<code>SIN_MARGEN</code>).</li>
+<li><strong>Puntaje:</strong> 100 · ({_num(w.profit, 2)} · profit frente al mejor + {_num(w.a_tiempo, 2)} · probabilidad de llegar a tiempo + {_num(w.desempeno, 2)} · desempeño/100 + {_num(w.confianza, 2)} · confianza/100). Ordena a los candidatos; se sugieren los {w.top_n} primeros.</li>
 <li><strong>Desempeño:</strong> 100 · [0,75 · puntualidad + 0,25 · (1 − magnitud del retraso)], con recencia de 12 meses y suavizado hacia el mercado.</li>
 <li><strong>Confianza:</strong> 100 · Q · F, con Q = ⅔ consistencia de tiempos + ⅓ cumplimiento con este cliente y F = evidencia histórica.</li>
 </ul>
+<h2>Glosario</h2>
+<dl class='datos'>
+<dt>Tiempo habitual</dt><dd>La mitad de los viajes simulados llega antes de este tiempo (mediana, P50).</dd>
+<dt>Día malo</dt><dd>Solo 1 de cada 10 viajes simulados tarda más que esto (percentil 90, P90).</dd>
+<dt>Llega a tiempo</dt><dd>Porcentaje de los {p.n_simulaciones} viajes simulados que llegan dentro del plazo.</dd>
+<dt>Desempeño</dt><dd>De 0 a 100: qué tanto cumplió los plazos en su historial y cuánto se atrasó cuando no cumplió.</dd>
+<dt>Confianza</dt><dd>De 0 a 100: qué tan confiables son esos datos (cuántos servicios hay y qué tan estables son sus tiempos).</dd>
+<dt>Puntaje</dt><dd>De 0 a 100: combina profit, llegar a tiempo, desempeño y confianza con los pesos de arriba.</dd>
+</dl>
 
-<footer>Generado el {generado:%Y-%m-%d %H:%M} (hora Colombia). El sistema compara opciones y explica sus
+<footer>Generado el {generado:%Y-%m-%d %H:%M} (hora Colombia). El sistema ordena las opciones por puntaje y explica sus
 consecuencias; la decisión y su justificación son del funcionario. Este informe reproduce exactamente lo que se
 mostró al decidir.</footer>
 </main></body></html>

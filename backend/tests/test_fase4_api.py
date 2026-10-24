@@ -35,6 +35,41 @@ def test_evaluar_devuelve_candidatos_y_cancelados(cliente):
     assert set(c["confianza"]["desglose"]) == {"consistencia", "cumplimiento_cliente", "evidencia"}
 
 
+def test_candidatos_ordenados_por_puntaje_con_top_4(cliente, cfg):
+    j = cliente.post("/solicitudes/evaluar", json=_solicitud()).json()
+    cands = j["candidatos"]
+    assert len(cands) > cfg.puntaje.top_n  # los datos sintéticos dejan 5 candidatos
+    assert [c["puesto"] for c in cands] == list(range(1, len(cands) + 1))
+    valores = [c["puntaje"]["valor"] for c in cands]
+    assert valores == sorted(valores, reverse=True)
+    assert [c["top"] for c in cands] == [p <= cfg.puntaje.top_n for p in range(1, len(cands) + 1)]
+    for c in cands:
+        assert c["puntaje"]["valor"] == pytest.approx(sum(c["puntaje"]["desglose"].values()), abs=0.25)
+    assert j["parametros_escenario"]["pesos_puntaje"] == {"profit": 0.4, "a_tiempo": 0.3, "desempeno": 0.15,
+                                                          "confianza": 0.15, "top_n": 4}
+
+
+def test_ningun_candidato_da_perdida(cliente):
+    # Presupuesto justo: algunos proveedores quedan por encima y se descartan con SIN_MARGEN
+    j = cliente.post("/solicitudes/evaluar", json=_solicitud(presupuesto_cop=9_000_000)).json()
+    assert all(c["profit"]["cop"] >= 0 and c["costo_cop"] <= 9_000_000 for c in j["candidatos"])
+    sin_margen = [c for c in j["cancelados"] if any(r["codigo"] == "SIN_MARGEN" for r in c["razones"])]
+    assert sin_margen
+    assert all(r["requerido"] == 9_000_000 and r["disponible"] > 9_000_000
+               for c in sin_margen for r in c["razones"] if r["codigo"] == "SIN_MARGEN")
+
+
+def test_si_todos_dan_perdida_aparecen_casi_elegibles(cliente):
+    j = cliente.post("/solicitudes/evaluar", json=_solicitud(presupuesto_cop=1_000)).json()
+    assert j["sin_candidatos"] and not j["candidatos"]
+    flexibilizar = [c["flexibilizar"] for c in j["casi_elegibles"] if c["razon"]["codigo"] == "SIN_MARGEN"]
+    assert flexibilizar and all(f.startswith("Aumentar el presupuesto a $") for f in flexibilizar)
+
+
+def test_presupuesto_cero_es_invalido(cliente):
+    assert cliente.post("/solicitudes/evaluar", json=_solicitud(presupuesto_cop=0)).status_code == 422
+
+
 def test_vehiculos_incluyen_contenedores_por_vehiculo(cliente):
     j = cliente.post("/solicitudes/evaluar", json=_solicitud(n_contenedores=3)).json()
     for c in j["candidatos"]:
@@ -100,16 +135,16 @@ def test_tipo_de_vehiculo_indicado_es_obligatorio(cliente):
 def test_escenario_no_cambia_la_solicitud_original(cliente):
     original = cliente.post("/solicitudes/evaluar", json=_solicitud()).json()
     sid = original["solicitud_id"]
-    esc = cliente.post(f"/solicitudes/{sid}/escenario", json={"plazo_h": 20, "penal_hora_cop": 50_000})
+    esc = cliente.post(f"/solicitudes/{sid}/escenario", json={"plazo_h": 20})
     assert esc.status_code == 200 and esc.json()["escenario_id"] == f"{sid}-E1"
     assert esc.json()["parametros_escenario"]["plazo_h"] == 20
     assert cliente.get(f"/solicitudes/{sid}").json() == original
 
 
-def test_escenario_solo_acepta_plazo_y_penal(cliente):
+def test_escenario_solo_acepta_plazo(cliente):
     sid = cliente.post("/solicitudes/evaluar", json=_solicitud()).json()["solicitud_id"]
-    r = cliente.post(f"/solicitudes/{sid}/escenario", json={"p_evento": 1.0})
-    assert r.status_code == 422
+    for cuerpo in ({"p_evento": 1.0}, {"plazo_h": 20, "penal_hora_cop": 50_000}, {}):
+        assert cliente.post(f"/solicitudes/{sid}/escenario", json=cuerpo).status_code == 422
 
 
 def test_decision_exige_justificacion_y_guarda_snapshot(cliente):

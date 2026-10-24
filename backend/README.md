@@ -30,5 +30,18 @@ Las pruebas no se conectan a la base: usan los datos sintéticos y filas de ejem
 | `datos/` | Interfaz `Repositorio` y adaptadores (simulado y PostgreSQL) |
 | `filtro/` | 8 reglas de descarte; agregar una es decorar una función con `@regla` |
 | `calculos/` | Recencia, Desempeño, Confianza, vehículos y reparto de contenedores, costo y profit |
-| `simulacion/` | Monte Carlo, escenarios "¿y si…?" (plazo y penalidad) y explicaciones |
+| `simulacion/` | Monte Carlo, escenarios "¿y si…?" (plazo) y explicaciones |
 | `api/` | Endpoints FastAPI; `api/ejemplos/` guarda respuestas reales para frontend y gafas |
+| `calculos/` | Recencia, Desempeño, Confianza, vehículos, costo y profit |
+| `simulacion/` | Monte Carlo, escenarios "¿y si…?" y explicaciones |
+| `api/` | FastAPI: `app.py` (rutas, CORS, errores en español), `esquemas.py` (contrato del README §5), `servicio.py` (filtro → cálculos → simulación, ficha de proveedor), `registro.py` (consecutivos y decisiones en memoria) |
+
+## API
+Desde la raíz del repositorio:
+
+    uvicorn backend.api.app:app --reload        # http://localhost:8000/docs
+
+Usa el repositorio que indique `REPOSITORIO` (terminal o `.env`). `CORS_ORIGENES` (separados por coma, por defecto `*`) limita qué sitios pueden llamarla. Contrato y endpoints: `../README.md`, sección 5.
+
+Despliegue en Render: `render.yaml` en la raíz (New → Blueprint). En el panel hay que escribir `DATABASE_URL`.
+

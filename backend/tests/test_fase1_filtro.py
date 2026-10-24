@@ -94,10 +94,53 @@ def test_vehiculo_no_disponible(cfg):
 
 def test_carga_no_soportada(cfg):
     s = Solicitud(cliente_id="C", origen_id="BUN", destino_id="BOG", fecha_servicio=FECHA, plazo_h=40,
-                  n_contenedores=2, peso_kg=10_000, tipo_carga="peligrosa", tipo_vehiculo_id="PLAT", presupuesto_cop=1)
+                  n_contenedores=2, peso_kg=10_000, tipo_carga="peligrosa", tipo_vehiculo_id="PLAT", presupuesto_cop=20_000_000)
     razones = _razones(_ctx(cfg, solicitud=s))
     assert [r.codigo for r in razones] == ["CARGA_NO_SOPORTADA"]
     assert razones[0].mensaje == "No transporta carga peligrosa"
+
+
+def _con_presupuesto(presupuesto):
+    return Solicitud(cliente_id="C", origen_id="BUN", destino_id="BOG", fecha_servicio=FECHA, plazo_h=40,
+                     n_contenedores=4, peso_kg=10_000, presupuesto_cop=presupuesto)
+
+
+@pytest.mark.parametrize("presupuesto", [8_000_000, 20_000_000])
+def test_sin_margen_no_descarta_si_alcanza_el_presupuesto(cfg, presupuesto):
+    # La opción cuesta 2 viajes × 4 000 000 = 8 000 000: igual o menor al presupuesto no da pérdida
+    r = evaluar_contextos([_ctx(cfg, solicitud=_con_presupuesto(presupuesto))])
+    assert len(r.candidatos) == 1
+
+
+def test_sin_margen_descarta_a_quien_da_perdida(cfg):
+    (razon,) = _razones(_ctx(cfg, solicitud=_con_presupuesto(7_999_999)))
+    assert razon.codigo == "SIN_MARGEN"
+    assert (razon.requerido, razon.disponible) == (7_999_999, 8_000_000)
+    assert razon.mensaje == "Costo $8.000.000 supera el presupuesto de $7.999.999"
+
+
+def test_sin_margen_usa_la_opcion_mas_barata_que_cumple(cfg):
+    # Una opción más barata pero lenta (60 h > plazo 40 h) no cuenta: el candidato pagaría la rápida
+    tarifas = [Tarifa(tarifa_id=t, proveedor_id="P1", ruta_id=RUTA.ruta_id, tipo_vehiculo_id=v, precio_viaje=p,
+                      tiempo_prometido_h=h, vigente_desde=date(2025, 1, 1))
+               for t, v, p, h in [("T1", "PLAT", 4_000_000, 26), ("T2", "CAMA", 1_000_000, 60)]]
+    ctx = _ctx(cfg, solicitud=_con_presupuesto(6_000_000), tipos=(PLAT, CAMA), unidades={"PLAT": 3, "CAMA": 3},
+               tarifas=tarifas)
+    assert [r.codigo for r in _razones(ctx)] == ["SIN_MARGEN"]
+
+
+def test_si_todos_dan_perdida_son_casi_elegibles_con_presupuesto_a_flexibilizar(cfg):
+    p2 = Proveedor(proveedor_id="P2", nombre="P2", poliza_vigente_hasta=date(2027, 1, 1))
+    s = _con_presupuesto(5_000_000)
+    r = evaluar_contextos([_ctx(cfg, solicitud=s), _ctx(cfg, solicitud=s, proveedor=p2)])
+    assert r.sin_candidatos
+    assert {c.proveedor.proveedor_id: c.flexibilizar for c in r.casi_elegibles} == {
+        "P1": "Aumentar el presupuesto a $8.000.000", "P2": "Aumentar el presupuesto a $8.000.000"}
+
+
+def test_presupuesto_debe_ser_positivo():
+    with pytest.raises(ValueError):
+        _con_presupuesto(0)
 
 
 def test_vehiculos_insuficientes(cfg):

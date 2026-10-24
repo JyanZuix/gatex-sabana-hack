@@ -62,10 +62,10 @@ TABLAS = {
     "solicitud": [
         {"solicitud_id": 1, "cliente_id": 16, "cliente": "Plásticos Bogotá", "ruta_id": 2, "tipo_vehiculo": "tractomula",
          "tipo_carga": "general", "peso_kg": 25000, "fecha_recogida": datetime(2026, 5, 2, 13),
-         "fecha_entrega_limite": datetime(2026, 5, 3, 21), "prioridad": "balanceado"},
+         "fecha_entrega_limite": datetime(2026, 5, 3, 21)},
         {"solicitud_id": 2, "cliente_id": 1, "cliente": "Agroquímicos Andinos", "ruta_id": 2, "tipo_vehiculo": "tractomula",
          "tipo_carga": "general", "peso_kg": 23000, "fecha_recogida": datetime(2026, 4, 4, 14),
-         "fecha_entrega_limite": datetime(2026, 4, 6, 16), "prioridad": "costo"},
+         "fecha_entrega_limite": datetime(2026, 4, 6, 16)},
     ],
     "servicio": [
         {"servicio_id": 1, "solicitud_id": 1, "proveedor_id": 1, "precio_cop": 4_500_000, "fecha_servicio": date(2026, 5, 2),

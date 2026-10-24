@@ -58,7 +58,7 @@ def evaluar_contextos(contextos: Iterable[ContextoProveedor], reglas: Optional[l
         if opcion is None:  # solo pasa si se quitaron reglas base de la lista
             raise RuntimeError(f"{ctx.proveedor.proveedor_id} pasó el filtro sin una opción de vehículo viable")
         avisos = () if ctx.capacidad is not None else ("Sin dato de capacidad de servicio para la fecha",)
-        candidatos.append(Candidato(ctx.proveedor, opcion, avisos))
+        candidatos.append(Candidato(ctx.proveedor, opcion, avisos, ctx.capacidad))
 
     casi = ()
     if not candidatos:

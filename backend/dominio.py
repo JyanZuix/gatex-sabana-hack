@@ -109,6 +109,8 @@ class ServicioHistorico(_Modelo):
     tiempo_real_h: float = Field(gt=0)
     plazo_acordado_h: Optional[float] = Field(default=None, gt=0)
     a_tiempo: Optional[bool] = None
+    # Carga del servicio con los nombres de la API ("general" explícito); None = no se sabe.
+    tipo_carga: Optional[Literal["general", "refrigerado", "sobredimensionado", "peligrosa"]] = None
 
 
 class Solicitud(_Modelo):
@@ -129,6 +131,4 @@ class Solicitud(_Modelo):
     peso_kg: float = Field(gt=0)
     tipo_carga: Optional[CargaEspecial] = None
     tipo_vehiculo_id: Optional[str] = None
-    presupuesto_cop: int = Field(ge=0)
-    # None → se usa `escenario.penal_hora_cop` de la configuración.
-    penal_hora_cop: Optional[float] = Field(default=None, ge=0)
+    presupuesto_cop: int = Field(gt=0)

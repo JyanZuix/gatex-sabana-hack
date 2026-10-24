@@ -20,6 +20,7 @@ from backend.calculos.desempeno import calcular_desempeno
 from backend.calculos.historial import Sumas, construir_historial
 from backend.calculos.priors import calcular_prior, prior_por_defecto
 from backend.calculos.profit import calcular_profit, margen_pct
+from backend.calculos.puntaje import EntradaPuntaje, calcular_puntaje, ordenar
 from backend.calculos.recencia import peso_recencia
 from backend.dominio import ServicioHistorico, Solicitud, Tarifa, TipoVehiculo
 
@@ -230,6 +231,13 @@ def test_tipos_validos_segun_carga():
     assert tipos_validos(_solicitud(n_contenedores=1, tipo_vehiculo_id="TURBO"), todos + [TURBO]) == []
 
 
+def test_carga_especial_sin_vehiculo_dedicado_usa_los_generales():
+    todos = [PLAT, SENC, REFRI, CAMA]
+    assert {t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=2, tipo_carga="peligrosa"), todos)} == {"PLAT", "SENC"}
+    # Si hay vehículo dedicado, solo ese: refrigerada no va en plataforma
+    assert "PLAT" not in {t.tipo_vehiculo_id for t in tipos_validos(_solicitud(n_contenedores=2, tipo_carga="refrigerado"), todos)}
+
+
 def test_costo_elige_vehiculo_mas_economico():
     s = _solicitud(n_contenedores=3)
     opciones = opciones_vehiculo(s, [PLAT, SENC], [_tarifa("PLAT", 4_000_000), _tarifa("SENC", 2_500_000)],
@@ -247,15 +255,51 @@ def test_sin_tarifa_no_es_opcion():
 # --- Profit ----------------------------------------------------------------
 
 def test_profit_y_margen():
-    p = calcular_profit(12_000_000, 9_800_000, 0)
+    p = calcular_profit(12_000_000, 9_800_000)
     assert p == 2_200_000
     assert margen_pct(p, 12_000_000) == pytest.approx(18.33, abs=0.01)
 
 
 def test_profit_negativo_no_se_oculta():
-    p = calcular_profit(9_000_000, 9_800_000, 500_000)
+    p = calcular_profit(9_000_000, 10_300_000)
     assert p == -1_300_000 and margen_pct(p, 9_000_000) < 0
 
 
 def test_margen_sin_presupuesto():
     assert margen_pct(-5, 0) is None
+
+
+# --- Puntaje ponderado -----------------------------------------------------
+
+def _p(pid, profit, prob, D, C, costo=10_000_000):
+    return EntradaPuntaje(pid, costo, profit, prob, D, C)
+
+
+def test_puntaje_con_pesos_conocidos(cfg):
+    # 40·(5/10) + 30·0.8 + 0.15·80 + 0.15·60 = 20 + 24 + 12 + 9 = 65
+    pje = calcular_puntaje(_p("A", 5_000_000, 0.8, 80, 60), mejor_profit_cop=10_000_000, cfg=cfg)
+    assert (pje.profit, pje.a_tiempo, pje.desempeno, pje.confianza) == pytest.approx((20, 24, 12, 9))
+    assert pje.valor == pytest.approx(65)
+
+
+def test_el_mejor_profit_aporta_todo_su_peso(cfg):
+    assert calcular_puntaje(_p("A", 3_000_000, 1, 100, 100), 3_000_000, cfg).valor == pytest.approx(100)
+    assert calcular_puntaje(_p("A", 0, 0, 0, 0), 0, cfg).valor == 0  # sin profit en ningún candidato
+
+
+def test_barato_e_impuntual_no_gana_solo_por_precio(cfg):
+    barato = _p("BARATO", 10_000_000, 0.55, 70, 50, costo=5_000_000)
+    puntual = _p("PUNTUAL", 8_000_000, 0.95, 90, 70, costo=7_000_000)
+    assert [x.proveedor_id for x, _ in ordenar([barato, puntual], cfg)] == ["PUNTUAL", "BARATO"]
+
+
+def test_orden_de_mayor_a_menor_y_desempate(cfg):
+    a = _p("A", 5_000_000, 0.8, 80, 60, costo=9_000_000)
+    b = _p("B", 5_000_000, 0.8, 80, 60, costo=8_000_000)   # empata con A: gana el más barato
+    c = _p("C", 5_000_000, 0.9, 80, 60)
+    d = _p("D", 1_000_000, 0.5, 50, 50)
+    orden = ordenar([d, a, b, c], cfg)
+    assert [x.proveedor_id for x, _ in orden] == ["C", "B", "A", "D"]
+    valores = [p.valor for _, p in orden]
+    assert valores == sorted(valores, reverse=True)
+

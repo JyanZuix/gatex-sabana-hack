@@ -9,114 +9,19 @@
   },
   "candidatos": [
     {
-      "proveedor_id": "PROV-01",
-      "nombre": "Transportes Andinos del Sur",
-      "vehiculos": {
-        "tipo_vehiculo_id": "tractomula",
-        "tipo": "Tractomula",
-        "cantidad": 3,
-        "contenedores_por_vehiculo": [
-          1,
-          1,
-          1
-        ]
-      },
-      "costo_cop": 14370000,
-      "profit": {
-        "esperado_cop": 15286274,
-        "p10_cop": 14510000,
-        "margen_pct": 51.0
-      },
-      "tiempo_h": {
-        "p50": 26.2,
-        "p90": 40.0,
-        "prob_a_tiempo": 0.472,
-        "abanico": {
-          "5": 22.8,
-          "10": 23.0,
-          "25": 25.0,
-          "50": 26.2,
-          "75": 36.4,
-          "90": 40.0,
-          "95": 42.0
-        }
-      },
-      "desempeno": {
-        "valor": 72.7,
-        "desglose": {
-          "puntualidad": 0.698,
-          "magnitud_retraso": 0.188
-        }
-      },
-      "confianza": {
-        "valor": 47.7,
-        "nivel": "Baja",
-        "desglose": {
-          "consistencia": 0.409,
-          "cumplimiento_cliente": 0.74,
-          "evidencia": 0.919
-        }
-      },
-      "riesgos": [],
-      "explicacion": "Historial con este cliente de 3.8 servicios efectivos (referencia 2.3); Opción más económica ($14.370.000, 7 % menos que la siguiente); Confianza de 47.7 (referencia 42.2); Probabilidad de llegar a tiempo de 47 % (referencia 80 %); Desempeño de 72.7 (referencia 82.4).",
-      "avisos": []
-    },
-    {
-      "proveedor_id": "PROV-03",
-      "nombre": "Carga Segura del Valle",
-      "vehiculos": {
-        "tipo_vehiculo_id": "tractomula",
-        "tipo": "Tractomula",
-        "cantidad": 3,
-        "contenedores_por_vehiculo": [
-          1,
-          1,
-          1
-        ]
-      },
-      "costo_cop": 16530000,
-      "profit": {
-        "esperado_cop": 13201935,
-        "p10_cop": 12120909,
-        "margen_pct": 44.0
-      },
-      "tiempo_h": {
-        "p50": 24.0,
-        "p90": 42.9,
-        "prob_a_tiempo": 0.785,
-        "abanico": {
-          "5": 21.0,
-          "10": 21.0,
-          "25": 21.8,
-          "50": 24.0,
-          "75": 25.3,
-          "90": 42.9,
-          "95": 45.0
-        }
-      },
-      "desempeno": {
-        "valor": 78.3,
-        "desglose": {
-          "puntualidad": 0.775,
-          "magnitud_retraso": 0.193
-        }
-      },
-      "confianza": {
-        "valor": 43.8,
-        "nivel": "Baja",
-        "desglose": {
-          "consistencia": 0.333,
-          "cumplimiento_cliente": 0.752,
-          "evidencia": 0.927
-        }
-      },
-      "riesgos": [],
-      "explicacion": "Historial con este cliente de 7.8 servicios efectivos (referencia 1.6); Probabilidad de llegar a tiempo de 78 % (referencia 75 %); Costo 15 % mayor que la opción más económica ($16.530.000 frente a $14.370.000); Desempeño de 78.3 (referencia 81.5).",
-      "avisos": []
-    },
-    {
       "proveedor_id": "PROV-06",
       "nombre": "Mulas de Oriente",
+      "puesto": 1,
+      "top": true,
+      "puntaje": {
+        "valor": 81.0,
+        "desglose": {
+          "profit": 37.2,
+          "a_tiempo": 25.5,
+          "desempeno": 12.9,
+          "confianza": 5.5
+        }
+      },
       "vehiculos": {
         "tipo_vehiculo_id": "tractomula",
         "tipo": "Tractomula",
@@ -129,9 +34,8 @@
       },
       "costo_cop": 15450000,
       "profit": {
-        "esperado_cop": 14371965,
-        "p10_cop": 13590000,
-        "margen_pct": 47.9
+        "cop": 14550000,
+        "margen_pct": 48.5
       },
       "tiempo_h": {
         "p50": 23.0,
@@ -145,14 +49,26 @@
           "75": 25.0,
           "90": 38.0,
           "95": 42.9
-        }
+        },
+        "resumen": "Normalmente llega en 23 h; en un día malo, hasta 38 h. Plazo: 26 h → llega a tiempo en el 85 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 4,
+        "servicios_libres_dia": 2,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 4 libres esta semana · acepta 2 servicios más el 03-nov"
+      },
+      "historial": {
+        "servicios": 5,
+        "servicios_con_cliente": 1
       },
       "desempeno": {
         "valor": 85.7,
         "desglose": {
           "puntualidad": 0.851,
           "magnitud_retraso": 0.127
-        }
+        },
+        "texto": "86/100: entrega a tiempo el 85 % de sus servicios y su retraso medio es del 13 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
       },
       "confianza": {
         "valor": 36.4,
@@ -161,17 +77,32 @@
           "consistencia": 0.432,
           "cumplimiento_cliente": 0.864,
           "evidencia": 0.632
-        }
+        },
+        "texto": "Baja (36/100): se basa en 5 servicios (1 con este cliente); sus tiempos son algo variables; con este cliente cumple cerca del 86 %."
       },
+      "fortalezas": [],
+      "debilidades": [],
       "riesgos": [
-        "Poca evidencia histórica (6.3 servicios efectivos)"
+        "Pocos datos: 5 servicios en su historial",
+        "Confianza baja (36/100): pocos datos y tiempos algo variables"
       ],
-      "explicacion": "Probabilidad de llegar a tiempo de 85 % (referencia 74 %); Desempeño de 85.7 (referencia 80.3); Historial con este cliente de 0.9 servicios efectivos (referencia 2.8); Confianza de 36.4 (referencia 44.1); Costo 8 % mayor que la opción más económica ($15.450.000 frente a $14.370.000).",
+      "explicacion": "Llega a tiempo en el 85 % de las simulaciones (los otros candidatos, 74 % en promedio); Desempeño de 86/100 (los otros candidatos, 80 en promedio); Ha hecho 1 servicio para este cliente (los otros candidatos, 4 en promedio); Confianza en sus datos de 36/100 (los otros candidatos, 44 en promedio); Costo 8 % mayor que la opción más económica ($15.450.000 frente a $14.370.000).",
       "avisos": []
     },
     {
-      "proveedor_id": "PROV-07",
-      "nombre": "Transpesados de Colombia",
+      "proveedor_id": "PROV-03",
+      "nombre": "Carga Segura del Valle",
+      "puesto": 2,
+      "top": true,
+      "puntaje": {
+        "valor": 76.3,
+        "desglose": {
+          "profit": 34.5,
+          "a_tiempo": 23.6,
+          "desempeno": 11.7,
+          "confianza": 6.6
+        }
+      },
       "vehiculos": {
         "tipo_vehiculo_id": "tractomula",
         "tipo": "Tractomula",
@@ -182,102 +113,82 @@
           1
         ]
       },
-      "costo_cop": 19020000,
+      "costo_cop": 16530000,
       "profit": {
-        "esperado_cop": 10814236,
-        "p10_cop": 10141379,
-        "margen_pct": 36.0
+        "cop": 13470000,
+        "margen_pct": 44.9
       },
       "tiempo_h": {
-        "p50": 22.2,
-        "p90": 36.5,
-        "prob_a_tiempo": 0.846,
+        "p50": 24.0,
+        "p90": 42.9,
+        "prob_a_tiempo": 0.785,
         "abanico": {
           "5": 21.0,
           "10": 21.0,
-          "25": 21.4,
-          "50": 22.2,
-          "75": 25.0,
-          "90": 36.5,
-          "95": 41.0
-        }
-      },
-      "desempeno": {
-        "valor": 81.6,
-        "desglose": {
-          "puntualidad": 0.804,
-          "magnitud_retraso": 0.15
-        }
-      },
-      "confianza": {
-        "valor": 44.4,
-        "nivel": "Baja",
-        "desglose": {
-          "consistencia": 0.368,
-          "cumplimiento_cliente": 0.783,
-          "evidencia": 0.878
-        }
-      },
-      "riesgos": [],
-      "explicacion": "Probabilidad de llegar a tiempo de 85 % (referencia 74 %); Costo 32 % mayor que la opción más económica ($19.020.000 frente a $14.370.000); Historial con este cliente de 1.6 servicios efectivos (referencia 2.6).",
-      "avisos": []
-    },
-    {
-      "proveedor_id": "PROV-08",
-      "nombre": "Químicos y Carga Especial",
-      "vehiculos": {
-        "tipo_vehiculo_id": "tractomula",
-        "tipo": "Tractomula",
-        "cantidad": 3,
-        "contenedores_por_vehiculo": [
-          1,
-          1,
-          1
-        ]
-      },
-      "costo_cop": 19530000,
-      "profit": {
-        "esperado_cop": 10188060,
-        "p10_cop": 9270000,
-        "margen_pct": 34.0
-      },
-      "tiempo_h": {
-        "p50": 25.0,
-        "p90": 41.0,
-        "prob_a_tiempo": 0.761,
-        "abanico": {
-          "5": 21.0,
-          "10": 21.0,
-          "25": 21.9,
-          "50": 25.0,
+          "25": 21.8,
+          "50": 24.0,
           "75": 25.3,
-          "90": 41.0,
-          "95": 41.0
-        }
+          "90": 42.9,
+          "95": 45.0
+        },
+        "resumen": "Normalmente llega en 24 h; en un día malo, hasta 42,9 h. Plazo: 26 h → llega a tiempo en el 78 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 7,
+        "servicios_libres_dia": 3,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 7 libres esta semana · acepta 3 servicios más el 03-nov"
+      },
+      "historial": {
+        "servicios": 79,
+        "servicios_con_cliente": 11
       },
       "desempeno": {
-        "valor": 85.9,
+        "valor": 78.3,
         "desglose": {
-          "puntualidad": 0.857,
-          "magnitud_retraso": 0.134
-        }
+          "puntualidad": 0.775,
+          "magnitud_retraso": 0.193
+        },
+        "texto": "78/100: entrega a tiempo el 77 % de sus servicios y su retraso medio es del 19 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
       },
       "confianza": {
-        "valor": 51.4,
+        "valor": 43.8,
         "nivel": "Baja",
         "desglose": {
-          "consistencia": 0.459,
-          "cumplimiento_cliente": 0.866,
-          "evidencia": 0.865
-        }
+          "consistencia": 0.333,
+          "cumplimiento_cliente": 0.752,
+          "evidencia": 0.927
+        },
+        "texto": "Baja (44/100): se basa en 79 servicios (11 con este cliente); sus tiempos son muy variables; con este cliente cumple cerca del 75 %."
       },
-      "riesgos": [],
-      "explicacion": "Confianza de 51.4 (referencia 41.6); Desempeño de 85.9 (referencia 80.2); Costo 36 % mayor que la opción más económica ($19.530.000 frente a $14.370.000); Historial con este cliente de 0.7 servicios efectivos (referencia 2.8).",
+      "fortalezas": [
+        "Puntualidad de 98 % en carga general (su promedio: 77 %; 40 servicios)",
+        "Puntualidad de 97 % en vehículo Tractomula (su promedio: 77 %; 31 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 56 % en carga refrigerada (su promedio: 77 %; 39 servicios)",
+        "Puntualidad de 56 % en vehículo Refrigerado (su promedio: 77 %; 39 servicios)"
+      ],
+      "riesgos": [
+        "Confianza baja (44/100): tiempos muy variables"
+      ],
+      "explicacion": "Ha hecho 11 servicios para este cliente (los otros candidatos, 2 en promedio); Llega a tiempo en el 78 % de las simulaciones (los otros candidatos, 75 % en promedio); Costo 15 % mayor que la opción más económica ($16.530.000 frente a $14.370.000); Desempeño de 78/100 (los otros candidatos, 82 en promedio).",
       "avisos": []
     },
     {
       "proveedor_id": "PROV-09",
       "nombre": "Ruta Express Antioquia",
+      "puesto": 3,
+      "top": true,
+      "puntaje": {
+        "valor": 75.8,
+        "desglose": {
+          "profit": 33.1,
+          "a_tiempo": 24.4,
+          "desempeno": 12.7,
+          "confianza": 5.5
+        }
+      },
       "vehiculos": {
         "tipo_vehiculo_id": "tractomula",
         "tipo": "Tractomula",
@@ -290,9 +201,8 @@
       },
       "costo_cop": 17070000,
       "profit": {
-        "esperado_cop": 12755172,
-        "p10_cop": 11882727,
-        "margen_pct": 42.5
+        "cop": 12930000,
+        "margen_pct": 43.1
       },
       "tiempo_h": {
         "p50": 20.9,
@@ -306,14 +216,26 @@
           "75": 21.7,
           "90": 39.1,
           "95": 42.4
-        }
+        },
+        "resumen": "Normalmente llega en 20,9 h; en un día malo, hasta 39,1 h. Plazo: 26 h → llega a tiempo en el 82 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 4,
+        "servicios_libres_dia": 3,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 4 libres esta semana · acepta 3 servicios más el 03-nov"
+      },
+      "historial": {
+        "servicios": 26,
+        "servicios_con_cliente": 1
       },
       "desempeno": {
         "valor": 84.8,
         "desglose": {
           "puntualidad": 0.847,
           "magnitud_retraso": 0.152
-        }
+        },
+        "texto": "85/100: entrega a tiempo el 85 % de sus servicios y su retraso medio es del 15 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
       },
       "confianza": {
         "valor": 36.9,
@@ -322,15 +244,33 @@
           "consistencia": 0.269,
           "cumplimiento_cliente": 0.856,
           "evidencia": 0.793
-        }
+        },
+        "texto": "Baja (37/100): se basa en 26 servicios (1 con este cliente); sus tiempos son muy variables; con este cliente cumple cerca del 86 %."
       },
-      "riesgos": [],
-      "explicacion": "Probabilidad de llegar a tiempo de 82 % (referencia 75 %); Desempeño de 84.8 (referencia 80.4); Costo 19 % mayor que la opción más económica ($17.070.000 frente a $14.370.000); Historial con este cliente de 0.6 servicios efectivos (referencia 2.8); Confianza de 36.9 (referencia 44.0).",
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Buenaventura → Cali (su promedio: 88 %; 6 servicios)"
+      ],
+      "debilidades": [],
+      "riesgos": [
+        "Confianza baja (37/100): tiempos muy variables"
+      ],
+      "explicacion": "Llega a tiempo en el 82 % de las simulaciones (los otros candidatos, 75 % en promedio); Desempeño de 85/100 (los otros candidatos, 80 en promedio); Ha hecho 1 servicio para este cliente (los otros candidatos, 4 en promedio); Costo 19 % mayor que la opción más económica ($17.070.000 frente a $14.370.000); Confianza en sus datos de 37/100 (los otros candidatos, 44 en promedio).",
       "avisos": []
     },
     {
       "proveedor_id": "PROV-11",
       "nombre": "Integral Cargo SAS",
+      "puesto": 4,
+      "top": true,
+      "puntaje": {
+        "valor": 75.2,
+        "desglose": {
+          "profit": 34.4,
+          "a_tiempo": 23.0,
+          "desempeno": 11.8,
+          "confianza": 6.0
+        }
+      },
       "vehiculos": {
         "tipo_vehiculo_id": "tractomula",
         "tipo": "Tractomula",
@@ -343,9 +283,8 @@
       },
       "costo_cop": 16560000,
       "profit": {
-        "esperado_cop": 13178465,
-        "p10_cop": 12240000,
-        "margen_pct": 43.9
+        "cop": 13440000,
+        "margen_pct": 44.8
       },
       "tiempo_h": {
         "p50": 23.8,
@@ -359,14 +298,26 @@
           "75": 25.3,
           "90": 41.0,
           "95": 45.0
-        }
+        },
+        "resumen": "Normalmente llega en 23,8 h; en un día malo, hasta 41 h. Plazo: 26 h → llega a tiempo en el 77 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 6,
+        "servicios_libres_dia": 3,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 6 libres esta semana · acepta 3 servicios más el 03-nov"
+      },
+      "historial": {
+        "servicios": 30,
+        "servicios_con_cliente": 3
       },
       "desempeno": {
         "valor": 78.5,
         "desglose": {
           "puntualidad": 0.775,
           "magnitud_retraso": 0.186
-        }
+        },
+        "texto": "78/100: entrega a tiempo el 77 % de sus servicios y su retraso medio es del 19 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
       },
       "confianza": {
         "valor": 40.2,
@@ -375,10 +326,279 @@
           "consistencia": 0.341,
           "cumplimiento_cliente": 0.764,
           "evidencia": 0.834
+        },
+        "texto": "Baja (40/100): se basa en 30 servicios (3 con este cliente); sus tiempos son muy variables; con este cliente cumple cerca del 76 %."
+      },
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Buenaventura → Cali (su promedio: 77 %; 5 servicios)",
+        "Puntualidad de 100 % en la ruta Cartagena → Bogotá (su promedio: 77 %; 5 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en vehículo Turbo (su promedio: 77 %; 6 servicios)"
+      ],
+      "riesgos": [
+        "Confianza baja (40/100): tiempos muy variables"
+      ],
+      "explicacion": "Costo 15 % mayor que la opción más económica ($16.560.000 frente a $14.370.000); Ha hecho 3 servicios para este cliente (los otros candidatos, 4 en promedio); Confianza en sus datos de 40/100 (los otros candidatos, 43 en promedio).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-07",
+      "nombre": "Transpesados de Colombia",
+      "puesto": 5,
+      "top": false,
+      "puntaje": {
+        "valor": 72.4,
+        "desglose": {
+          "profit": 28.1,
+          "a_tiempo": 25.4,
+          "desempeno": 12.2,
+          "confianza": 6.7
         }
       },
-      "riesgos": [],
-      "explicacion": "Costo 15 % mayor que la opción más económica ($16.560.000 frente a $14.370.000); Confianza de 40.2 (referencia 43.4); Desempeño de 78.5 (referencia 81.5).",
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 19020000,
+      "profit": {
+        "cop": 10980000,
+        "margen_pct": 36.6
+      },
+      "tiempo_h": {
+        "p50": 22.2,
+        "p90": 36.5,
+        "prob_a_tiempo": 0.846,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.0,
+          "25": 21.4,
+          "50": 22.2,
+          "75": 25.0,
+          "90": 36.5,
+          "95": 41.0
+        },
+        "resumen": "Normalmente llega en 22,2 h; en un día malo, hasta 36,5 h. Plazo: 26 h → llega a tiempo en el 85 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 3,
+        "servicios_libres_dia": 1,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 3 libres esta semana · acepta 1 servicio más el 03-nov"
+      },
+      "historial": {
+        "servicios": 50,
+        "servicios_con_cliente": 3
+      },
+      "desempeno": {
+        "valor": 81.6,
+        "desglose": {
+          "puntualidad": 0.804,
+          "magnitud_retraso": 0.15
+        },
+        "texto": "82/100: entrega a tiempo el 80 % de sus servicios y su retraso medio es del 15 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 44.4,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.368,
+          "cumplimiento_cliente": 0.783,
+          "evidencia": 0.878
+        },
+        "texto": "Baja (44/100): se basa en 50 servicios (3 con este cliente); sus tiempos son muy variables; con este cliente cumple cerca del 78 %."
+      },
+      "fortalezas": [
+        "Puntualidad de 91 % en carga general (su promedio: 80 %; 11 servicios)",
+        "Puntualidad de 91 % en vehículo Tractomula (su promedio: 80 %; 11 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 40 % en la ruta Santa Marta → Bogotá (su promedio: 80 %; 5 servicios)",
+        "Puntualidad de 67 % en la ruta Buenaventura → Cali (su promedio: 80 %; 9 servicios)"
+      ],
+      "riesgos": [
+        "Confianza baja (44/100): tiempos muy variables"
+      ],
+      "explicacion": "Llega a tiempo en el 85 % de las simulaciones (los otros candidatos, 74 % en promedio); Costo 32 % mayor que la opción más económica ($19.020.000 frente a $14.370.000); Ha hecho 3 servicios para este cliente (los otros candidatos, 4 en promedio).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-01",
+      "nombre": "Transportes Andinos del Sur",
+      "puesto": 6,
+      "top": false,
+      "puntaje": {
+        "valor": 72.2,
+        "desglose": {
+          "profit": 40.0,
+          "a_tiempo": 14.2,
+          "desempeno": 10.9,
+          "confianza": 7.2
+        }
+      },
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 14370000,
+      "profit": {
+        "cop": 15630000,
+        "margen_pct": 52.1
+      },
+      "tiempo_h": {
+        "p50": 26.2,
+        "p90": 40.0,
+        "prob_a_tiempo": 0.472,
+        "abanico": {
+          "5": 22.8,
+          "10": 23.0,
+          "25": 25.0,
+          "50": 26.2,
+          "75": 36.4,
+          "90": 40.0,
+          "95": 42.0
+        },
+        "resumen": "Normalmente llega en 26,2 h; en un día malo, hasta 40 h. Plazo: 26 h → llega a tiempo en el 47 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 9,
+        "servicios_libres_dia": 5,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 9 libres esta semana · acepta 5 servicios más el 03-nov"
+      },
+      "historial": {
+        "servicios": 81,
+        "servicios_con_cliente": 5
+      },
+      "desempeno": {
+        "valor": 72.7,
+        "desglose": {
+          "puntualidad": 0.698,
+          "magnitud_retraso": 0.188
+        },
+        "texto": "73/100: entrega a tiempo el 70 % de sus servicios y su retraso medio es del 19 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 47.7,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.409,
+          "cumplimiento_cliente": 0.74,
+          "evidencia": 0.919
+        },
+        "texto": "Baja (48/100): se basa en 81 servicios (5 con este cliente); sus tiempos son algo variables; con este cliente cumple cerca del 74 %."
+      },
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Bogotá → Buenaventura (su promedio: 69 %; 5 servicios)",
+        "Puntualidad de 100 % en la ruta Santa Marta → Bogotá (su promedio: 69 %; 7 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 56 % en la ruta Buenaventura → Bogotá (su promedio: 69 %; 18 servicios)",
+        "Puntualidad de 33 % en la ruta Medellín → Cartagena (su promedio: 69 %; 6 servicios)"
+      ],
+      "riesgos": [
+        "Llega a tiempo solo en el 47 % de las simulaciones (se espera al menos 70 %)",
+        "Confianza baja (48/100): tiempos algo variables"
+      ],
+      "explicacion": "Ha hecho 5 servicios para este cliente (los otros candidatos, 3 en promedio); Opción más económica ($14.370.000, 7 % menos que la siguiente); Confianza en sus datos de 48/100 (los otros candidatos, 42 en promedio); Llega a tiempo en el 47 % de las simulaciones (los otros candidatos, 80 % en promedio); Desempeño de 73/100 (los otros candidatos, 82 en promedio).",
+      "avisos": []
+    },
+    {
+      "proveedor_id": "PROV-08",
+      "nombre": "Químicos y Carga Especial",
+      "puesto": 7,
+      "top": false,
+      "puntaje": {
+        "valor": 70.2,
+        "desglose": {
+          "profit": 26.8,
+          "a_tiempo": 22.8,
+          "desempeno": 12.9,
+          "confianza": 7.7
+        }
+      },
+      "vehiculos": {
+        "tipo_vehiculo_id": "tractomula",
+        "tipo": "Tractomula",
+        "cantidad": 3,
+        "contenedores_por_vehiculo": [
+          1,
+          1,
+          1
+        ]
+      },
+      "costo_cop": 19530000,
+      "profit": {
+        "cop": 10470000,
+        "margen_pct": 34.9
+      },
+      "tiempo_h": {
+        "p50": 25.0,
+        "p90": 41.0,
+        "prob_a_tiempo": 0.761,
+        "abanico": {
+          "5": 21.0,
+          "10": 21.0,
+          "25": 21.9,
+          "50": 25.0,
+          "75": 25.3,
+          "90": 41.0,
+          "95": 41.0
+        },
+        "resumen": "Normalmente llega en 25 h; en un día malo, hasta 41 h. Plazo: 26 h → llega a tiempo en el 76 % de los casos simulados."
+      },
+      "capacidad": {
+        "vehiculos_necesarios": 3,
+        "vehiculos_libres": 5,
+        "servicios_libres_dia": 1,
+        "texto": "Necesita 3 vehículos (Tractomula) y tiene 5 libres esta semana · acepta 1 servicio más el 03-nov"
+      },
+      "historial": {
+        "servicios": 47,
+        "servicios_con_cliente": 1
+      },
+      "desempeno": {
+        "valor": 85.9,
+        "desglose": {
+          "puntualidad": 0.857,
+          "magnitud_retraso": 0.134
+        },
+        "texto": "86/100: entrega a tiempo el 86 % de sus servicios y su retraso medio es del 13 % sobre el tiempo pactado (lo reciente pesa más; con pocos datos se acerca al promedio del mercado)."
+      },
+      "confianza": {
+        "valor": 51.4,
+        "nivel": "Baja",
+        "desglose": {
+          "consistencia": 0.459,
+          "cumplimiento_cliente": 0.866,
+          "evidencia": 0.865
+        },
+        "texto": "Baja (51/100): se basa en 47 servicios (1 con este cliente); sus tiempos son algo variables; con este cliente cumple cerca del 87 %."
+      },
+      "fortalezas": [
+        "Puntualidad de 100 % en la ruta Barranquilla → Medellín (su promedio: 87 %; 7 servicios)",
+        "Puntualidad de 100 % en la ruta Buenaventura → Medellín (su promedio: 87 %; 6 servicios)"
+      ],
+      "debilidades": [
+        "Puntualidad de 67 % en la ruta Buenaventura → Bogotá (su promedio: 87 %; 9 servicios)",
+        "Puntualidad de 71 % en la ruta Cartagena → Bogotá (su promedio: 87 %; 7 servicios)"
+      ],
+      "riesgos": [
+        "Confianza baja (51/100): tiempos algo variables"
+      ],
+      "explicacion": "Confianza en sus datos de 51/100 (los otros candidatos, 42 en promedio); Desempeño de 86/100 (los otros candidatos, 80 en promedio); Costo 36 % mayor que la opción más económica ($19.530.000 frente a $14.370.000); Ha hecho 1 servicio para este cliente (los otros candidatos, 4 en promedio).",
       "avisos": []
     }
   ],
@@ -472,7 +692,13 @@
   "sin_candidatos": false,
   "parametros_escenario": {
     "plazo_h": 26.0,
-    "penal_hora_cop": 80000.0,
+    "pesos_puntaje": {
+      "profit": 0.4,
+      "a_tiempo": 0.3,
+      "desempeno": 0.15,
+      "confianza": 0.15,
+      "top_n": 4
+    },
     "semilla": 42,
     "n_simulaciones": 2000
   }

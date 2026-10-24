@@ -79,12 +79,7 @@ class Simulacion(_Seccion):
     min_servicios_ruta: float = Field(ge=0)
     percentil_tipico: float = Field(ge=0, le=100)
     percentil_mal_caso: float = Field(ge=0, le=100)
-    percentil_profit_mal_caso: float = Field(ge=0, le=100)
     percentiles_abanico: tuple[float, ...]
-
-
-class Escenario(_Seccion):
-    penal_hora_cop: float = Field(ge=0)
 
 
 class Vehiculos(_Seccion):
@@ -110,9 +105,27 @@ class Explicacion(_Seccion):
     umbral_impacto: float = Field(ge=0)
 
 
+class Puntaje(_Seccion):
+    peso_profit: Peso
+    peso_a_tiempo: Peso
+    peso_desempeno: Peso
+    peso_confianza: Peso
+    top_n: int = Field(ge=1)
+
+
 class Ficha(_Seccion):
     min_servicios_segmento: int = Field(ge=1)
     umbral_diferencia: float = Field(gt=0, le=1)
+    max_en_tarjeta: int = Field(ge=0)
+
+
+class Riesgo(_Seccion):
+    min_a_tiempo: float = Field(ge=0, le=1)
+
+
+class Textos(_Seccion):
+    consistencia_estable: float = Field(ge=0, le=1)
+    consistencia_variable: float = Field(ge=0, le=1)
 
 
 class Config(_Seccion):
@@ -121,13 +134,15 @@ class Config(_Seccion):
     desempeno: Desempeno
     confianza: Confianza
     simulacion: Simulacion
-    escenario: Escenario
     vehiculos: Vehiculos
     datos: Datos
     cierre: Cierre
     filtro: Filtro
     explicacion: Explicacion
+    puntaje: Puntaje
     ficha: Ficha
+    riesgo: Riesgo
+    textos: Textos
 
     @model_validator(mode="after")
     def _pesos_suman_uno(self) -> "Config":
@@ -137,6 +152,10 @@ class Config(_Seccion):
             raise ValueError(f"Los pesos de desempeño deben sumar 1 (suman {d})")
         if abs(q - 1) > 1e-9:
             raise ValueError(f"Los pesos de confianza deben sumar 1 (suman {q})")
+        p = self.puntaje
+        s = p.peso_profit + p.peso_a_tiempo + p.peso_desempeno + p.peso_confianza
+        if abs(s - 1) > 1e-9:
+            raise ValueError(f"Los pesos del puntaje deben sumar 1 (suman {s})")
         return self
 
 

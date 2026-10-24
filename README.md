@@ -28,7 +28,7 @@ El sistema:
 4. Muestra todo en un **display de realidad aumentada (gafas)** y en una **interfaz web de respaldo**. Allí el funcionario compara las consecuencias económicas, de tiempo y de confianza de cada opción.
 5. **El funcionario toma la decisión final.** El sistema la registra con su justificación.
 
-> **Principio rector: el sistema acompaña, no decide.** Nunca seleccionamos automáticamente un proveedor ni presentamos un "ganador" impuesto. Mostramos opciones viables, sus consecuencias simuladas y sus explicaciones. Mensajes como "El sistema asignó al proveedor X" están **prohibidos**.
+> **Principio rector: el sistema sugiere, el funcionario decide.** Nunca seleccionamos automáticamente un proveedor. Ordenamos las opciones viables con un **puntaje de fórmula pública** y sugerimos un **Top 4**, con sus consecuencias simuladas y sus explicaciones; el funcionario elige (puede ser fuera del Top 4) y justifica. Mensajes como "El sistema asignó al proveedor X" están **prohibidos**.
 
 ---
 
@@ -45,7 +45,6 @@ El sistema:
   5. desempeño histórico;
   6. confiabilidad o entregas a tiempo;
   7. fortalezas y debilidades específicas.
-- **Contexto Colombia:** bloqueos y cierres de vías frecuentes. Colfecar reporta más de 2.000 bloqueos desde 2023. Por eso importan las **condiciones actuales**, no solo el historial.
 
 ### Glosario
 | Término | Significado |
@@ -57,7 +56,7 @@ El sistema:
 | **Cancelado** | Proveedor **descartado** por incumplir al menos un requisito mínimo; guarda **la lista completa** de razones |
 | **Desempeño (D)** | Qué tan bien ha cumplido el proveedor (dominado por la puntualidad) |
 | **Confianza (C)** | Cuánto le creemos al proveedor **para este cliente**: consistencia de tiempos, cumplimiento con el cliente, cantidad y recencia del historial |
-| **Profit** | Lo que le sobra a COSCO del presupuesto disponible para el envío = presupuesto − costo pagado al proveedor − costo esperado de retraso |
+| **Profit** | Lo que le sobra a COSCO del presupuesto disponible para el envío = presupuesto − costo pagado al proveedor |
 | **Presupuesto disponible** | Dinero con que cuenta COSCO antes de contratar el transporte terrestre de esta solicitud |
 
 ---
@@ -76,7 +75,7 @@ El sistema:
                                                     ┌─────────────────────┐
                                                     │  Base de datos      │
                                                     │  historial + tarifas│
-                                                    │  + condiciones hoy  │
+                                                    │  + flota/capacidad  │
                                                     └─────────┬───────────┘
                                                               ▼
                               3. FILTRO de requisitos mínimos
@@ -107,7 +106,8 @@ El backend trae **todos los proveedores activos** con lo relacionado a la ruta A
 - flota disponible;
 - cobertura;
 - tiempo prometido;
-- historial de servicios (para calcular D y C).
+- historial de servicios (para calcular D y C);
+- capacidad de servicio en la fecha.
 
 > **Decisión (2026-10-24):** los incidentes y las condiciones o bloqueos de vía **no forman parte del modelo**. No se simulan ni entran en la Confianza.
 
@@ -127,6 +127,7 @@ Todos los proveedores empiezan en la lista **Candidatos**. Se evalúan **TODAS**
 | `PLAZO_INCUMPLIBLE` | Su tiempo prometido no alcanza a cumplir el plazo de la solicitud | "Tránsito pactado 52 h; plazo disponible 40 h" |
 | `CARGA_NO_SOPORTADA` | No maneja el tipo de carga (refrigerada, peligrosa, etc.) | "No transporta carga peligrosa" |
 | `PROVEEDOR_INACTIVO` | Suspendido, sin documentación vigente o inactivo | "Póliza vencida desde el 15-oct" |
+| `SIN_MARGEN` | Su opción más barata que cumple cuesta más que el presupuesto (daría pérdida) | "Costo $8.000.000 supera el presupuesto de $7.500.000" |
 
 - Cada razón se guarda con su **código**, el **mensaje legible** y el **dato que la causó** (valor requerido frente a valor del proveedor).
 - Las reglas viven en un **módulo propio y configurable** (`backend/filtro/`). Agregar una regla nueva no debe obligar a tocar la simulación.
@@ -142,30 +143,33 @@ Las fórmulas exactas están en `docs/calculos_simulacion.md`. Este es el resume
 | **Tiempo estimado** | Simulación Monte Carlo (N = 2000, semilla fija) con el historial de desviaciones del proveedor y del mercado → tiempo típico (P50), mal escenario (P90) y **probabilidad de llegar a tiempo** |
 | **Desempeño D** | `100·[0.75·Puntualidad + 0.25·(1 − Magnitud de retraso)]`, con suavizado bayesiano y recencia (vida media de 12 meses). **Siempre se calcula del historial** (`servicio`); nunca es dato de entrada. `servicio.calificacion` no se usa |
 | **Confianza C** | `100 · Q · F`: Q = (2/3) consistencia de tiempos + (1/3) cumplimiento con este cliente; F = evidencia (cantidad de servicios y peso extra al historial con este cliente) |
-| **Profit COSCO** | `Profit = Presupuesto_disponible − Costo_proveedor − Costo_esperado_retraso` (ver 3.4) |
+| **Profit COSCO** | `Profit = Presupuesto_disponible − Costo_proveedor` (ver 3.4) |
 
 ### 3.4 Profit para COSCO SHIPPING
 ```
 Presupuesto_disponible  = dinero disponible en COSCO antes del envío terrestre (dato de la solicitud)
 Costo_proveedor         = vehículos × precio_viaje
-Costo_esperado_retraso  = Σ_simulaciones [ penal_hora × max(0, T_sim − plazo) ] / N
-Profit                  = Presupuesto_disponible − Costo_proveedor − Costo_esperado_retraso
+Profit                  = Presupuesto_disponible − Costo_proveedor
 Margen %                = Profit / Presupuesto_disponible
 ```
-- Se muestran el **profit esperado** y el **profit en un mal escenario** (P10).
-- **Decisión (2026-10-23):** COSCO no tiene una tarifa al cliente. El "ingreso" es el **presupuesto disponible** antes del envío; lo que sobra tras pagar al proveedor y el retraso esperado es el profit. La solicitud lo recibe como campo de entrada (`presupuesto_cop`). Si el costo supera el presupuesto, el profit es negativo y se muestra así. **Por confirmar con negocio.** No inventen valores.
-- `penal_hora` (costo por hora de retraso) es un **parámetro del escenario**. Vale 0 por defecto y el funcionario lo puede ajustar.
+- El profit es un número fijo (no se simula): la tarifa es fija y **el costo por retraso se eliminó** (decisión 2026-10-24). El riesgo de llegar tarde se muestra como probabilidad de llegar a tiempo, no como pesos.
+- **Decisión (2026-10-23):** COSCO no tiene una tarifa al cliente. El "ingreso" es el **presupuesto disponible** antes del envío; lo que sobra tras pagar al proveedor es el profit. La solicitud lo recibe como campo de entrada (`presupuesto_cop`). Si el costo supera el presupuesto, el profit es negativo y se muestra así. **Por confirmar con negocio.** No inventen valores.
 
 ### 3.5 Paso 5: qué ve el funcionario
-**Sección "Elegibles" (candidatos):** una tarjeta por proveedor con:
-- **Económico:** costo, profit esperado, profit en mal escenario y margen.
-- **Tiempo:** P50 y P90, probabilidad de llegar a tiempo y el **abanico** de resultados simulados.
-- **Confianza y desempeño:** valor de 0 a 100, etiqueta (Alta, Media o Baja) y **desglose** de cada componente.
+**Sección "Elegibles" (candidatos):** ordenados por **puntaje** de mayor a menor; los 4 primeros van marcados como **sugeridos (Top 4)**. Una tarjeta por proveedor con:
+- **Puesto y puntaje:** `S = 100·(0,40·M + 0,30·P_a + 0,15·D/100 + 0,15·C/100)`, con `M` = profit frente al mejor profit entre los candidatos y `P_a` = probabilidad de llegar a tiempo, y los puntos que aporta cada factor (ver `docs/calculos_simulacion.md` §6.4).
+- **Económico:** costo, profit y margen.
+- **Tiempo en palabras** (`tiempo_h.resumen`): *"Normalmente llega en 26 h; en un día malo, hasta 40 h. Plazo: 33 h → llega a tiempo en el 72 % de los casos simulados"*, más el **abanico** para el gráfico.
+- **Capacidad** (`capacidad.texto`): vehículos que necesita frente a los libres esta semana y servicios que acepta ese día (o "sin dato", que no descarta).
+- **Desempeño y confianza:** valor de 0 a 100, etiqueta, **desglose** y una frase que dice de dónde sale (`texto`).
+- **Historial real:** servicios en total y con este cliente (conteos, no ponderados).
+- **Fortalezas y debilidades** (máx. 2 de cada una): primero las de esta ruta, vehículo o carga; cada una cita su porcentaje, el promedio del proveedor y cuántos servicios la respaldan.
+- **Riesgos con su dato:** pocos datos (N servicios), nunca trabajó con el cliente, probabilidad de llegar a tiempo menor al 70 %, confianza baja con su causa.
 - **Logística:** tipo de vehículo y **número de vehículos** a pedir.
-- **Explicación en lenguaje natural:** los 2–3 factores que más suben y más bajan a esta opción.
+- **Explicación en lenguaje natural:** los 2–3 factores que más suben y más bajan a esta opción, comparados con los otros candidatos.
 
 Además:
-- El funcionario puede **ordenar** las opciones por el criterio que prefiera (profit, tiempo, confianza) y correr **escenarios "¿y si…?"** con otro plazo (`plazo_h`) u otra penalidad por hora de retraso (`penal_hora_cop`). Estos escenarios cambian supuestos, nunca los datos históricos.
+- El funcionario ve el Top 4 sugerido y todos los demás candidatos (nada se oculta), y puede correr **escenarios "¿y si…?"** con otro plazo (`plazo_h`): el orden se recalcula. Estos escenarios cambian supuestos, nunca los datos históricos.
 
 **Sección "Descartados" (cancelados), obligatoria:** lista de proveedores descartados con **todas** sus razones y el dato que causó cada una. Sirve para transparencia y auditoría.
 
@@ -212,7 +216,7 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
 | `GET /catalogos` | Clientes, ubicaciones, rutas, tipos de vehículo y de carga **con los IDs que acepta la API**. Los desplegables deben llenarse de aquí. Solo lista vehículos que llevan contenedores (turbo y sencillo quedan fuera) |
 | `POST /solicitudes/evaluar` | Filtra, calcula y simula. Devuelve candidatos, cancelados con todas sus razones y casi elegibles |
 | `GET /solicitudes/{id}` | Evaluación original |
-| `POST /solicitudes/{id}/escenario` | "¿Y si…?" con otro `plazo_h` o `penal_hora_cop`; la solicitud original no cambia |
+| `POST /solicitudes/{id}/escenario` | "¿Y si…?" con otro `plazo_h`; la solicitud original no cambia |
 | `POST /decisiones` · `GET /decisiones/{id}` | Elección del funcionario con justificación obligatoria y snapshot de lo que vio. Inserta la solicitud en `transporte.solicitud`. Una sola decisión por solicitud (409 si se repite); 503 si la base no responde (no queda nada registrado) |
 | `GET /decisiones/{id}/informe` | **Informe descargable** (HTML autocontenido, imprimible o guardable como PDF): solicitud, decisión y justificación, comparación de opciones con gráfico de tiempos, descartados con todas sus razones y cómo se calculó. `?descargar=false` lo abre en el navegador |
 | `POST /solicitudes/{id}/cierre` | Registra el **resultado real del viaje** en `transporte.servicio` y actualiza el modelo. Responde el D del proveedor antes y después |
@@ -230,14 +234,13 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
   "peso_kg": 20000,
   "tipo_carga": null,
   "tipo_vehiculo_id": "tractomula",
-  "presupuesto_cop": 30000000,
-  "penal_hora_cop": 50000
+  "presupuesto_cop": 30000000
 }
 ```
 - **Toda carga va en contenedores de 20'** (1 TEU cada uno). `n_contenedores` ≥ 1 y `peso_kg` (peso de **cada** contenedor) > 0 son obligatorios. No existe carga suelta: turbo y sencillo (`cap_teu = 0`) son **obsoletos** y pedirlos da 422.
 - `tipo_carga`: `null` (general), `"refrigerado"`, `"sobredimensionado"` o `"peligrosa"`. Ojo: la base escribe `refrigerada`/`sobredimensionada`; la API usa estos valores.
 - `tipo_vehiculo_id` es opcional; **si se envía es obligatorio**: solo se evalúan tarifas y flota de ese tipo.
-- `presupuesto_cop` lo introduce el funcionario. `penal_hora_cop` es opcional (por defecto 0).
+- `presupuesto_cop` lo introduce el funcionario.
 - Responde **422** si el cliente, la ruta o el tipo de vehículo no existen, si un contenedor de ese peso no cabe en el tipo exigido o en ningún vehículo del catálogo, o si faltan campos. Responde **503** si la base no responde.
 
 **Respuesta** (extracto real de `backend/api/ejemplos/evaluacion_respuesta.json`; datos de prueba inventados):
@@ -257,7 +260,7 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
         "contenedores_por_vehiculo": [1, 1, 1]
       },
       "costo_cop": 14370000,
-      "profit": {"esperado_cop": 15534366, "p10_cop": 15280000, "margen_pct": 51.8},
+      "profit": {"cop": 15630000, "margen_pct": 52.1},
       "tiempo_h": {
         "p50": 26.2,
         "p90": 40.0,
@@ -274,7 +277,7 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
         "desglose": {"consistencia": 0.409, "cumplimiento_cliente": 0.74, "evidencia": 0.919}
       },
       "riesgos": [],
-      "explicacion": "Historial con este cliente de 3.8 servicios efectivos (referencia 2.3); Opción más económica ($14.370.000, 7 % menos que la siguiente); Confianza de 47.7 (referencia 42.2); Probabilidad de llegar a tiempo de 72 % (referencia 82 %); Desempeño de 72.7 (referencia 82.4).",
+      "explicacion": "Ha hecho 5 servicios para este cliente (los otros candidatos, 3 en promedio); Opción más económica ($14.370.000, 7 % menos que la siguiente); Confianza en sus datos de 48/100 (los otros candidatos, 42 en promedio); Llega a tiempo en el 72 % de las simulaciones (los otros candidatos, 82 % en promedio); Desempeño de 73/100 (los otros candidatos, 82 en promedio).",
       "avisos": []
     }
   ],
@@ -294,7 +297,7 @@ Documentación interactiva en `/docs` (OpenAPI). Respuestas reales guardadas en 
   ],
   "casi_elegibles": [],
   "sin_candidatos": false,
-  "parametros_escenario": {"plazo_h": 33.0, "penal_hora_cop": 50000.0, "semilla": 42, "n_simulaciones": 2000}
+  "parametros_escenario": {"plazo_h": 33.0, "semilla": 42, "n_simulaciones": 2000}
 }
 ```
 - `vehiculos.tipo_vehiculo_id` (clave del catálogo) y `vehiculos.contenedores_por_vehiculo`: cuántos contenedores lleva cada vehículo (se llena uno antes del siguiente).
@@ -349,7 +352,7 @@ En la raíz también están `index.html`, `js/`, `assets/` y `LEEME.md`: prototi
 
 ## 7. Reglas para agentes de IA
 
-1. **Nunca decidir por el funcionario.** Siempre opciones, consecuencias, explicación y confirmación humana.
+1. **Nunca decidir por el funcionario.** El sistema ordena y sugiere un Top 4 con una fórmula pública; siempre opciones, consecuencias, explicación y confirmación humana con justificación.
 2. **Toda razón de descarte debe ser visible.** Evaluar todas las reglas, no solo la primera que falle.
 3. **Ningún número sin explicación.** Cada valor de D, C, tiempo, costo y profit debe poder desglosarse y rastrearse hasta los datos.
 4. **No inventar datos.** Si falta un dato, márquenlo y muestren cómo afecta la confianza. Los datos sintéticos de prueba van **etiquetados** como tales, por ahora en `backend/datos_sinteticos/`. Las credenciales van solo en `.env` (nunca en `.env.example`).
@@ -368,15 +371,15 @@ En la raíz también están `index.html`, `js/`, `assets/` y `LEEME.md`: prototi
 
 | Criterio | Pts | Nuestra respuesta |
 |---|---|---|
-| Comprensión del problema | 15 | Los 7 factores, las tensiones entre ellos y el contexto colombiano (bloqueos, cobertura) |
-| Calidad de la recomendación | 20 | El filtro garantiza que todo candidato cumple los requisitos; los "casi elegibles" cubren los casos sin opción ideal |
+| Comprensión del problema | 15 | Los 7 factores, las tensiones entre ellos y el contexto colombiano (cobertura y capacidad de los proveedores) |
+| Calidad de la recomendación | 20 | El filtro garantiza que todo candidato cumple los requisitos y no da pérdida; un puntaje público ordena y sugiere un Top 4; los "casi elegibles" cubren los casos sin opción ideal |
 | Metodología y transparencia | 20 | Fórmulas documentadas, desglose por componente y razones de descarte visibles |
 | Funcionamiento y demostración | 20 | Flujo de principio a fin con datos históricos y de prueba en varios casos distintos |
 | Análisis y visualización | 10 | Tarjetas comparables, abanico de simulación, ficha por proveedor y tableros |
 | Valor de negocio y viabilidad | 10 | Profit por decisión, tiempo ahorrado al funcionario y plan de implementación |
 | Comunicación | 5 | Demo en realidad aumentada con la web de respaldo y una historia clara |
 
-**Validación (backtesting):** se reviven solicitudes históricas con las condiciones de ese día. Se revisa: ¿el proveedor elegido por COSCO estaba entre los candidatos? ¿la simulación predijo bien el tiempo y la puntualidad reales?
+**Validación (backtesting):** se reviven solicitudes históricas con las tarifas y la flota de ese día. Se revisa: ¿el proveedor elegido por COSCO estaba entre los candidatos? ¿la simulación predijo bien el tiempo y la puntualidad reales?
 
 ---
 

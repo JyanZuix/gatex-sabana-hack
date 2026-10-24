@@ -37,7 +37,7 @@ def test_config_contiene_parametros_del_documento(cfg):
     assert (d.P0, d.R0, d.sigma0) == (0.85, 0.10, 0.20)
     assert (cfg.confianza.niveles.alta, cfg.confianza.niveles.media) == (75, 55)
     assert cfg.vehiculos.permitir_tandas is False
-    assert cfg.escenario.penal_hora_cop == 0
+    assert not hasattr(cfg, "escenario")  # el costo por retraso se eliminó
 
 
 def test_config_falta_parametro_lo_nombra():
@@ -58,6 +58,16 @@ def test_config_pesos_deben_sumar_uno():
     datos = _yaml()
     datos["desempeno"]["peso_puntualidad"] = 0.8
     with pytest.raises(ErrorConfiguracion, match="sumar 1"):
+        config_desde_dict(datos)
+
+
+def test_config_pesos_del_puntaje_deben_sumar_uno():
+    datos = _yaml()
+    p = datos["puntaje"]
+    assert (p["peso_profit"], p["peso_a_tiempo"], p["peso_desempeno"], p["peso_confianza"], p["top_n"]) == (
+        0.40, 0.30, 0.15, 0.15, 4)
+    p["peso_profit"] = 0.5
+    with pytest.raises(ErrorConfiguracion, match="puntaje deben sumar 1"):
         config_desde_dict(datos)
 
 
@@ -177,3 +187,17 @@ def test_fabrica_elige_adaptador():
         crear_repositorio({"REPOSITORIO": "postgres"})
     with pytest.raises(ValueError):
         crear_repositorio({"REPOSITORIO": "mysql"})
+
+
+def test_fabrica_lee_env_sin_pisar_la_terminal(tmp_path, monkeypatch):
+    import os
+    from backend.datos import fabrica
+    monkeypatch.setattr(os, "environ", dict(os.environ))  # load_dotenv escribe aquí; no afecta otras pruebas
+    archivo = tmp_path / ".env"
+    archivo.write_text("REPOSITORIO=postgres\nDATABASE_URL=postgresql://desde-env\n", encoding="utf-8")
+    monkeypatch.setattr(fabrica, "ARCHIVO_ENV", archivo)
+    monkeypatch.delenv("REPOSITORIO", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "postgresql://desde-terminal")
+    repo = crear_repositorio()
+    assert isinstance(repo, RepositorioPostgres)
+    assert repo.dsn == "postgresql://desde-terminal"

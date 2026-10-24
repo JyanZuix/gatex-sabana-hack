@@ -191,7 +191,7 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
         return _registrada(solicitud_id).evaluacion
 
     @app.post("/solicitudes/{solicitud_id}/escenario", response_model=e.Evaluacion, tags=["Solicitudes"],
-              summary="¿Y si…? Vuelve a evaluar con otro plazo o penalidad; la solicitud original no cambia")
+              summary="¿Y si…? Vuelve a evaluar con otro plazo; la solicitud original no cambia")
     def escenario(solicitud_id: str, entrada: e.EscenarioEntrada) -> e.Evaluacion:
         r = _registrada(solicitud_id)
         cambios = entrada.model_dump(exclude_none=True)

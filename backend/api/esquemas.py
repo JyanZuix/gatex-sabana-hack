@@ -35,14 +35,12 @@ class SolicitudEntrada(_Esquema):
     peso_kg: float = Field(gt=0)
     tipo_carga: Optional[CargaEspecial] = None
     tipo_vehiculo_id: Optional[str] = None
-    presupuesto_cop: int = Field(ge=0)
-    penal_hora_cop: Optional[float] = Field(default=None, ge=0)
+    presupuesto_cop: int = Field(gt=0)
 
 
 class EscenarioEntrada(_Esquema):
     """Supuestos que cambia el funcionario. Nunca cambian el historial."""
-    plazo_h: Optional[float] = Field(default=None, gt=0)
-    penal_hora_cop: Optional[float] = Field(default=None, ge=0)
+    plazo_h: float = Field(gt=0)
 
 
 class DecisionEntrada(_Esquema):
@@ -76,8 +74,7 @@ class Vehiculos(_Esquema):
 
 
 class Profit(_Esquema):
-    esperado_cop: int
-    p10_cop: int
+    cop: int                              # presupuesto − costo del proveedor
     margen_pct: Optional[float]
 
 
@@ -86,6 +83,19 @@ class TiempoH(_Esquema):
     p90: float
     prob_a_tiempo: float
     abanico: dict[str, float]            # percentil → horas, para el gráfico
+    resumen: str                         # frase llana: tiempo habitual, día malo, plazo y probabilidad
+
+
+class CapacidadSalida(_Esquema):
+    vehiculos_necesarios: int
+    vehiculos_libres: int                # unidades libres esta semana del tipo elegido
+    servicios_libres_dia: Optional[int]  # servicios que acepta en la fecha; null = sin dato (no descarta)
+    texto: str
+
+
+class HistorialSalida(_Esquema):
+    servicios: int                       # servicios reales en su historial (sin ponderar)
+    servicios_con_cliente: int
 
 
 class DesgloseDesempeno(_Esquema):
@@ -96,6 +106,7 @@ class DesgloseDesempeno(_Esquema):
 class DesempenoSalida(_Esquema):
     valor: float
     desglose: DesgloseDesempeno
+    texto: str
 
 
 class DesgloseConfianza(_Esquema):
@@ -108,17 +119,38 @@ class ConfianzaSalida(_Esquema):
     valor: float
     nivel: Literal["Alta", "Media", "Baja"]
     desglose: DesgloseConfianza
+    texto: str
+
+
+class DesglosePuntaje(_Esquema):
+    """Puntos que aporta cada factor; suman `PuntajeSalida.valor`."""
+    profit: float
+    a_tiempo: float
+    desempeno: float
+    confianza: float
+
+
+class PuntajeSalida(_Esquema):
+    valor: float                          # 0-100; ordena a los candidatos
+    desglose: DesglosePuntaje
 
 
 class CandidatoSalida(_Esquema):
     proveedor_id: str
     nombre: str
+    puesto: int                           # 1 = mayor puntaje; `candidatos` llega en este orden
+    top: bool                             # entre los `puntaje.top_n` sugeridos
+    puntaje: PuntajeSalida
     vehiculos: Vehiculos
     costo_cop: int
     profit: Profit
     tiempo_h: TiempoH
+    capacidad: CapacidadSalida
+    historial: HistorialSalida
     desempeno: DesempenoSalida
     confianza: ConfianzaSalida
+    fortalezas: list[str]                # máx. `ficha.max_en_tarjeta`; primero las de esta ruta, vehículo o carga
+    debilidades: list[str]
     riesgos: list[str]
     explicacion: str
     avisos: list[str] = []
@@ -145,9 +177,17 @@ class CasiElegibleSalida(_Esquema):
     vehiculos: Optional[Vehiculos] = None  # lo que tendría que pedirle si se flexibiliza; null si no tiene tarifa
 
 
+class PesosPuntaje(_Esquema):
+    profit: float
+    a_tiempo: float
+    desempeno: float
+    confianza: float
+    top_n: int
+
+
 class ParametrosEscenario(_Esquema):
     plazo_h: float
-    penal_hora_cop: float
+    pesos_puntaje: PesosPuntaje
     semilla: int
     n_simulaciones: int
 

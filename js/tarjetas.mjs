@@ -6,13 +6,13 @@ export class AnimadorTarjetas {
         for(const [nombre] of TARJETAS_PROVEEDOR) {
             const matches=[];modelo.traverse(o=>{if(o.name===nombre)matches.push(o);});
             if(matches.length!==1)throw new Error('Debe existir una sola '+nombre+'; encontradas: '+matches.length);
-            const node=matches[0];this.items.set(nombre,{node,original:node.position.clone(),estado:'neutral',proveedor_id:null});
+            const node=matches[0];this.items.set(nombre,{node,original:node.position.clone(),estado:'neutral',proveedor_id:null,puesto:null,top:false});
         }
     }
     mover(item,destino) {this.animaciones.set(item.node.name,{item,desde:item.node.position.clone(),hasta:destino.clone(),inicio:null});}
     restaurar() {
         this.animaciones.clear();
-        for(const item of this.items.values()){item.estado='neutral';item.proveedor_id=null;this.mover(item,item.original);}
+        for(const item of this.items.values()){item.estado='neutral';item.proveedor_id=null;item.puesto=null;item.top=false;this.mover(item,item.original);}
     }
     aplicar(evaluacion,vinculos,casiPolicy) {
         if(!['panel','arriba'].includes(casiPolicy))throw new Error('Falta definir cómo presentar los casi elegibles.');
@@ -23,18 +23,20 @@ export class AnimadorTarjetas {
                 if(!binding||!this.items.has(binding.tarjeta))throw new Error('No hay asociación verificada para '+proveedor.proveedor_id+'. No se modificaron las tarjetas.');
                 const anterior=porProveedor.get(proveedor.proveedor_id);
                 if(anterior&&(anterior.estado===estado||anterior.estado==='candidato'||estado==='candidato'))throw new Error('La API clasificó un proveedor en grupos incompatibles.');
-                porProveedor.set(proveedor.proveedor_id,{...binding,estado});
+                porProveedor.set(proveedor.proveedor_id,{...binding,estado,puesto:proveedor.puesto??null,top:estado==='candidato'&&proveedor.top===true});
             }
         }
         const clasificadas=new Set([...porProveedor.values()].map(p=>p.tarjeta));
         const faltantes=[...this.items.keys()].filter(key=>!clasificadas.has(key));
         if(faltantes.length)throw new Error('La API no clasificó estas tarjetas: '+faltantes.join(', ')+'. No se modificaron las tarjetas.');
         this.animaciones.clear();
-        for(const item of this.items.values()){item.estado='sin_clasificar';item.proveedor_id=null;this.mover(item,item.original);}
+        for(const item of this.items.values()){item.estado='sin_clasificar';item.proveedor_id=null;item.puesto=null;item.top=false;this.mover(item,item.original);}
         for(const [id,entry] of porProveedor) {
-            const item=this.items.get(entry.tarjeta);item.estado=entry.estado;item.proveedor_id=id;
+            const item=this.items.get(entry.tarjeta);item.estado=entry.estado;item.proveedor_id=id;item.puesto=entry.puesto;item.top=entry.top;
             const target=item.original.clone();
+            // Top N sugerido arriba; los demás candidatos, a media altura y seleccionables; descartados abajo.
             if(entry.estado==='cancelado'||(entry.estado==='casi'&&casiPolicy==='panel'))target.y-=this.descenso;
+            else if(entry.estado==='candidato'&&!entry.top)target.y-=this.descenso/2;
             this.mover(item,target);
         }
     }
