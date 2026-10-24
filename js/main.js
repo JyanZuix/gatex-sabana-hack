@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { AlturaInicialVR } from './altura-vr.mjs';
+const alturaVR = new AlturaInicialVR(1.5);
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { CATALOGOS } from './catalogos.js';
 import { Desplegable, hitZone, menuLayout } from './desplegables.mjs';
@@ -12,7 +14,7 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color('#e9edf2');
 scene.fog = new THREE.Fog('#e9edf2', 8, 28);
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .05, 60);
-camera.position.set(0, 1.6, 0); // WebXR sustituye esta pose por la del visor.
+camera.position.set(0, 1.5, 0); // WebXR sustituye esta pose por la del visor.
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); // Limita el coste de la vista convencional.
 renderer.setSize(innerWidth, innerHeight);
@@ -233,10 +235,10 @@ entrar.addEventListener('click',async()=>{
         session=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']}); // Solicitud dentro del clic: conserva la activación del usuario.
         xrSession=session;
         session.addEventListener('end',()=>{
-            xrSession=null;selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
+            xrSession=null;alturaVR.reset();camera.position.set(0,1.5,0);selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
             estado.textContent='Sesión terminada. Puedes volver a entrar.';entrar.focus();
         },{once:true});
-        await renderer.xr.setSession(session);inicio.hidden=true;draw(); // Entrada directa a la sección 2.
+        await renderer.xr.setSession(session);alturaVR.iniciar(renderer.xr.getReferenceSpace());inicio.hidden=true;draw(); // Entrada directa a la sección 2.
     } catch(error) {
         console.error(error);if(session)await session.end().catch(()=>{});xrSession=null;
         estado.textContent='No se pudo entrar en VR. Comprueba los permisos del navegador y el área de juego e inténtalo de nuevo.';
@@ -257,7 +259,8 @@ async function initialize() {
     } catch(error){console.error(error);estado.textContent='No se pudo comprobar WebXR. Revisa los permisos y abre la página directamente, fuera de una vista previa incrustada.';}
 }
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-renderer.setAnimationLoop(()=>{
+renderer.setAnimationLoop((tiempo,frame)=>{
+    alturaVR.actualizar(frame,renderer.xr); // Inicio sentado o de pie a 1.50 m; después seguimiento libre.
     const hoverIds=[];
     for(const {controller,line} of controllers) {
         const hit=renderer.xr.isPresenting?controllerHit(controller):null;
@@ -269,3 +272,4 @@ renderer.setAnimationLoop(()=>{
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
 initialize();
+
