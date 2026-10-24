@@ -1,0 +1,82 @@
+{
+ "sintetico": true,
+ "nota": "Datos sintéticos generados para pruebas y demo. No representan proveedores ni clientes reales.",
+ "generado_para": "2026-10-23",
+ "datos": [
+  {
+   "proveedor_id": "PROV-01",
+   "nombre": "Transportes Andinos (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-02",
+   "nombre": "Logística del Pacífico (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "nombre": "Carga Segura (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": [
+    "refrigerado",
+    "peligrosa"
+   ]
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "nombre": "TransCaribe (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": [
+    "sobredimensionado"
+   ]
+  },
+  {
+   "proveedor_id": "PROV-05",
+   "nombre": "Rápido Express (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-06",
+   "nombre": "Montaña Cargo (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "nombre": "Carga Express (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "nombre": "Vías del Sur (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2026-10-15",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-09",
+   "nombre": "Nuevo Horizonte (sintético)",
+   "estado": "activo",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  },
+  {
+   "proveedor_id": "PROV-10",
+   "nombre": "Transportes Llanos (sintético)",
+   "estado": "suspendido",
+   "poliza_vigente_hasta": "2027-06-30",
+   "cargas_especiales": []
+  }
+ ]
+}

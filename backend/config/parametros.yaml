@@ -1,0 +1,59 @@
+# Parámetros del módulo de cálculo y simulación.
+# Fuente: docs/calculos_simulacion.md, sección 8. No cambiar sin actualizar ese documento.
+
+recencia:
+  vida_media_dias: 365            # H: un servicio de hace 12 meses pesa 0.5
+
+prior:
+  m: 10                           # fuerza del prior: equivale a 10 servicios promedio del mercado
+  min_servicios_segmento: 20      # servicios mínimos para usar un segmento (ruta → corredor → nacional)
+  por_defecto:                    # valores si no hay datos de mercado
+    P0: 0.85
+    R0: 0.10
+    sigma0: 0.20
+    I0: 0.05
+
+desempeno:
+  peso_puntualidad: 0.75
+  peso_magnitud_retraso: 0.25
+
+confianza:
+  peso_consistencia: 0.40
+  peso_incidentes: 0.40
+  peso_cumplimiento_cliente: 0.20
+  sigma_max: 0.5                  # ±50 % de variación = consistencia nula
+  k_evidencia: 10                 # con 10 servicios efectivos, E = 0.5
+  alfa_cliente: 2                 # un servicio con este cliente vale por 3
+  piso_evidencia: 0.4             # confianza mínima de un proveedor nuevo
+  niveles:
+    alta: 75                      # C ≥ 75
+    media: 55                     # 55 ≤ C < 75; por debajo, Baja
+
+severidad:                        # tabla 1.1
+  sin_incidente: 0.0
+  leve: 0.3
+  moderado: 0.6
+  grave: 1.0
+
+simulacion:
+  n: 2000
+  semilla: 42
+  min_servicios_ruta: 5           # si W_ruta < 5 se usa todo el historial del proveedor
+  severidad_media_sin_historial: 0.5
+  percentil_tipico: 50
+  percentil_mal_caso: 90
+  percentil_profit_mal_caso: 10
+  percentiles_abanico: [5, 10, 25, 50, 75, 90, 95]
+
+escenario:
+  penal_hora_cop: 0               # costo por hora de retraso; lo ajusta el funcionario
+
+vehiculos:
+  permitir_tandas: false          # viajes en varias tandas: por defecto se descarta
+
+filtro:
+  servicios_requeridos: 1         # capacidad de servicio mínima en la fecha
+
+explicacion:
+  max_factores: 3                 # factores a favor y en contra que se muestran
+  umbral_impacto: 0.02            # impacto mínimo para mencionar un factor

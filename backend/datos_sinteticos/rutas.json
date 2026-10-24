@@ -1,0 +1,35 @@
+{
+ "sintetico": true,
+ "nota": "Datos sintéticos generados para pruebas y demo. No representan proveedores ni clientes reales.",
+ "generado_para": "2026-10-23",
+ "datos": [
+  {
+   "ruta_id": "R-BUN-BOG",
+   "origen_id": "BUN",
+   "destino_id": "BOG",
+   "distancia_km": 515,
+   "corredor": "Buenaventura–Bogotá"
+  },
+  {
+   "ruta_id": "R-BOG-BUN",
+   "origen_id": "BOG",
+   "destino_id": "BUN",
+   "distancia_km": 515,
+   "corredor": "Buenaventura–Bogotá"
+  },
+  {
+   "ruta_id": "R-CTG-MED",
+   "origen_id": "CTG",
+   "destino_id": "MED",
+   "distancia_km": 640,
+   "corredor": "Cartagena–Medellín"
+  },
+  {
+   "ruta_id": "R-MED-CTG",
+   "origen_id": "MED",
+   "destino_id": "CTG",
+   "distancia_km": 640,
+   "corredor": "Cartagena–Medellín"
+  }
+ ]
+}

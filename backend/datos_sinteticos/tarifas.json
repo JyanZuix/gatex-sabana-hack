@@ -1,0 +1,347 @@
+{
+ "sintetico": true,
+ "nota": "Datos sintéticos generados para pruebas y demo. No representan proveedores ni clientes reales.",
+ "generado_para": "2026-10-23",
+ "datos": [
+  {
+   "tarifa_id": "TAR-PROV-01-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-01",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5040000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-01-R-BUN-BOG-TV-SENC20",
+   "proveedor_id": "PROV-01",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 3360000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-01-R-BOG-BUN-TV-PLAT40",
+   "proveedor_id": "PROV-01",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4640000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-01-R-BOG-BUN-TV-SENC20",
+   "proveedor_id": "PROV-01",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 3090000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-01-R-CTG-MED-TV-PLAT40",
+   "proveedor_id": "PROV-01",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5800000,
+   "tiempo_prometido_h": 30.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-01-R-CTG-MED-TV-SENC20",
+   "proveedor_id": "PROV-01",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 3860000,
+   "tiempo_prometido_h": 30.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-02-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-02",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4420000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-02-R-BUN-BOG-TV-SENC20",
+   "proveedor_id": "PROV-02",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 2940000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-02-R-BOG-BUN-TV-PLAT40",
+   "proveedor_id": "PROV-02",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4060000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-02-R-BOG-BUN-TV-SENC20",
+   "proveedor_id": "PROV-02",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 2710000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-03-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-03",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5380000,
+   "tiempo_prometido_h": 27.3,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-03-R-BUN-BOG-TV-REFRI40",
+   "proveedor_id": "PROV-03",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-REFRI40",
+   "precio_viaje": 6940000,
+   "tiempo_prometido_h": 27.3,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-03-R-CTG-MED-TV-PLAT40",
+   "proveedor_id": "PROV-03",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 6180000,
+   "tiempo_prometido_h": 31.5,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-03-R-CTG-MED-TV-REFRI40",
+   "proveedor_id": "PROV-03",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-REFRI40",
+   "precio_viaje": 7990000,
+   "tiempo_prometido_h": 31.5,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-03-R-MED-CTG-TV-PLAT40",
+   "proveedor_id": "PROV-03",
+   "ruta_id": "R-MED-CTG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5810000,
+   "tiempo_prometido_h": 30.5,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-03-R-MED-CTG-TV-REFRI40",
+   "proveedor_id": "PROV-03",
+   "ruta_id": "R-MED-CTG",
+   "tipo_vehiculo_id": "TV-REFRI40",
+   "precio_viaje": 7500000,
+   "tiempo_prometido_h": 30.5,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-04-R-CTG-MED-TV-PLAT40",
+   "proveedor_id": "PROV-04",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5520000,
+   "tiempo_prometido_h": 30.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-04-R-CTG-MED-TV-CAMABAJA",
+   "proveedor_id": "PROV-04",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-CAMABAJA",
+   "precio_viaje": 9780000,
+   "tiempo_prometido_h": 30.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-04-R-MED-CTG-TV-PLAT40",
+   "proveedor_id": "PROV-04",
+   "ruta_id": "R-MED-CTG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5180000,
+   "tiempo_prometido_h": 29.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-04-R-MED-CTG-TV-CAMABAJA",
+   "proveedor_id": "PROV-04",
+   "ruta_id": "R-MED-CTG",
+   "tipo_vehiculo_id": "TV-CAMABAJA",
+   "precio_viaje": 9180000,
+   "tiempo_prometido_h": 29.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-05-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-05",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 5180000,
+   "tiempo_prometido_h": 22.1,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-05-R-BUN-BOG-TV-SENC20",
+   "proveedor_id": "PROV-05",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 3460000,
+   "tiempo_prometido_h": 22.1,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-05-R-BOG-BUN-TV-PLAT40",
+   "proveedor_id": "PROV-05",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4770000,
+   "tiempo_prometido_h": 21.2,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-05-R-BOG-BUN-TV-SENC20",
+   "proveedor_id": "PROV-05",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "precio_viaje": 3180000,
+   "tiempo_prometido_h": 21.2,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-06-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-06",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4220000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-06-R-CTG-MED-TV-PLAT40",
+   "proveedor_id": "PROV-06",
+   "ruta_id": "R-CTG-MED",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4860000,
+   "tiempo_prometido_h": 30.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-06-R-MED-CTG-TV-PLAT40",
+   "proveedor_id": "PROV-06",
+   "ruta_id": "R-MED-CTG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4560000,
+   "tiempo_prometido_h": 29.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-07-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-07",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4560000,
+   "tiempo_prometido_h": 52.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-08-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-08",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4660000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-08-R-BOG-BUN-TV-PLAT40",
+   "proveedor_id": "PROV-08",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4280000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-09-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-09",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4610000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-09-R-BOG-BUN-TV-PLAT40",
+   "proveedor_id": "PROV-09",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4240000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-10-R-BUN-BOG-TV-PLAT40",
+   "proveedor_id": "PROV-10",
+   "ruta_id": "R-BUN-BOG",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4510000,
+   "tiempo_prometido_h": 26.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": null
+  },
+  {
+   "tarifa_id": "TAR-PROV-06-R-BOG-BUN-TV-PLAT40-2025",
+   "proveedor_id": "PROV-06",
+   "ruta_id": "R-BOG-BUN",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "precio_viaje": 4100000,
+   "tiempo_prometido_h": 25.0,
+   "vigente_desde": "2025-01-01",
+   "vigente_hasta": "2026-06-30"
+  }
+ ]
+}

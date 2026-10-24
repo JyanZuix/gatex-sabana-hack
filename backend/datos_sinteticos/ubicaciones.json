@@ -1,0 +1,35 @@
+{
+ "sintetico": true,
+ "nota": "Datos sintéticos generados para pruebas y demo. No representan proveedores ni clientes reales.",
+ "generado_para": "2026-10-23",
+ "datos": [
+  {
+   "ubicacion_id": "BUN",
+   "nombre": "Puerto de Buenaventura",
+   "tipo": "puerto",
+   "lat": 3.8801,
+   "lon": -77.0312
+  },
+  {
+   "ubicacion_id": "BOG",
+   "nombre": "Bogotá",
+   "tipo": "ciudad",
+   "lat": 4.711,
+   "lon": -74.0721
+  },
+  {
+   "ubicacion_id": "CTG",
+   "nombre": "Puerto de Cartagena",
+   "tipo": "puerto",
+   "lat": 10.391,
+   "lon": -75.4794
+  },
+  {
+   "ubicacion_id": "MED",
+   "nombre": "Medellín",
+   "tipo": "ciudad",
+   "lat": 6.2442,
+   "lon": -75.5812
+  }
+ ]
+}

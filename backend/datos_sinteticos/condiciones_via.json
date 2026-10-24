@@ -1,0 +1,23 @@
+{
+ "sintetico": true,
+ "nota": "Datos sintéticos generados para pruebas y demo. No representan proveedores ni clientes reales.",
+ "generado_para": "2026-10-23",
+ "datos": [
+  {
+   "corredor": "Buenaventura–Bogotá",
+   "fecha_hora": "2026-10-20 08:00:00",
+   "p_evento": 0.15,
+   "demora_min_h": 4,
+   "demora_max_h": 12,
+   "descripcion": "Riesgo de bloqueo en el Alto de La Línea"
+  },
+  {
+   "corredor": "Cartagena–Medellín",
+   "fecha_hora": "2026-10-20 08:00:00",
+   "p_evento": 0.05,
+   "demora_min_h": 2,
+   "demora_max_h": 6,
+   "descripcion": "Obras en la vía con paso restringido"
+  }
+ ]
+}

@@ -1,0 +1,97 @@
+{
+ "sintetico": true,
+ "nota": "Datos sintéticos generados para pruebas y demo. No representan proveedores ni clientes reales.",
+ "generado_para": "2026-10-23",
+ "datos": [
+  {
+   "proveedor_id": "PROV-01",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 4,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-01",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "unidades_disponibles": 3,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-02",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 6,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-02",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "unidades_disponibles": 2,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 3,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-03",
+   "tipo_vehiculo_id": "TV-REFRI40",
+   "unidades_disponibles": 3,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 3,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-04",
+   "tipo_vehiculo_id": "TV-CAMABAJA",
+   "unidades_disponibles": 2,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-05",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 2,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-05",
+   "tipo_vehiculo_id": "TV-SENC20",
+   "unidades_disponibles": 4,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-06",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 5,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-07",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 1,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-08",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 3,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-09",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 2,
+   "vigente_desde": "2026-10-01"
+  },
+  {
+   "proveedor_id": "PROV-10",
+   "tipo_vehiculo_id": "TV-PLAT40",
+   "unidades_disponibles": 3,
+   "vigente_desde": "2026-10-01"
+  }
+ ]
+}
