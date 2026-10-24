@@ -1,61 +1,35 @@
-# Entrada del usuario desde Gatex2.glb
+# Gatex3 sin niebla
 
-## Aplicar en el proyecto
-Haz una copia de seguridad de main.js y escenario.js actuales. Copia los archivos de esta entrega:
-- js/main.js: sustituye el anterior.
-- js/escenario.js: sustituye el anterior.
-- js/entrada-vr.mjs: nuevo.
-- js/referencia-cono.mjs: nuevo.
-- assets/Gatex2.glb: nuevo.
+## Aplicar
+Guarda una copia de seguridad de los dos archivos JS actuales. Copia a tu proyecto:
+- js/main.js: sustituye el actual.
+- js/escenario.js: sustituye el actual.
+- assets/Gatex3.glb: archivo nuevo.
 
-Conserva index.html, inicio.js, catalogos.js y desplegables.mjs. altura-vr.mjs puede permanecer como archivo, pero ya no se importa: la entrada desde el cono reemplaza la altura fija de 1.50 m. Gatex1.glb y modelo-tablet.js tampoco se cargan. No es necesario borrarlos.
+Conserva entrada-vr.mjs, referencia-cono.mjs, catalogos.js, desplegables.mjs, inicio.js e index.html. No hace falta borrar Gatex2.glb: ya no se carga. Recarga completamente la página después de copiar los archivos.
 
-Esta entrega se preparó en outputs; no modificó la carpeta original de OneDrive ni el GLB de Downloads.
+La carpeta original de OneDrive no se modificó: esta entrega contiene los archivos preparados para sustituirlos. El GLB de Downloads tampoco se modificó; su copia entregada coincide byte a byte.
 
-## Decisiones confirmadas
-Se utiliza la punta del cono Usuario, su altura en el modelo y la dirección completa de base a punta, incluida su inclinación. La vista queda 1 cm más allá de la punta siguiendo esa dirección. El cono se oculta después de obtener la referencia. La tablet se centra frente a la persona conservando su geometría, tamaño, materiales e interfaz.
+## Cambios exactos
+En main.js se sustituye scene.fog = new THREE.Fog(...) por scene.fog = null. También se actualiza a Gatex3.glb el nombre del archivo en los mensajes de error. No se encontraron otros efectos de niebla en los módulos activos ni extensiones de niebla en el GLB.
 
-## Referencia obtenida
-Se detectó un único nodo Usuario, con una malla de 128 vértices que contiene 33 posiciones distintas: 32 forman la base circular y una es la punta. La identificación compara geometría y coplanaridad; no asume que el cono apunta hacia X, Y o Z.
+En escenario.js solo se cambia la ruta y el nombre de error de Gatex2.glb a Gatex3.glb. El cargador conserva la misma lógica: una sola instancia de escenario, retirada de la anterior cuando la nueva carga correctamente, detección de Usuario y ocultamiento del cono. No se carga Gatex2 ni se utiliza como sustituto ante errores.
 
-Tras aplicar las transformaciones del objeto:
-- Centro de base: aproximadamente (-10.757259, 5.192857, 0).
-- Punta: aproximadamente (-8.758111, 5.134486, 0).
-- Dirección normalizada base → punta: (0.999574, -0.029186, 0).
-- Vista inicial, 1 cm después: aproximadamente (-8.748115, 5.134195, 0).
+No cambian el fondo inferior azul oscuro y superior gris claro, el suelo, las luces ni la cámara. El alcance máximo de la cámara sigue en 60 m.
 
-La altura de entrada queda, por tanto, cerca de 5.13 metros en las coordenadas de este escenario, no a 1.50 m. No se baja ni se normaliza el modelo: es la altura que define tu cono. La inclinación vertical es de aproximadamente 1.67 grados hacia abajo.
+## Referencia y tablet
+Se compararon Gatex2 y Gatex3: solo cambian las transformaciones de Tarjeta1, Tarjeta2, Tarjeta3, Tarjeta4 y Tarjeta5. La geometría binaria completa y los materiales son idénticos entre versiones. Usuario conserva su geometría, posición, rotación, escala y ubicación en la jerarquía.
 
-## PC y WebXR
-En PC, la cámara usa directamente la posición y orientación deducidas. En VR, al llegar la primera pose válida del visor, se calcula un nuevo espacio de referencia con posición Y orientación completas. El desplazamiento se aplica mediante getOffsetReferenceSpace y renderer.xr.setReferenceSpace, por igual al visor y a ambos mandos.
+Se mantiene la vista 1 cm después de la punta, siguiendo la dirección completa desde la base; altura aproximada de 5.134 m según el modelo. Usuario sigue oculto. En VR el espacio de referencia se ajusta una vez por sesión para visor y mandos y conserva sus movimientos posteriores. La vista PC utiliza la misma referencia.
 
-La transformación del origen es: pose real inicial × inversa de la pose virtual deseada. Por ello, la primera pose virtual coincide con la referencia, aunque el operador inicie sentado o mirando en otra dirección. El ajuste sucede una vez en cada sesión. Después se conservan los movimientos de cabeza y manos; no se fija la altura ni se corrige la dirección continuamente.
+La tablet, su centrado frente al usuario, geometría, tamaño, formulario, desplegables, teclado y controles permanecen exactamente iguales. Se verificó por comparación del código: no hay cambios fuera de la asignación de niebla y los mensajes/ruta del modelo.
 
-Se omite el renderizado del fotograma donde se instala el espacio nuevo para que la primera vista renderizada no mezcle poses antiguas de ojos o mandos con la entrada nueva. Al salir, vuelve a configurarse la vista de PC desde el cono.
+## Alcance de cámara
+Se revisaron los vértices del modelo transformados desde el punto inicial Usuario. La distancia máxima es aproximadamente 37.34 m y la profundidad máxima en la dirección inicial es 36.11 m: no hay objetos que exijan ampliar el límite actual de 60 m desde ese punto. Algunos pueden estar fuera del campo visual inicial y requerir mirar hacia ellos; no se movieron para ponerlos frente al usuario. No se cambió el alcance ni ninguna transformación.
 
-## Tablet y escenario
-La pantalla sigue midiendo 1.15 x 0.8625 m, dentro del mismo marco sencillo. Se centra a 1.35 m delante de la dirección de entrada completa y mira hacia la persona. Su altura se deriva ahora del punto del cono; no se fuerza a 1.50 m. El centrado se realiza al entrar y la tablet permanece fija en el mundo después; no persigue a la cabeza.
+## Verificación
+Pasaron node --check para ambos archivos, la validación de cabecera y longitud del GLB, la comparación binaria con el original, la comparación del cono entre versiones y las comprobaciones de que los cambios de código se limitan a los indicados. Gatex3 no contiene SoporteTablet ni AnclajeTablet y no depende de texturas o buffers externos.
 
-No cambió el formulario, los catálogos, los desplegables, el teclado, las zonas de selección ni los eventos de los mandos. No se conectó el backend. Se conserva el fondo inferior azul oscuro y superior gris claro.
+No se ha hecho renderizado WebGL ni prueba física de esta entrega en Quest 3. Falta comprobar que las cinco tarjetas actualizadas se ven correctamente sin niebla, el encuadre desde Usuario, la entrada/salida de VR, la selección con ambos mandos y la fluidez.
 
-Gatex2.glb se añade sin mover, girar, escalar ni recolorear sus objetos. La única modificación de visualización es Usuario.visible=false, autorizada para ocultar la referencia. No se eliminan sus datos ni se cambia el archivo original. No contiene SoporteTablet ni AnclajeTablet. El cargador mantiene una única instancia del escenario; deja de cargar Gatex1.glb.
-
-Si falta Usuario, está duplicado, no puede distinguirse un cono inequívoco o falla el archivo, se informa explícitamente en el inicio y se bloquea la entrada; no se adivina un punto ni se carga el modelo anterior.
-
-## Pruebas realizadas y límites
-Pasó la sintaxis de los cuatro módulos JavaScript. Las pruebas leyeron la geometría real de Gatex2.glb, verificaron la punta/base y la igualdad binaria del archivo copiado con el original. La detección también pasó con un cono girado de forma oblicua y rechazó geometría insuficiente.
-
-La calibración se comprobó con tres alturas y tres orientaciones reales iniciales, espera de seguimiento válido, conservación de traslaciones y giros posteriores, relación mano-ojo y un ajuste por sesión. La prueba de regresión del formulario y desplegables pasó. Se comparó literalmente su código para confirmar que los controles, la geometría de tablet y la interfaz permanecen intactos.
-
-No se ha realizado una prueba visual de WebGL ni una prueba física en Quest 3. Falta confirmar que el encuadre coincide con lo esperado, que el cono no aparece, que la tablet se ve centrada y legible y que los dos mandos funcionan desde la nueva ubicación. También falta verificar fluidez y la visibilidad de los elementos lejanos con la niebla existente.
-
-## Ejecutar
-Desde la carpeta completa del proyecto, con Python instalado:
-
-    py -m http.server 8000
-
-En Ubuntu/WSL:
-
-    python3 -m http.server 8000 --bind 0.0.0.0
-
-Prueba PC: http://localhost:8000/?preview=1. Para Quest utiliza una URL HTTPS válida sin preview=1. Recarga completamente tras copiar los archivos y no abras index.html mediante doble clic.
+Para PC utiliza la página servida por HTTP y ?preview=1. Para Quest usa HTTPS sin preview=1. No abras index.html con doble clic.

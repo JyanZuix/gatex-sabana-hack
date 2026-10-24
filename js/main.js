@@ -21,7 +21,7 @@ fondoCtx.fillStyle=degradado;fondoCtx.fillRect(0,0,256,128);
 const fondoTexture=new THREE.CanvasTexture(fondo);
 fondoTexture.mapping=THREE.EquirectangularReflectionMapping;fondoTexture.colorSpace=THREE.SRGBColorSpace;
 scene.background=fondoTexture; // Azul oscuro abajo y gris claro arriba, sin editar materiales del GLB.
-scene.fog = new THREE.Fog('#e9edf2', 8, 28);
+scene.fog = null; // Sin niebla: las tarjetas y los objetos lejanos conservan su visibilidad.
 const camera = new THREE.PerspectiveCamera(65, innerWidth / innerHeight, .05, 60);
 camera.position.set(0, 1.5, 0); // WebXR sustituye esta pose por la del visor.
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -273,8 +273,8 @@ async function initialize() {
         const resultado=await cargarEscenario(scene);
         puntoEntrada=resultado.entrada;entradaVR.configurar(puntoEntrada);restablecerVistaPC();
     } catch(error) {
-        console.error('No se pudo cargar Gatex2.glb:',error);
-        estado.textContent='No se pudo cargar assets/Gatex2.glb. Comprueba que copiaste el archivo y sirve la página por HTTP/HTTPS. Detalle: '+error.message;
+        console.error('No se pudo cargar Gatex3.glb:',error);
+        estado.textContent='No se pudo cargar assets/Gatex3.glb. Comprueba que copiaste el archivo y sirve la página por HTTP/HTTPS. Detalle: '+error.message;
         entrar.disabled=true;return; // Error explícito: no carga otro modelo ni permite entrar fingiendo que terminó.
     }
     if(preview){entrar.textContent='Abrir prueba en PC';entrar.disabled=false;estado.textContent='Modo de desarrollo. Esta vista no verifica el funcionamiento del visor.';return;}
@@ -309,5 +309,6 @@ renderer.setAnimationLoop((tiempo,frame)=>{
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
 initialize();
+
 
 
