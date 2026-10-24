@@ -4,7 +4,7 @@ const alturaVR = new AlturaInicialVR(1.5);
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { CATALOGOS } from './catalogos.js';
 import { Desplegable, hitZone, menuLayout } from './desplegables.mjs';
-import { cargarModeloTablet } from './modelo-tablet.js';
+// Tablet independiente: no se carga el GLB ni se utiliza AnclajeTablet.
 
 const inicio = document.getElementById('inicio'); // Pantalla 1: una única acción de entrada.
 const entrar = document.getElementById('entrar');
@@ -30,9 +30,19 @@ const grid = new THREE.GridHelper(30, 30, '#b8c6d5', '#cbd3dd');
 grid.position.y = .002; scene.add(grid); // Referencia espacial sin modelos ni texturas pesadas.
 
 const tablet = new THREE.Group();
-tablet.position.set(0, 1.48, -1.35); scene.add(tablet); // Tablet fija frente al usuario, sin movimiento artificial de cámara.
+tablet.position.set(0, 1.5, -1.35); scene.add(tablet); // Centro a la altura de la vista inicial, a 1.35 m de distancia.
+let centrarAlEntrar = false;
+function centrarTablet(posicion, orientacion) {
+    const frente = new THREE.Vector3(0,0,-1).applyQuaternion(orientacion);
+    frente.y = 0; // Se centra en la dirección horizontal inicial, sin inclinarse con la cabeza.
+    if(frente.lengthSq()<1e-8)frente.set(0,0,-1);
+    frente.normalize();
+    tablet.position.copy(posicion).addScaledVector(frente,1.35);
+    tablet.position.y=1.5;
+    tablet.lookAt(new THREE.Vector3(posicion.x,1.5,posicion.z)); // Su cara mira al usuario; después permanece fija en la escena.
+}
 const shell = new THREE.Mesh(new THREE.BoxGeometry(1.2, .9, .04), new THREE.MeshStandardMaterial({color:'#26344c', roughness:.5}));
-tablet.add(shell); // Carcasa provisional sustituible por un GLB de Blender.
+tablet.add(shell); // Marco definitivo sencillo, sin soporte ni anclajes externos.
 const canvas = document.createElement('canvas'); canvas.width = 1440; canvas.height = 1080;
 const ctx = canvas.getContext('2d');
 const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
@@ -52,7 +62,7 @@ const raycaster = new THREE.Raycaster(); const rotation = new THREE.Matrix4();
 const controllers = [], selecting = new Set();
 const menu = new Desplegable(CATALOGOS);
 let hovered = new Set(), keyboardFocus = false;
-let modelWarning = '';
+
 function openField(index) {
     const field = fields[index];
     if (CATALOGOS[field.id]) {
@@ -112,7 +122,7 @@ function draw() {
     text('Backend pendiente de conexión.',996,355,20,'#5f6e83');
     text('El borrador no se guarda al salir.',996,409,20,'#5f6e83');
     text('Catálogos de ejemplo del proyecto.',996,451,19,'#5f6e83');
-    if(modelWarning) text('Modelo no disponible: vista provisional.',996,498,17,'#8a4313');
+
     card(42,615,1353,63,'#e3ebf7');
     text(active<0?'Selecciona un campo con el gatillo del mando.':`Editando: ${fields[active].label}`,60,655,23,'#23446d',600);
     if(active>=0) drawKeyboard();
@@ -235,10 +245,10 @@ entrar.addEventListener('click',async()=>{
         session=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']}); // Solicitud dentro del clic: conserva la activación del usuario.
         xrSession=session;
         session.addEventListener('end',()=>{
-            xrSession=null;alturaVR.reset();camera.position.set(0,1.5,0);selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
+            xrSession=null;alturaVR.reset();centrarAlEntrar=false;camera.position.set(0,1.5,0);camera.quaternion.identity();centrarTablet(camera.position,camera.quaternion);selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
             estado.textContent='Sesión terminada. Puedes volver a entrar.';entrar.focus();
         },{once:true});
-        await renderer.xr.setSession(session);alturaVR.iniciar(renderer.xr.getReferenceSpace());inicio.hidden=true;draw(); // Entrada directa a la sección 2.
+        await renderer.xr.setSession(session);alturaVR.iniciar(renderer.xr.getReferenceSpace());centrarAlEntrar=true;inicio.hidden=true;draw(); // Entrada directa a la sección 2.
     } catch(error) {
         console.error(error);if(session)await session.end().catch(()=>{});xrSession=null;
         estado.textContent='No se pudo entrar en VR. Comprueba los permisos del navegador y el área de juego e inténtalo de nuevo.';
@@ -247,7 +257,7 @@ entrar.addEventListener('click',async()=>{
 });
 async function initialize() {
     draw();
-    try {await cargarModeloTablet(scene,screen,tablet);} catch(error) {console.error(error);modelWarning=error.message;draw();}
+    centrarTablet(camera.position,camera.quaternion); // Vista de escritorio centrada y sin depender de modelos externos.
     if(preview){entrar.textContent='Abrir prueba en PC';entrar.disabled=false;estado.textContent='Modo de desarrollo. Esta vista no verifica el funcionamiento del visor.';return;}
     if(location.protocol==='file:'||!isSecureContext){estado.textContent='Para usar VR abre esta página desde una dirección HTTPS válida en Meta Quest Browser. No abras index.html con doble clic.';return;}
     try {
@@ -261,6 +271,13 @@ async function initialize() {
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 renderer.setAnimationLoop((tiempo,frame)=>{
     alturaVR.actualizar(frame,renderer.xr); // Inicio sentado o de pie a 1.50 m; después seguimiento libre.
+    if(centrarAlEntrar && frame && !alturaVR.pendiente) {
+        const pose=frame.getViewerPose(renderer.xr.getReferenceSpace());
+        if(pose) {
+            centrarTablet(new THREE.Vector3().copy(pose.transform.position),new THREE.Quaternion().copy(pose.transform.orientation));
+            centrarAlEntrar=false; // Se centra una vez: no persigue al visor al mirar a otro lado.
+        }
+    }
     const hoverIds=[];
     for(const {controller,line} of controllers) {
         const hit=renderer.xr.isPresenting?controllerHit(controller):null;
