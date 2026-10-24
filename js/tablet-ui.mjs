@@ -10,7 +10,8 @@ export class TabletOperaciones {
             {id:'fecha_servicio',label:'Fecha del servicio',kind:'date',value:'',hint:'AAAA-MM-DD'},
             {id:'plazo_h',label:'Plazo (horas)',kind:'number',value:'',hint:'Ej. 33'},
             {id:'presupuesto',label:'Presupuesto (miles de COP)',kind:'number',value:'',hint:'Ej. 6.000 = $6.000.000 COP'},
-            {id:'peso',label:'Peso (kg)',kind:'number',value:'',hint:'Ej. 24.000 = 24 toneladas'},
+            {id:'n_contenedores',label:"Contenedores de 20'",kind:'number',value:'',hint:'Cantidad entera, mínimo 1'},
+            {id:'peso',label:'Peso por contenedor (kg)',kind:'number',value:'',hint:'Peso de cada contenedor, en kg'},
             {id:'origen',label:'Ciudad / puerto de origen',kind:'select',value:undefined,hint:'Seleccionar origen'},
             {id:'destino',label:'Ciudad / puerto de destino',kind:'select',value:undefined,hint:'Seleccionar destino'},
             {id:'carga',label:'Tipo de carga',kind:'select',value:undefined,hint:'Seleccionar carga'},
@@ -57,7 +58,7 @@ export class TabletOperaciones {
         this.onDirty();
     }
     drawFields() {
-        const list=this.page===0?this.fields.slice(0,5):this.fields.slice(5);
+        const list=this.page===0?this.fields.slice(0,6):this.fields.slice(6);
         list.forEach((f,i)=>{
             const x=42+(i%2)*452,y=214+Math.floor(i/2)*121,w=425;
             this.texto(f.label,x,y+22,22,'#334760',600);this.rect(x,y+33,w,58,this.active===f.id?'#dbe9ff':'white');
@@ -68,7 +69,7 @@ export class TabletOperaciones {
             if(!disabled)this.zones.push({id:'field-'+f.id,x,y:y+33,w,h:58,action:()=>this.openField(f.id)});
             if(this.errores[f.id])this.texto(this.errores[f.id].slice(0,53),x,y+112,16,'#b42318');
         });
-        if(this.page===0)this.button('clients','Ver clientes registrados',496,490,400,50,()=>this.openMenu('cliente'),!!this.catalogos&&!this.catalogLoading);
+        if(this.page===0)this.button('clients','Ver clientes',250,213,217,30,()=>this.openMenu('cliente'),!!this.catalogos&&!this.catalogLoading);
     }
     setPage(page) {this.page=page;this.active=null;this.menu.close();this.focus=0;this.keyboardFocus=false;this.draw();}
     openField(id) {
@@ -103,7 +104,7 @@ export class TabletOperaciones {
         if(!this.active)return;const f=this.field(this.active);this.consultas.cancelar();
         if(key==='DEL')f.value=Array.from(f.value).slice(0,-1).join('');
         else if(key==='DONE'){const id=this.active;this.active=null;if(id==='fecha_servicio'&&this.catalogos)this.conectar();}
-        else if(key==='NEXT'){const index=(this.fields.indexOf(f)+1)%this.fields.length;const next=this.fields[index];this.page=index>=5?1:0;this.active=null;this.openField(next.id);return;}
+        else if(key==='NEXT'){const index=(this.fields.indexOf(f)+1)%this.fields.length;const next=this.fields[index];this.page=index>=6?1:0;this.active=null;this.openField(next.id);return;}
         else if(String(f.value).length<90)f.value+=key;
         this.errores[f.id]=null;this.dirty=true;this.draw();
     }
@@ -134,7 +135,7 @@ export class TabletOperaciones {
         if(!['panel','arriba'].includes(this.politicaCasi)){this.mensaje='Falta confirmar cómo presentar los casi elegibles.';this.draw();return;}
         if(this.mappingErrors.length){this.mensaje='La asociación de proveedores y tarjetas está incompleta. Revisa los nombres del catálogo.';this.erroresGlobal=true;this.draw();return;}
         const validation=crearSolicitud(this.values(),this.catalogos);this.errores=validation.errores;
-        if(Object.keys(this.errores).length){this.page=this.fields.findIndex(f=>this.errores[f.id])<5?0:1;this.mensaje='Revisa los campos señalados. No se envió la solicitud.';this.draw();return;}
+        if(Object.keys(this.errores).length){this.page=this.fields.findIndex(f=>this.errores[f.id])<6?0:1;this.mensaje='Revisa los campos señalados. No se envió la solicitud.';this.draw();return;}
         this.active=null;this.menu.close();this.mensaje='Evaluando solicitud…';this.erroresGlobal=false;
         const pending=this.consultas.evaluar(validation.datos);this.draw();
         try {
@@ -142,7 +143,7 @@ export class TabletOperaciones {
             this.onResultados(evaluation,this.vinculos,this.politicaCasi);
             this.resultado=evaluation;this.dirty=false;this.page=2;this.detallePage=0;this.discardPage=0;this.casiPage=0;this.proveedorActual=evaluation.candidatos[0]?.proveedor_id||null;
             this.mensaje=evaluation.sin_candidatos?'No hay proveedores adecuados. Revisa descartados y qué podría flexibilizarse.':`${evaluation.candidatos.length} candidatos disponibles. La decisión final es del operador.`;
-        } catch(error){this.mensaje=error.message;this.erroresGlobal=true;for(const item of error.errores||[]){const field=CAMPOS_API[item.campo];if(field)this.errores[field]=item.mensaje;}if(Object.keys(this.errores).length)this.page=this.fields.findIndex(f=>this.errores[f.id])<5?0:1;}
+        } catch(error){this.mensaje=error.message;this.erroresGlobal=true;for(const item of error.errores||[]){const field=CAMPOS_API[item.campo];if(field)this.errores[field]=item.mensaje;}if(Object.keys(this.errores).length)this.page=this.fields.findIndex(f=>this.errores[f.id])<6?0:1;}
         finally {this.draw();}
     }
     nuevaConsulta() {
@@ -159,7 +160,7 @@ export class TabletOperaciones {
         if(!p){this.texto('No hay proveedores adecuados.',42,291,29,'#9a3412',700);this.texto('Revisa los motivos y las alternativas del panel derecho.',42,338,22);return;}
         this.texto(p.nombre,42,282,26,'#175cde',700);
         const money=n=>n==null?'No disponible':new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n);
-        const rows=[`Vehículo: ${p.vehiculos.tipo} · Cantidad: ${p.vehiculos.cantidad}`,`Costo: ${money(p.costo_cop)} · Profit esperado: ${money(p.profit.esperado_cop)}`,`Profit P10: ${money(p.profit.p10_cop)} · Margen: ${p.profit.margen_pct==null?'No disponible':p.profit.margen_pct+' %'}`,`Tránsito P50: ${p.tiempo_h.p50} h · P90: ${p.tiempo_h.p90} h`,`A tiempo: ${(p.tiempo_h.prob_a_tiempo*100).toFixed(1)} % · Incidente: ${(p.prob_incidente*100).toFixed(1)} %`,`Desempeño: ${p.desempeno.valor} · Confianza: ${p.confianza.valor} (${p.confianza.nivel})`,p.explicacion,...p.riesgos.map(s=>'Riesgo: '+s),...p.avisos.map(s=>'Aviso: '+s)].flatMap(s=>this.wrap(s,75));
+        const rows=[`Vehículo: ${p.vehiculos.tipo} · Cantidad: ${p.vehiculos.cantidad}`,`Costo: ${money(p.costo_cop)} · Profit esperado: ${money(p.profit.esperado_cop)}`,`Profit P10: ${money(p.profit.p10_cop)} · Margen: ${p.profit.margen_pct==null?'No disponible':p.profit.margen_pct+' %'}`,`Tránsito P50: ${p.tiempo_h.p50} h · P90: ${p.tiempo_h.p90} h`,`A tiempo: ${(p.tiempo_h.prob_a_tiempo*100).toFixed(1)} %`+(Number.isFinite(p.prob_incidente)?` · Incidente: ${(p.prob_incidente*100).toFixed(1)} %`:''),`Desempeño: ${p.desempeno.valor} · Confianza: ${p.confianza.valor} (${p.confianza.nivel})`,...(Array.isArray(p.vehiculos.contenedores_por_vehiculo)?['Contenedores por vehículo: '+p.vehiculos.contenedores_por_vehiculo.join(' · ')]:[]),p.explicacion,...p.riesgos.map(s=>'Riesgo: '+s),...p.avisos.map(s=>'Aviso: '+s)].flatMap(s=>this.wrap(s,75));
         const pages=Math.max(1,Math.ceil(rows.length/7));this.detallePage=Math.min(this.detallePage,pages-1);
         rows.slice(this.detallePage*7,this.detallePage*7+7).forEach((s,i)=>this.texto(s,42,325+i*29,21));
         this.button('detail-prev','Texto anterior',42,540,210,48,()=>{this.detallePage--;this.draw();},this.detallePage>0);

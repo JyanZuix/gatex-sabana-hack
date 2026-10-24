@@ -1,0 +1,9 @@
+GATEX — QUEST-DIAG-01
+
+Esta es una copia de frontend. No se ha publicado automáticamente.
+Publica en Netlify ESTA carpeta: index.html debe quedar en la raíz del sitio junto con js, assets y _headers.
+Abre la URL publicada directamente en Meta Quest Browser y recarga. Debe verse QUEST-DIAG-01.
+Si Entrar a VR falla, envía una foto del diagnóstico visible.
+El backend corre por separado. Su URL se configura en js/config.js.
+La tablet ahora pide cantidad de contenedores de 20 pies y peso POR CONTENEDOR en kg.
+No se ha probado físicamente en Quest 3 ni contra el servidor real durante esta revisión.

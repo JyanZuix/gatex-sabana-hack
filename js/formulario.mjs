@@ -20,14 +20,16 @@ export function crearSolicitud(values,catalogos) {
     if(!catalogos.tipos_carga.some(c=>c.id===values.carga))errores.carga='Selecciona un tipo de carga.';
     if(values.vehiculo!==null&&!catalogos.tipos_vehiculo.some(v=>v.id===values.vehiculo))errores.vehiculo='Selecciona un vehículo del catálogo o la opción automática.';
     if(!fechaValida(values.fecha_servicio))errores.fecha_servicio='Utiliza una fecha válida AAAA-MM-DD.';
+    const contenedores=numeroES(values.n_contenedores);
+    if(!Number.isSafeInteger(contenedores)||contenedores<1)errores.n_contenedores='Introduce una cantidad entera de contenedores, mínimo 1.';
     const peso=numeroES(values.peso),plazo=numeroES(values.plazo_h),presupuesto=numeroES(values.presupuesto);
-    if(!Number.isFinite(peso)||peso<=0)errores.peso='El peso en kg debe ser mayor que cero.';
+    if(!Number.isFinite(peso)||peso<=0)errores.peso='El peso por contenedor en kg debe ser mayor que cero.';
     if(!Number.isFinite(plazo)||plazo<=0)errores.plazo_h='El plazo en horas debe ser mayor que cero.';
     if(!Number.isFinite(presupuesto)||presupuesto<0||!Number.isSafeInteger(presupuesto*1000))errores.presupuesto='Introduce un presupuesto en miles de COP que produzca pesos enteros.';
     if(Object.keys(errores).length)return {errores};
-    return {errores:{},datos:{cliente_id:clientes[0].id,origen_id:values.origen,destino_id:values.destino,fecha_servicio:values.fecha_servicio,plazo_h:plazo,toneladas:peso/1000,presupuesto_cop:presupuesto*1000,tipo_carga:values.carga,tipo_vehiculo_id:values.vehiculo}};
+    return {errores:{},datos:{cliente_id:clientes[0].id,origen_id:values.origen,destino_id:values.destino,fecha_servicio:values.fecha_servicio,plazo_h:plazo,n_contenedores:contenedores,peso_kg:peso,presupuesto_cop:presupuesto*1000,tipo_carga:values.carga,tipo_vehiculo_id:values.vehiculo}};
 }
-export const CAMPOS_API={cliente_id:'cliente',origen_id:'origen',destino_id:'destino',fecha_servicio:'fecha_servicio',plazo_h:'plazo_h',toneladas:'peso',presupuesto_cop:'presupuesto',tipo_carga:'carga',tipo_vehiculo_id:'vehiculo'};
+export const CAMPOS_API={cliente_id:'cliente',origen_id:'origen',destino_id:'destino',fecha_servicio:'fecha_servicio',plazo_h:'plazo_h',peso_kg:'peso',n_contenedores:'n_contenedores',toneladas:'peso',presupuesto_cop:'presupuesto',tipo_carga:'carga',tipo_vehiculo_id:'vehiculo'};
 export class Consultas {
     constructor(api) {this.api=api;this.version=0;this.control=null;this.ocupado=false;}
     cancelar() {this.version++;this.control?.abort();this.control=null;this.ocupado=false;}

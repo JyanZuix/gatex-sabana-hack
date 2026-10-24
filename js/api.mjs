@@ -21,9 +21,14 @@ export class API {
         } finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
     }
     salud(signal) {return this.llamar('GET','/salud',undefined,signal);}
-    catalogos(origen='',fecha='',signal) {
+    async catalogos(origen='',fecha='',signal) {
         const query=new URLSearchParams();if(origen)query.set('origen_id',origen);if(fecha)query.set('fecha_servicio',fecha);
-        return this.llamar('GET','/catalogos/formulario'+(query.size?'?'+query:''),undefined,signal);
+        const [formulario,oficiales]=await Promise.all([
+            this.llamar('GET','/catalogos/formulario'+(query.size?'?'+query:''),undefined,signal),
+            this.llamar('GET','/catalogos',undefined,signal)
+        ]);
+        if(!Array.isArray(oficiales?.tipos_vehiculo))throw new ErrorAPI('El catálogo oficial de vehículos llegó incompleto.');
+        return {...formulario,tipos_vehiculo:oficiales.tipos_vehiculo.map(v=>({id:v.tipo_vehiculo_id,nombre:v.nombre}))}; // Catálogo oficial: el backend define qué vehículos siguen vigentes.
     }
     async evaluar(datos,signal) {
         const data=await this.llamar('POST','/solicitudes/evaluar',datos,signal);
@@ -32,7 +37,7 @@ export class API {
         const text=s=>typeof s==='string';
         const list=values=>Array.isArray(values)&&values.every(text);
         for(const p of data.candidatos) {
-            if(!text(p.proveedor_id)||!text(p.nombre)||!text(p.vehiculos?.tipo)||!number(p.vehiculos?.cantidad)||!number(p.costo_cop)||!number(p.profit?.esperado_cop)||!number(p.profit?.p10_cop)||!(p.profit?.margen_pct===null||number(p.profit?.margen_pct))||!number(p.tiempo_h?.p50)||!number(p.tiempo_h?.p90)||!number(p.tiempo_h?.prob_a_tiempo)||!number(p.prob_incidente)||!number(p.desempeno?.valor)||!number(p.confianza?.valor)||!text(p.confianza?.nivel)||!text(p.explicacion)||!list(p.riesgos)||!list(p.avisos))throw new ErrorAPI('Un candidato llegó incompleto. No se modificaron las tarjetas.');
+            if(!text(p.proveedor_id)||!text(p.nombre)||!text(p.vehiculos?.tipo)||!number(p.vehiculos?.cantidad)||!number(p.costo_cop)||!number(p.profit?.esperado_cop)||!number(p.profit?.p10_cop)||!(p.profit?.margen_pct===null||number(p.profit?.margen_pct))||!number(p.tiempo_h?.p50)||!number(p.tiempo_h?.p90)||!number(p.tiempo_h?.prob_a_tiempo)||(p.prob_incidente!=null&&!number(p.prob_incidente))||!number(p.desempeno?.valor)||!number(p.confianza?.valor)||!text(p.confianza?.nivel)||!text(p.explicacion)||!list(p.riesgos)||!list(p.avisos))throw new ErrorAPI('Un candidato llegó incompleto. No se modificaron las tarjetas.');
         }
         for(const p of data.cancelados)if(!text(p.proveedor_id)||!text(p.nombre)||!Array.isArray(p.razones)||p.razones.some(r=>!text(r.mensaje)))throw new ErrorAPI('La lista de descartados llegó incompleta.');
         for(const p of data.casi_elegibles)if(!text(p.proveedor_id)||!text(p.nombre)||!text(p.razon?.mensaje)||!text(p.flexibilizar))throw new ErrorAPI('La lista de casi elegibles llegó incompleta.');

@@ -1,0 +1,7 @@
+/
+  Cache-Control: no-store
+/index.html
+  Cache-Control: no-store
+/js/*
+  Content-Type: text/javascript; charset=utf-8
+  Cache-Control: no-store
