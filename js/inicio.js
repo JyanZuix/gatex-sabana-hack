@@ -5,4 +5,4 @@ function informar(error) {
     window.GatexDiagnostico?.error(error);
     estado.textContent='No se pudo cargar la aplicación: '+(error?.message||error||'error desconocido')+'. Comprueba que se hayan publicado js/ y assets/ completos.';
 }
-import('./main.js?v=QUEST-DIAG-01').catch(informar);
+import('./main.js?v=QUEST-CAT-02').catch(informar);

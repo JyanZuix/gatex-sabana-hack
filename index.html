@@ -15,18 +15,18 @@ button{border:0;border-radius:14px;padding:20px 42px;background:#175cde;color:wh
 </script> <!-- Módulos de la misma versión; requieren acceso a internet. -->
 </head>
 <body>
-<main id="inicio"><p id="version">QUEST-DIAG-01 · revisión de entrada</p><button id="entrar" disabled>Entrar a VR</button><p id="estado" role="status" aria-live="polite">Comprobando el acceso a realidad virtual…</p><pre id="diagnostico" aria-live="polite"></pre><noscript>Activa JavaScript para iniciar esta aplicación.</noscript></main>
+<main id="inicio"><p id="version">QUEST-CAT-02 · revisión de catálogos</p><button id="entrar" disabled>Entrar a VR</button><p id="estado" role="status" aria-live="polite">Comprobando el acceso a realidad virtual…</p><pre id="diagnostico" aria-live="polite"></pre><noscript>Activa JavaScript para iniciar esta aplicación.</noscript></main>
 <div id="aviso" hidden role="status">Vista de prueba en PC · Haz clic en la tablet. Usa Tab, las flechas y Enter para navegar.</div>
 <script>
 (() => {
     const estado=document.getElementById('estado'),panel=document.getElementById('diagnostico'),boton=document.getElementById('entrar');
     const lineas=[];
-    const diagnostico={version:'QUEST-DIAG-01',appLista:false,clics:0,
+    const diagnostico={version:'QUEST-CAT-02',appLista:false,clics:0,
         registrar(texto){lineas.push(texto);if(lineas.length>9)lineas.shift();panel.textContent=lineas.join('\n');},
         error(error){const mensaje=error?.message||String(error||'Error desconocido');this.registrar('ERROR: '+mensaje);estado.textContent='Error: '+mensaje;}
     };
     window.GatexDiagnostico=diagnostico;
-    diagnostico.registrar('HTML nuevo cargado · QUEST-DIAG-01');
+    diagnostico.registrar('HTML nuevo cargado · QUEST-CAT-02');
     diagnostico.registrar('HTTPS: '+(window.isSecureContext?'sí':'no')+' · WebXR: '+(navigator.xr?'presente':'ausente'));
     diagnostico.registrar('Página incrustada: '+(window.top!==window?'sí; abre la URL directamente':'no'));
     boton.addEventListener('click',()=>{
@@ -41,7 +41,7 @@ button{border:0;border-radius:14px;padding:20px 42px;background:#175cde;color:wh
     setTimeout(()=>{if(!diagnostico.appLista)diagnostico.registrar('La carga aún no ha habilitado VR. Último paso registrado arriba.');},20000);
 })();
 </script>
-<script type="module" src="./js/inicio.js?v=QUEST-DIAG-01"></script>
+<script type="module" src="./js/inicio.js?v=QUEST-CAT-02"></script>
 </body>
 </html>
 

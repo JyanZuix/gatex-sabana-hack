@@ -17,8 +17,8 @@ export class TabletOperaciones {
             {id:'carga',label:'Tipo de carga',kind:'select',value:undefined,hint:'Seleccionar carga'},
             {id:'vehiculo',label:'Tipo de vehículo',kind:'select',value:null,hint:'Automático (backend)'}
         ];
-        this.opciones={};this.menu=new Desplegable(this.opciones);this.consultas=new Consultas(api);this.zones=[];this.hover=new Set();
-        this.page=0;this.active=null;this.focus=0;this.keyboardFocus=false;this.catalogos=null;this.catalogLoading=false;this.catalogVersion=0;this.catalogControl=null;
+        this.opciones={};this.etiquetas={};this.menu=new Desplegable(this.opciones);this.consultas=new Consultas(api);this.zones=[];this.hover=new Set();
+        this.page=0;this.active=null;this.focus=0;this.keyboardFocus=false;this.catalogos=null;this.catalogLoading=false;this.catalogReady=false;this.catalogEstados={};this.catalogVersion=0;this.catalogControl=null;
         this.errores={};this.mensaje='Conecta con el backend para cargar las opciones.';this.resultado=null;this.proveedorActual=null;this.detallePage=0;this.discardPage=0;this.casiPage=0;this.dirty=false;
         this.vinculos=new Map();this.mappingErrors=[];this.draw();
     }
@@ -39,13 +39,13 @@ export class TabletOperaciones {
         this.button('page1','Ruta y carga',327,92,270,56,()=>this.setPage(1));
         this.button('page2','Resultados',612,92,270,56,()=>this.setPage(2),!!this.resultado);
         this.button('connect','Reconectar',990,92,205,56,()=>this.conectar(),!this.catalogLoading&&!this.consultas.ocupado);
-        this.texto(this.catalogLoading?'Cargando opciones del servidor…':this.catalogos?(this.catalogos.repositorio.includes('simulad')?'Conectado a datos sintéticos de prueba':'Catálogos obtenidos del backend'):'Sin conexión a los catálogos',42,187,22,'#586a82');
+        this.texto(this.catalogLoading?'Cargando opciones del servidor…':this.catalogReady?(this.catalogos.repositorio.includes('simulad')?'Conectado a datos sintéticos de prueba':'Catálogos obtenidos del backend'):this.catalogos?'Catálogos incompletos: revisa el error y pulsa Reconectar':'Sin conexión a los catálogos',42,187,22,'#586a82');
         if(this.page===2)this.drawResultados();else this.drawFields();
         this.drawDescartados();
-        const canEvaluate=!!this.catalogos&&!this.catalogLoading&&!this.consultas.ocupado;
+        const canEvaluate=this.catalogReady&&!this.catalogLoading&&!this.consultas.ocupado;
         this.button('evaluate',this.consultas.ocupado?'Evaluando…':'Evaluar solicitud',42,606,420,62,()=>this.evaluar(),canEvaluate,true);
         this.button('new','Nueva consulta',477,606,420,62,()=>this.nuevaConsulta());
-        const message=this.wrap(this.mensaje,88);message.slice(0,2).forEach((line,i)=>this.texto(line,48,696+i*27,21,this.erroresGlobal?'#9a3412':'#23446d'));
+        const message=this.wrap(this.mensaje,88);message.slice(0,3).forEach((line,i)=>this.texto(line,48,696+i*27,21,this.erroresGlobal?'#9a3412':'#23446d'));
         if(this.active)this.drawKeyboard();
         else {
             this.texto('La evaluación apoya la decisión; no asigna un proveedor.',48,837,22,'#586a82');
@@ -62,12 +62,13 @@ export class TabletOperaciones {
         list.forEach((f,i)=>{
             const x=42+(i%2)*452,y=214+Math.floor(i/2)*121,w=425;
             this.texto(f.label,x,y+22,22,'#334760',600);this.rect(x,y+33,w,58,this.active===f.id?'#dbe9ff':'white');
-            const option=this.opciones[f.id]?.find(o=>o.value===f.value),label=option?.label??(f.value??f.hint);
+            const option=this.opciones[f.id]?.find(o=>o.value===f.value),label=option?.label??(this.etiquetas[f.id]&&this.etiquetas[f.id].value===f.value?this.etiquetas[f.id].label:(f.value??f.hint));
             const c=this.ctx;c.save();c.beginPath();c.rect(x+10,y+35,w-55,54);c.clip();this.texto(label||f.hint,x+14,y+72,22,f.value!==undefined&&f.value!==''?'#16243b':'#738299');c.restore();
-            const disabled=f.kind==='select'&&this.catalogLoading;
+            const estadoCampo=f.kind==='select'?this.estadoCampo(f.id):null;
             if(f.kind==='select')this.texto('▾',x+w-35,y+72,24,'#175cde');
-            if(!disabled)this.zones.push({id:'field-'+f.id,x,y:y+33,w,h:58,action:()=>this.openField(f.id)});
+            this.zones.push({id:'field-'+f.id,x,y:y+33,w,h:58,action:()=>this.openField(f.id)});
             if(this.errores[f.id])this.texto(this.errores[f.id].slice(0,53),x,y+112,16,'#b42318');
+            else if(estadoCampo)this.texto(estadoCampo.texto,x,y+112,16,estadoCampo.tipo==='error'?'#b42318':'#586a82');
         });
         if(this.page===0)this.button('clients','Ver clientes',250,213,217,30,()=>this.openMenu('cliente'),!!this.catalogos&&!this.catalogLoading);
     }
@@ -76,26 +77,33 @@ export class TabletOperaciones {
         const field=this.field(id);if(field.kind==='select'){this.openMenu(id);return;}
         this.menu.close();this.active=id;this.keyboardFocus=false;this.draw();
     }
+    estadoCampo(id) {
+        if(this.catalogLoading)return {tipo:'cargando',texto:'Cargando opciones…'};
+        const tipo=this.catalogEstados[id]||(!this.catalogos?'error':'disponible');
+        if(tipo==='error')return {tipo,texto:'Sin catálogo válido · pulsa Reconectar'};
+        if(id==='destino'&&!this.field('origen').value)return {tipo:'pendiente',texto:'Selecciona primero un origen'};
+        if(!this.opciones[id]?.length)return {tipo:'vacio',texto:'Sin opciones disponibles'};
+        return {tipo:'disponible',texto:'Opciones disponibles'};
+    }
     openMenu(id) {
-        if(!this.catalogos){this.mensaje='No hay un catálogo cargado. Pulsa Reconectar.';this.draw();return;}
-        if(id==='destino'&&!this.field('origen').value){this.mensaje='Selecciona primero un origen.';this.draw();return;}
         if(!this.opciones[id])this.opciones[id]=[];
         if(this.menu.field===id)this.menu.close();else this.menu.open(id,this.field(id).value);
         this.active=null;this.keyboardFocus=false;this.draw();
     }
     drawMenu() {
         const c=this.ctx;c.fillStyle='rgba(14,27,48,.50)';c.fillRect(0,0,1440,1080);this.rect(260,330,920,545,'white');
-        this.texto(this.field(this.menu.field).label,295,383,30,'#16243b',700);this.texto('Opciones recibidas de la API',295,420,20,'#586a82');this.zones=[];
-        for(const o of menuLayout(this.menu).entries)this.button('option-'+o.index,o.label,o.x,o.y,o.w,o.h,()=>this.choose(o.index),true,false);
-        if(!this.menu.options.length)this.texto('No hay opciones para esta selección.',295,493,24);
-        if(this.menu.page>0)this.button('previous','Anterior',295,770,270,58,()=>{this.menu.changePage(-1);this.draw();});
-        if(this.menu.page<this.menu.pages-1)this.button('next-page','Siguiente',875,770,270,58,()=>{this.menu.changePage(1);this.draw();});
+        this.texto(this.field(this.menu.field).label,295,383,30,'#16243b',700);const estado=this.estadoCampo(this.menu.field);this.texto(estado.tipo==='disponible'?'Opciones recibidas de la API':estado.texto,295,420,20,'#586a82');this.zones=[];
+        for(const o of (estado.tipo==='disponible'?menuLayout(this.menu).entries:[]))this.button('option-'+o.index,o.label,o.x,o.y,o.w,o.h,()=>this.choose(o.index),true,false);
+        if(estado.tipo!=='disponible'){this.texto(estado.texto,295,493,24);if(estado.tipo==='error')this.button('retry-menu','Reintentar conexión',295,580,400,58,()=>this.conectar(),!this.catalogLoading);}
+        if(estado.tipo==='disponible'&&this.menu.page>0)this.button('previous','Anterior',295,770,270,58,()=>{this.menu.changePage(-1);this.draw();});
+        if(estado.tipo==='disponible'&&this.menu.page<this.menu.pages-1)this.button('next-page','Siguiente',875,770,270,58,()=>{this.menu.changePage(1);this.draw();});
         this.texto(`${this.menu.page+1} / ${this.menu.pages}`,672,807,24,'#586a82');
         this.button('close-menu','Cerrar',970,348,175,54,()=>{this.menu.close();this.draw();});
         this.focus=Math.max(0,this.zones.findIndex(z=>z.id==='option-'+this.menu.index));
         this.zones.push({id:'dismiss',x:0,y:0,w:1440,h:1080,action:()=>{this.menu.close();this.draw();}});
     }
     choose(index) {
+        if(this.estadoCampo(this.menu.field).tipo!=='disponible')return;
         const selection=this.menu.select(index);if(!selection)return;const field=this.field(selection.field);
         field.value=selection.field==='cliente'?selection.option.label:selection.option.value;this.consultas.cancelar();this.errores[field.id]=null;this.dirty=true;this.draw();
         if(field.id==='origen')this.conectar();
@@ -116,22 +124,32 @@ export class TabletOperaciones {
         this.button('delete','Borrar',467,957,220,52,()=>this.edit('DEL'));this.button('next','Siguiente',702,957,260,52,()=>this.edit('NEXT'));this.button('done','Listo',977,957,418,52,()=>this.edit('DONE'),true,true);
     }
     async conectar() {
-        const version=++this.catalogVersion;this.catalogControl?.abort();this.catalogControl=new AbortController();this.catalogLoading=true;this.menu.close();this.draw();
+        for(const f of this.fields){const o=this.opciones[f.id]?.find(o=>o.value===f.value);if(o)this.etiquetas[f.id]=o;}
+        const version=++this.catalogVersion;this.catalogControl?.abort();this.catalogControl=new AbortController();this.catalogLoading=true;this.catalogReady=false;this.menu.close();this.draw();
         try {
             const catalogos=await this.api.catalogos(this.field('origen').value||'',fechaValida(this.field('fecha_servicio').value)?this.field('fecha_servicio').value:'',this.catalogControl.signal);
             if(version!==this.catalogVersion)return;
-            if(!catalogos||typeof catalogos.repositorio!=='string')throw new Error('El servidor no devolvió el contrato de catálogos esperado. Actualiza el backend.');
-            for(const key of ['origenes','destinos','rutas','clientes','tipos_carga','tipos_vehiculo','proveedores'])if(!Array.isArray(catalogos[key]))throw new Error('El endpoint /catalogos no devuelve '+key+'. Actualiza el backend.');
-            this.catalogos=catalogos;const mapping=vincularProveedores(catalogos.proveedores);this.vinculos=mapping.porId;this.mappingErrors=mapping.errores;
+            if(!catalogos||typeof catalogos.repositorio!=='string')throw new Error('Contrato de catálogos incompatible. Revisa el backend.');
+            for(const key of ['origenes','destinos','rutas','clientes','tipos_carga','tipos_vehiculo','proveedores'])if(!Array.isArray(catalogos[key]))throw new Error('El catálogo recibido no devuelve '+key+'.');
+            this.catalogos=catalogos;this.catalogReady=catalogos.catalogosCompletos!==false;
+            const estados=catalogos.estadosCatalogos||{formulario:'disponible',vehiculos:'disponible'};
+            this.catalogEstados={cliente:estados.formulario,origen:estados.formulario,destino:estados.formulario,carga:estados.formulario,vehiculo:estados.vehiculos};
+            const mapping=vincularProveedores(catalogos.proveedores);this.vinculos=mapping.porId;this.mappingErrors=mapping.errores;
             const asOptions=list=>list.map(o=>({value:o.id,label:o.nombre}));
-            Object.assign(this.opciones,{cliente:asOptions(catalogos.clientes),origen:asOptions(catalogos.origenes),destino:asOptions(catalogos.destinos),carga:asOptions(catalogos.tipos_carga),vehiculo:[{value:null,label:'Automático (backend)'},...asOptions(catalogos.tipos_vehiculo)]});
-            const invalid=[];for(const id of ['origen','destino','carga','vehiculo']){const f=this.field(id);if(f.value!==undefined&&!this.opciones[id].some(o=>o.value===f.value)){f.value=undefined;invalid.push(f.label);this.dirty=true;}}
-            this.mensaje=invalid.length?'Selecciona de nuevo: '+invalid.join(', '):'Catálogos cargados. La disponibilidad final se evalúa al enviar.';this.erroresGlobal=false;
-        } catch(error){if(version!==this.catalogVersion||error.name==='AbortError')return;this.catalogos=null;this.mensaje=error.status===404?'Falta GET /catalogos en el servidor. Instala la actualización del backend.':error.message;this.erroresGlobal=true;}
-        finally {if(version===this.catalogVersion){this.catalogLoading=false;this.draw();}}
+            Object.assign(this.opciones,{cliente:asOptions(catalogos.clientes),origen:asOptions(catalogos.origenes),destino:asOptions(catalogos.destinos),carga:asOptions(catalogos.tipos_carga),vehiculo:estados.vehiculos==='disponible'?[{value:null,label:'Automático (backend)'},...asOptions(catalogos.tipos_vehiculo)]:[]});
+            // Un fallo de red no invalida una elección: solo un catálogo nuevo y válido puede hacerlo.
+            const invalid=[];for(const id of ['origen','destino','carga','vehiculo']){const f=this.field(id);if(this.catalogEstados[id]==='disponible'&&f.value!==undefined&&!this.opciones[id].some(o=>o.value===f.value)){f.value=undefined;invalid.push(f.label);this.dirty=true;}}
+            const avisos=invalid.length?' Selecciona de nuevo: '+invalid.join(', '):'';
+            this.mensaje=(this.catalogReady?'Catálogos cargados. La disponibilidad final se evalúa al enviar.':(catalogos.erroresCatalogos||['Carga incompleta. Pulsa Reconectar.']).join(' · '))+avisos;this.erroresGlobal=!this.catalogReady;
+        } catch(error){
+            if(version!==this.catalogVersion||error.name==='AbortError')return;
+            this.catalogReady=false;this.catalogEstados=Object.fromEntries(['cliente','origen','destino','carga','vehiculo'].map(id=>[id,'error']));
+            for(const id of Object.keys(this.opciones))this.opciones[id]=[];
+            this.mensaje=error.message;this.erroresGlobal=true;
+        } finally {if(version===this.catalogVersion){this.catalogLoading=false;this.draw();}}
     }
     async evaluar() {
-        if(!this.catalogos||this.catalogLoading||this.consultas.ocupado)return;
+        if(!this.catalogReady||this.catalogLoading||this.consultas.ocupado)return;
         if(!['panel','arriba'].includes(this.politicaCasi)){this.mensaje='Falta confirmar cómo presentar los casi elegibles.';this.draw();return;}
         if(this.mappingErrors.length){this.mensaje='La asociación de proveedores y tarjetas está incompleta. Revisa los nombres del catálogo.';this.erroresGlobal=true;this.draw();return;}
         const validation=crearSolicitud(this.values(),this.catalogos);this.errores=validation.errores;
@@ -210,6 +228,7 @@ export class TabletOperaciones {
         else if(event.key==='Backspace')this.edit('DEL');else if(event.key.length===1){event.preventDefault();this.edit(event.key);}
     }
 }
+
 
 
 

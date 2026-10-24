@@ -5,30 +5,49 @@ export class ErrorAPI extends Error {
 export class API {
     constructor(base=API_BASE,fetchImpl=globalThis.fetch,timeout=API_TIMEOUT_MS) {this.base=base.replace(/\/$/,'');this.fetch=fetchImpl;this.timeout=timeout;}
     async llamar(method,path,body,signal) {
+        let url;
+        try {url=new URL(this.base+path);}catch{throw new ErrorAPI('Dirección del backend inválida. Revisa js/config.js.');}
+        if(globalThis.location?.protocol==='https:'&&url.protocol!=='https:')throw new ErrorAPI(path+': conexión HTTP bloqueada desde HTTPS. Configura el túnel HTTPS.');
         const controller=new AbortController();
         const abort=()=>controller.abort();if(signal?.aborted)controller.abort();else signal?.addEventListener('abort',abort,{once:true});
-        const timer=setTimeout(()=>controller.abort(new Error('Tiempo de espera agotado')),this.timeout);
+        const timer=setTimeout(()=>controller.abort(),this.timeout);
         try {
-            const response=await this.fetch(this.base+path,{method,headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal});
+            const response=await this.fetch(url.href,{method,headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal});
             const raw=await response.text();let data;
-            try {data=JSON.parse(raw);}catch{throw new ErrorAPI('El servidor no devolvió JSON. Revisa que la dirección del backend siga vigente.',response.status);}
-            if(!response.ok)throw new ErrorAPI(typeof data.detalle==='string'?data.detalle:'El servidor rechazó la petición.',response.status,Array.isArray(data.errores)?data.errores:[]);
+            try {data=JSON.parse(raw);}catch{throw new ErrorAPI(path+': HTTP '+response.status+'; respuesta no JSON. Revisa el túnel y la ruta.',response.status);}
+            if(!response.ok)throw new ErrorAPI(path+': HTTP '+response.status+' · '+(typeof data?.detalle==='string'?data.detalle:'El servidor rechazó la petición.'),response.status,Array.isArray(data?.errores)?data.errores:[]);
             return data;
         } catch(error) {
             if(signal?.aborted)throw new DOMException('Consulta cancelada','AbortError');
             if(error instanceof ErrorAPI)throw error;
-            throw new ErrorAPI(controller.signal.aborted?'La petición agotó su tiempo de espera. Puedes reintentar.':'No se pudo conectar con el backend. Comprueba la conexión y la dirección del servidor.');
+            // Fetch no permite distinguir DNS, red o CORS cuando el navegador oculta la respuesta.
+            throw new ErrorAPI(path+': '+(controller.signal.aborted?'tiempo de espera agotado. Reintenta.':'sin respuesta accesible. Revisa túnel, red o CORS; el navegador no distingue estas causas.'));
         } finally {clearTimeout(timer);signal?.removeEventListener('abort',abort);}
     }
     salud(signal) {return this.llamar('GET','/salud',undefined,signal);}
     async catalogos(origen='',fecha='',signal) {
         const query=new URLSearchParams();if(origen)query.set('origen_id',origen);if(fecha)query.set('fecha_servicio',fecha);
-        const [formulario,oficiales]=await Promise.all([
-            this.llamar('GET','/catalogos/formulario'+(query.size?'?'+query:''),undefined,signal),
-            this.llamar('GET','/catalogos',undefined,signal)
+        const ruta='/catalogos/formulario'+(query.size?'?'+query:'');
+        const comprobarOpciones=(lista,nombre)=>{
+            if(!Array.isArray(lista)||lista.some(o=>!o||!(typeof o.id==='string'||o.id===null)||typeof o.nombre!=='string'))throw new ErrorAPI(nombre+': catálogo con formato incompatible.');
+        };
+        const resultados=await Promise.allSettled([
+            this.llamar('GET',ruta,undefined,signal).then(data=>{
+                if(!data||typeof data.repositorio!=='string')throw new ErrorAPI(ruta+': falta repositorio en la respuesta.');
+                for(const key of ['origenes','destinos','clientes','tipos_carga'])comprobarOpciones(data[key],ruta+' · '+key);
+                if(!Array.isArray(data.rutas)||data.rutas.some(r=>typeof r?.origen_id!=='string'||typeof r?.destino_id!=='string')||!Array.isArray(data.proveedores)||data.proveedores.some(p=>typeof p?.proveedor_id!=='string'||typeof p?.nombre!=='string'))throw new ErrorAPI(ruta+': rutas o proveedores incompatibles.');
+                return data;
+            }),
+            this.llamar('GET','/catalogos',undefined,signal).then(data=>{
+                if(!Array.isArray(data?.tipos_vehiculo)||data.tipos_vehiculo.some(v=>typeof v?.tipo_vehiculo_id!=='string'||typeof v?.nombre!=='string'))throw new ErrorAPI('/catalogos: catálogo oficial de vehículos incompatible.');
+                return data.tipos_vehiculo.map(v=>({id:v.tipo_vehiculo_id,nombre:v.nombre}));
+            })
         ]);
-        if(!Array.isArray(oficiales?.tipos_vehiculo))throw new ErrorAPI('El catálogo oficial de vehículos llegó incompleto.');
-        return {...formulario,tipos_vehiculo:oficiales.tipos_vehiculo.map(v=>({id:v.tipo_vehiculo_id,nombre:v.nombre}))}; // Catálogo oficial: el backend define qué vehículos siguen vigentes.
+        if(signal?.aborted)throw new DOMException('Consulta cancelada','AbortError');
+        const [form,vehiculos]=resultados,base=form.status==='fulfilled'?form.value:{repositorio:'',origenes:[],destinos:[],rutas:[],clientes:[],tipos_carga:[],proveedores:[]};
+        const errores=resultados.filter(r=>r.status==='rejected').map(r=>r.reason?.message||'Error de catálogo');
+        return {...base,tipos_vehiculo:vehiculos.status==='fulfilled'?vehiculos.value:[],catalogosCompletos:errores.length===0,erroresCatalogos:errores,
+            estadosCatalogos:{formulario:form.status==='fulfilled'?'disponible':'error',vehiculos:vehiculos.status==='fulfilled'?'disponible':'error'}};
     }
     async evaluar(datos,signal) {
         const data=await this.llamar('POST','/solicitudes/evaluar',datos,signal);
