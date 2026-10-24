@@ -5,13 +5,11 @@ Documentación:   http://localhost:8000/docs
 """
 from __future__ import annotations
 
-import os
 from datetime import date, datetime, timedelta, timezone
 from typing import Callable, Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import ValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -26,6 +24,7 @@ from backend.filtro import RutaNoEncontrada
 
 from . import esquemas as e
 from .catalogos import construir_catalogos
+from .cors import envolver_cors
 from .informe import construir_informe, nombre_archivo
 from .registro import Registro
 from .servicio import ServicioEvaluacion
@@ -79,9 +78,6 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
                     "candidatos y registra la decisión del funcionario. La API no elige: el funcionario decide.",
         version="1.0.0",
     )
-    origenes = [o.strip() for o in os.environ.get("CORS_ORIGENES", "*").split(",") if o.strip()]
-    app.add_middleware(CORSMiddleware, allow_origins=origenes, allow_methods=["*"], allow_headers=["*"],
-                       expose_headers=["Content-Disposition"])   # el front lee el nombre del informe
 
     @app.exception_handler(RequestValidationError)
     async def _validacion(_: Request, exc: RequestValidationError):
@@ -327,6 +323,7 @@ def crear_app(repo: Optional[Repositorio] = None, cfg: Optional[Config] = None,
     return app
 
 
-app = crear_app()
+# CORS por fuera de FastAPI: también cubre los errores 500 del servidor.
+app = envolver_cors(crear_app())
 
 
