@@ -2,11 +2,10 @@
 
 Por iteración j:
   1. Δ_j: con prob. W/(W+m) del historial del proveedor (ponderado por w_i), si no del mercado.
-  2. demora_j ~ Uniforme(d_min, d_max) con prob. p_evento del corredor.
-  3. T_j = T_prom · (1 + Δ_j) + demora_j
-  4. a_j = T_j ≤ plazo
-  5. inc_j ~ Bernoulli(min(1, I / s̄)); si ocurre, la severidad sale de su historial.
-  6. costo_j = Costo_opción + penal_hora · max(0, T_j − plazo)
+  2. T_j = T_prom · (1 + Δ_j)
+  3. a_j = T_j ≤ plazo
+  4. inc_j ~ Bernoulli(min(1, I / s̄)); si ocurre, la severidad sale de su historial.
+  5. costo_j = Costo_opción + penal_hora · max(0, T_j − plazo)
 """
 from __future__ import annotations
 
@@ -19,7 +18,6 @@ import numpy as np
 from backend.calculos.historial import Historial
 from backend.calculos.profit import margen_pct
 from backend.config import Config
-from backend.dominio import CondicionVia
 
 
 @dataclass(frozen=True)
@@ -35,9 +33,6 @@ class EntradaSimulacion:
     deltas_mercado: np.ndarray
     pesos_mercado: np.ndarray
     sigma0: float                    # respaldo si el mercado no tiene datos
-    p_evento: float
-    demora_min_h: float
-    demora_max_h: float
     indice_incidentes: float         # I (sección 3.2), incluye servicios sin incidente
     severidades_proveedor: np.ndarray
 
@@ -79,7 +74,6 @@ def preparar_entrada(
     costo_cop: int,
     presupuesto_cop: float,
     penal_hora_cop: float,
-    condicion: Optional[CondicionVia],
     cfg: Config,
 ) -> EntradaSimulacion:
     """Arma la entrada desde los historiales: ruta del proveedor (o todo si W_ruta < mínimo) y mercado en la ruta."""
@@ -92,9 +86,6 @@ def preparar_entrada(
         presupuesto_cop=presupuesto_cop, penal_hora_cop=penal_hora_cop,
         deltas_proveedor=propio.delta, pesos_proveedor=propio.w,
         deltas_mercado=mercado.delta, pesos_mercado=mercado.w, sigma0=sigma0,
-        p_evento=condicion.p_evento if condicion else 0.0,
-        demora_min_h=condicion.demora_min_h if condicion else 0.0,
-        demora_max_h=condicion.demora_max_h if condicion else 0.0,
         indice_incidentes=indice_incidentes,
         severidades_proveedor=historial_proveedor.severidades_incidentes,
     )
@@ -133,15 +124,11 @@ def simular(e: EntradaSimulacion, cfg: Config, semilla: Optional[int] = None) ->
         avisos.append("Sin historial del mercado en la ruta: se usó Δ ~ Normal(0, σ0)")
     delta = np.where(usa_propio, d_propio, d_mercado)
 
-    # 2. Condiciones actuales de la vía
-    hay_evento = rng.random(n) < e.p_evento
-    demora = np.where(hay_evento, rng.uniform(e.demora_min_h, e.demora_max_h, n), 0.0)
-
-    # 3-4. Tiempo y llegada a tiempo
-    T = e.tiempo_prometido_h * (1 + delta) + demora
+    # 2-3. Tiempo y llegada a tiempo
+    T = e.tiempo_prometido_h * (1 + delta)
     a_tiempo = T <= e.plazo_h
 
-    # 5. Incidentes
+    # 4. Incidentes
     sev = e.severidades_proveedor
     s_media = float(sev.mean()) if sev.size else s.severidad_media_sin_historial
     p_inc = min(1.0, e.indice_incidentes / s_media)
@@ -149,7 +136,7 @@ def simular(e: EntradaSimulacion, cfg: Config, semilla: Optional[int] = None) ->
     sev_j = rng.choice(sev, size=n) if sev.size else np.full(n, s_media)
     sev_media_inc = float(sev_j[inc].mean()) if inc.any() else 0.0
 
-    # 6. Costo y profit
+    # 5. Costo y profit
     retraso_h = np.maximum(0.0, T - e.plazo_h)
     penalidad = e.penal_hora_cop * retraso_h
     costo_j = e.costo_cop + penalidad

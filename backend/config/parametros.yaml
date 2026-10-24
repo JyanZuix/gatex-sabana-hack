@@ -57,3 +57,7 @@ filtro:
 explicacion:
   max_factores: 3                 # factores a favor y en contra que se muestran
   umbral_impacto: 0.02            # impacto mínimo para mencionar un factor
+
+ficha:                            # ficha de proveedor (GET /proveedores/{id})
+  min_servicios_segmento: 5       # servicios mínimos en una ruta o vehículo para opinar de él
+  umbral_diferencia: 0.10         # diferencia frente a su promedio para llamarlo fortaleza o debilidad
