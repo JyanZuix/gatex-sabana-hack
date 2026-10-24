@@ -1,36 +1,22 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gatex - Logística VR</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #0b0f19;
-            font-family: sans-serif;
-        }
-        canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-        }
-    </style>
-    <!-- Import Map para cargar Three.js de forma moderna -->
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-      }
-    </script>
+<meta charset="UTF-8"> <!-- Permite caracteres en español. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gatex-sim VR</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#e9edf2;color:#16243b;font:16px system-ui,sans-serif} /* Paleta del entorno. */
+canvas{display:block} #inicio{position:fixed;inset:0;display:grid;place-content:center;background:#e9edf2;z-index:2;text-align:center;padding:24px}
+button{border:0;border-radius:14px;padding:20px 42px;background:#175cde;color:white;font:600 20px system-ui;cursor:pointer} button:focus-visible{outline:4px solid #12243d;outline-offset:6px} button:disabled{opacity:.6;cursor:wait}
+#estado{max-width:540px;line-height:1.6;font-size:15px} [hidden]{display:none!important} #aviso{position:fixed;bottom:16px;left:16px;right:16px;text-align:center;background:#fff;padding:12px;border-radius:12px}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script> <!-- Módulos de la misma versión; requieren acceso a internet. -->
 </head>
 <body>
-
-    <!-- Cargamos nuestro script principal -->
-    <script type="module" src="./js/main.js"></script>
+<main id="inicio"><button id="entrar" disabled>Entrar a VR</button><p id="estado" role="status" aria-live="polite">Comprobando el acceso a realidad virtual…</p></main>
+<div id="aviso" hidden role="status">Vista de prueba en PC · Haz clic en la tablet. Usa Tab, las flechas y Enter para navegar.</div>
+<script type="module" src="./js/inicio.js"></script>
 </body>
 </html>
