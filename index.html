@@ -8,15 +8,40 @@
 *{box-sizing:border-box} body{margin:0;background:#e9edf2;color:#16243b;font:16px system-ui,sans-serif} /* Paleta del entorno. */
 canvas{display:block} #inicio{position:fixed;inset:0;display:grid;place-content:center;background:#e9edf2;z-index:2;text-align:center;padding:24px}
 button{border:0;border-radius:14px;padding:20px 42px;background:#175cde;color:white;font:600 20px system-ui;cursor:pointer} button:focus-visible{outline:4px solid #12243d;outline-offset:6px} button:disabled{opacity:.6;cursor:wait}
-#estado{max-width:540px;line-height:1.6;font-size:15px} [hidden]{display:none!important} #aviso{position:fixed;bottom:16px;left:16px;right:16px;text-align:center;background:#fff;padding:12px;border-radius:12px}
+#version{font-weight:700;color:#175cde} #diagnostico{white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;max-width:680px;margin:8px auto;font:14px/1.5 system-ui;color:#23384f} #inicio{overflow:auto} #estado{max-width:540px;line-height:1.6;font-size:15px} [hidden]{display:none!important} #aviso{position:fixed;bottom:16px;left:16px;right:16px;text-align:center;background:#fff;padding:12px;border-radius:12px}
 </style>
 <script type="importmap">
 {"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
 </script> <!-- Módulos de la misma versión; requieren acceso a internet. -->
 </head>
 <body>
-<main id="inicio"><button id="entrar" disabled>Entrar a VR</button><p id="estado" role="status" aria-live="polite">Comprobando el acceso a realidad virtual…</p></main>
+<main id="inicio"><p id="version">QUEST-CAT-02 · revisión de catálogos</p><button id="entrar" disabled>Entrar a VR</button><p id="estado" role="status" aria-live="polite">Comprobando el acceso a realidad virtual…</p><pre id="diagnostico" aria-live="polite"></pre><noscript>Activa JavaScript para iniciar esta aplicación.</noscript></main>
 <div id="aviso" hidden role="status">Vista de prueba en PC · Haz clic en la tablet. Usa Tab, las flechas y Enter para navegar.</div>
-<script type="module" src="./js/inicio.js"></script>
+<script>
+(() => {
+    const estado=document.getElementById('estado'),panel=document.getElementById('diagnostico'),boton=document.getElementById('entrar');
+    const lineas=[];
+    const diagnostico={version:'QUEST-CAT-02',appLista:false,clics:0,
+        registrar(texto){lineas.push(texto);if(lineas.length>9)lineas.shift();panel.textContent=lineas.join('\n');},
+        error(error){const mensaje=error?.message||String(error||'Error desconocido');this.registrar('ERROR: '+mensaje);estado.textContent='Error: '+mensaje;}
+    };
+    window.GatexDiagnostico=diagnostico;
+    diagnostico.registrar('HTML nuevo cargado · QUEST-CAT-02');
+    diagnostico.registrar('HTTPS: '+(window.isSecureContext?'sí':'no')+' · WebXR: '+(navigator.xr?'presente':'ausente'));
+    diagnostico.registrar('Página incrustada: '+(window.top!==window?'sí; abre la URL directamente':'no'));
+    boton.addEventListener('click',()=>{
+        diagnostico.clics++;diagnostico.registrar('Clic recibido #'+diagnostico.clics+' · aplicación lista: '+(diagnostico.appLista?'sí':'no'));
+        if(!diagnostico.appLista)estado.textContent='El clic llegó, pero la aplicación aún no terminó de cargar. Revisa el último paso de abajo.';
+    },true);
+    document.getElementById('inicio').addEventListener('pointerdown',event=>{
+        if(event.target===boton&&boton.disabled)diagnostico.registrar('El botón sigue deshabilitado; revisa la carga o el error de arriba.');
+    },true);
+    window.addEventListener('error',event=>diagnostico.error(event.error||event.message));
+    window.addEventListener('unhandledrejection',event=>diagnostico.error(event.reason));
+    setTimeout(()=>{if(!diagnostico.appLista)diagnostico.registrar('La carga aún no ha habilitado VR. Último paso registrado arriba.');},20000);
+})();
+</script>
+<script type="module" src="./js/inicio.js?v=QUEST-CAT-02"></script>
 </body>
 </html>
+

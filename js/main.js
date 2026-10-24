@@ -8,6 +8,7 @@ import { TabletOperaciones } from './tablet-ui.mjs';
 import { AnimadorTarjetas } from './tarjetas.mjs';
 import { POLITICA_CASI, RESTABLECER_TARJETAS } from './config.js';
 import { cargarEscenario } from './escenario.js'; // El escenario es independiente de la tablet.
+window.GatexDiagnostico?.registrar('Módulos de aplicación cargados; preparando Three.js…');
 
 const inicio = document.getElementById('inicio'); // Pantalla 1: una única acción de entrada.
 const entrar = document.getElementById('entrar');
@@ -111,49 +112,58 @@ async function exitVR() {
     if(xrSession) {try{await xrSession.end();}catch(error){console.error(error);}}
     else {resetForm();inicio.hidden=false;document.getElementById('aviso').hidden=true;entrar.focus();}
 }
+function registrarEntrada(mensaje){window.GatexDiagnostico?.registrar(mensaje);}
+function marcarEntradaLista(){if(window.GatexDiagnostico)window.GatexDiagnostico.appLista=true;}
 entrar.addEventListener('click',async()=>{
+    registrarEntrada('Controlador del botón ejecutado');
     if(starting)return;
     if(preview) {inicio.hidden=true;document.getElementById('aviso').hidden=false;draw();return;}
     starting=true;entrar.disabled=true;estado.textContent='Solicitando acceso a VR…';
+    registrarEntrada('Solicitando immersive-vr · gesto activo: '+(navigator.userActivation?.isActive??'sin dato'));
     let session;
     try {
         session=await navigator.xr.requestSession('immersive-vr',{requiredFeatures:['local-floor']}); // Solicitud dentro del clic: conserva la activación del usuario.
-        xrSession=session;
+        xrSession=session;registrarEntrada('WebXR aceptó la sesión; configurando el visor…');
         session.addEventListener('end',()=>{
             xrSession=null;entradaVR.reset();centrarAlEntrar=false;restablecerVistaPC();selecting.clear();resetForm();inicio.hidden=false;entrar.disabled=false;
+            marcarEntradaLista();registrarEntrada('Sesión terminada; puede volver a entrar');
             estado.textContent='Sesión terminada. Puedes volver a entrar.';entrar.focus();
         },{once:true});
         estado.textContent='Preparando la sesión VR…';
-        await renderer.xr.setSession(session);entradaVR.iniciar(renderer.xr.getReferenceSpace());centrarAlEntrar=true;inicio.hidden=true;draw(); // Entrada directa a la sección 2.
+        await renderer.xr.setSession(session);entradaVR.iniciar(renderer.xr.getReferenceSpace());centrarAlEntrar=true;registrarEntrada('Sesión VR iniciada');inicio.hidden=true;draw(); // Entrada directa a la sección 2.
     } catch(error) {
         console.error(error);if(session)await session.end().catch(()=>{});xrSession=null;
         inicio.hidden=false;
         estado.textContent='No se pudo entrar en VR: '+(error.message||error.name||'error desconocido')+'. Revisa los permisos de Meta Quest Browser e inténtalo otra vez.';
-        window.alert(estado.textContent);
+        registrarEntrada('ERROR de entrada: '+(error.name||'Error')+' · '+(error.message||error));
     } finally {starting=false;entrar.disabled=false;}
 });
 async function initialize() {
     draw();
     // Se espera el marcador Usuario antes de fijar la vista y centrar la tablet.
-    estado.textContent='Cargando el nuevo escenario…';
+    estado.textContent='Cargando el nuevo escenario…';registrarEntrada('Descargando Gatex5.glb…');
     try {
         const resultado=await cargarEscenario(scene);
+        registrarEntrada('Escenario cargado; comprobando las doce tarjetas…');
         animador=new AnimadorTarjetas(resultado.modelo);
         puntoEntrada=resultado.entrada;entradaVR.configurar(puntoEntrada);restablecerVistaPC();
     } catch(error) {
         console.error('No se pudo cargar Gatex5.glb:',error);
         estado.textContent='No se pudo cargar assets/Gatex5.glb. Comprueba que copiaste el archivo y sirve la página por HTTP/HTTPS. Detalle: '+error.message;
+        registrarEntrada('ERROR de escenario: '+error.message);
         entrar.disabled=true;return; // Error explícito: no carga otro modelo ni permite entrar fingiendo que terminó.
     }
     ui.conectar(); // Catálogos reales; un fallo se informa dentro de la tablet y no simula datos.
-    if(preview){entrar.textContent='Abrir prueba en PC';entrar.disabled=false;estado.textContent='Modo de desarrollo. Esta vista no verifica el funcionamiento del visor.';return;}
+    if(preview){marcarEntradaLista();registrarEntrada('Vista de prueba PC lista');entrar.textContent='Abrir prueba en PC';entrar.disabled=false;estado.textContent='Modo de desarrollo. Esta vista no verifica el funcionamiento del visor.';return;}
     if(location.protocol==='file:'||!isSecureContext){estado.textContent='Para usar VR abre esta página desde una dirección HTTPS válida en Meta Quest Browser. No abras index.html con doble clic.';return;}
     try {
+        registrarEntrada('Comprobando compatibilidad WebXR…');
         if(!navigator.xr||!await navigator.xr.isSessionSupported('immersive-vr')) {
             estado.textContent='Este dispositivo o navegador no admite VR inmersiva. Abre esta dirección en Meta Quest Browser.';
             window.alert(estado.textContent);return;
         }
-        estado.textContent='';entrar.disabled=false;
+        marcarEntradaLista();registrarEntrada('Aplicación lista para VR · botón habilitado');
+        estado.textContent='Escenario listo. Pulsa Entrar a VR.';entrar.disabled=false;
     } catch(error){console.error(error);estado.textContent='No se pudo comprobar WebXR. Revisa los permisos y abre la página directamente, fuera de una vista previa incrustada.';}
 }
 window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
@@ -179,7 +189,7 @@ renderer.setAnimationLoop((tiempo,frame)=>{
     renderer.render(scene,camera);
 }); // Bucle WebXR: permite a la plataforma gestionar la frecuencia de refresco.
 initialize().catch(error=>{
-    console.error('Error de inicio:',error);
+    console.error('Error de inicio:',error);window.GatexDiagnostico?.error(error);
     inicio.hidden=false;entrar.disabled=true;estado.textContent='No se pudo iniciar la aplicación: '+(error.message||error);
 });
 
